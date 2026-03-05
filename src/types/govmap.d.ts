@@ -40,16 +40,16 @@ declare global {
       geometry?: any;
     }
 
-    //   interface ShelterResult {
-    //     x: number;
-    //     y: number;
-    //     distance: number;
-    //     attributes: Record<string, any>;
-    //   }
+    interface ShelterResult {
+      x: number;
+      y: number;
+      distance: number;
+      attributes: Record<string, any>;
+    }
 
     interface Response {
       status: number; // 0 for success
-      data: any[]; // ShelterResult[];
+      data: ShelterResult[];
       message: string | null;
       errorCode: number;
     }

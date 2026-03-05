@@ -6,12 +6,15 @@ import {
   Marker,
   Popup,
   useMapEvents,
+  useMap,
+  Circle,
 } from "react-leaflet";
 import L, { LatLng } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/leaflet.css";
 import { useGovMapLoader } from "../hooks/useGovMapLoader";
-import MOCK_SHELTERS from "../mockData/mockShelters";
+import { useGeolocation } from "../hooks/useGeolocation";
+import generateMockShelters from "../mockData/mockShelters";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -23,7 +26,16 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
 });
+
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// Create the custom pulsing icon
+const userIcon = L.divIcon({
+  className: "user-location-marker",
+  html: '<div class="user-location-dot"></div>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
+});
 
 // --- Interfaces ---
 interface ShelterData {
@@ -36,79 +48,113 @@ interface ShelterData {
 
 const API_TOKEN = "YOUR_API_TOKEN";
 
+const MapRecenter = ({ location }: { location: L.LatLng | null }) => {
+  const map = useMap(); // useMap is a hook provided by react-leaflet
+  useEffect(() => {
+    if (location) {
+      map.flyTo(location, 16, {
+        animate: true,
+        duration: 1.5,
+      });
+    }
+  }, [location, map]);
+
+  return null;
+};
+
 const ShelterMap: React.FC = () => {
   // 1. Initialize the Loader Guard
-  const { isLoaded, error } = useGovMapLoader(API_TOKEN);
+  const { isLoaded, error: loaderError } = useGovMapLoader(API_TOKEN);
+  const {
+    coordinates,
+    loading: geoLoading,
+    error: geoError,
+    locate,
+  } = useGeolocation();
 
-  const [shelters, setShelters] = useState<ShelterData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [shelters, setShelters] = useState<govmap.ShelterResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
-  // 2. The Core Search Logic
-  const findNearbyShelters = useCallback(
-    async (location: LatLng) => {
-      // Safety check: Don't run if SDK isn't ready
-      //if (!window.govmap || !isLoaded) return;
+  // Automatically search when coordinates change (from "Locate Me")
+  useEffect(() => {
+    if (coordinates) {
+      findNearbyShelters(coordinates);
+    }
+  }, [coordinates]);
 
-      setLoading(true);
+  // Combine them for the UI Overlay
+  // If we are finding the GPS OR searching the DB, show the spinner
+  const isGlobalLoading = geoLoading || searchLoading;
 
-      // SIMULATED DELAY (To test your cool CSS spinner)
+  const findNearbyShelters = useCallback(async (latlng: L.LatLng) => {
+    console.log("Map clicked at:", latlng); // DEBUG 1
+    setSearchLoading(true);
+
+    try {
+      // Force a delay to see the spinner
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      setSearchLoading(true);
+
+      // Simulating API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      try {
-        let results: ShelterData[] = [];
+      const mockData = generateMockShelters(latlng);
+      setShelters(mockData);
+    } catch (err) {
+      console.error("Error:", err);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
 
-        if (window.govmap) {
-          // A. Convert GPS (WGS84) -> ITM (Israel Network) for the API
-          const itmPoint = window.govmap.geoToItm({
-            lat: location.lat,
-            lng: location.lng,
-          });
+  // 2. The Core Search Logic
+  // const findNearbyShelters = useCallback(
+  //   async (location: LatLng) => {
+  //     // Safety check: Don't run if SDK isn't ready
+  //     if (!window.govmap || !isLoaded) return;
 
-          const params: govmap.LayerDataParams = {
-            LayerName: "layer_bombshelters",
-            Point: itmPoint,
-            Radius: 1000,
-          };
+  //     setLoading(true);
 
-          const response = await window.govmap.getLayerData(params);
+  //     try {
+  //       let results: ShelterData[] = [];
+  //         // A. Convert GPS (WGS84) -> ITM (Israel Network) for the API
+  //         const itmPoint = window.govmap.geoToItm({
+  //           lat: location.lat,
+  //           lng: location.lng,
+  //         });
 
-          if (response.status === 0 && response.data) {
-            results = response.data.map((item: any) => {
-              // B. The ignored part: Convert ITM results BACK to GPS for Leaflet
-              const gps = window.govmap.itmToGeo({ x: item.x, y: item.y });
+  //         const params: govmap.LayerDataParams = {
+  //           LayerName: "layer_bombshelters",
+  //           Point: itmPoint,
+  //           Radius: 1000,
+  //         };
 
-              return {
-                lat: gps.lat,
-                lng: gps.lng,
-                name: item.attributes?.["שם_מקלט"] || "Public Shelter",
-                address: item.attributes?.["כתובת"] || "Unknown Address",
-                distance: item.distance,
-              };
-            });
-          }
-        } else {
-          // MOCK LOGIC (Runs if SDK isn't loaded yet)
-          console.warn("GovMap SDK not found. Using Mock Data.");
-          // Create results with coordinates relative to where YOU clicked
-          // This ensures they are always visible on your screen
-          results = MOCK_SHELTERS.map((item, index) => ({
-            lat: location.lat + (index === 0 ? 0.002 : -0.002), // offset slightly
-            lng: location.lng + (index === 0 ? 0.002 : -0.002),
-            name: item.attributes["שם_מקלט"],
-            address: item.attributes["כתובת"],
-            distance: item.distance,
-          }));
-        }
+  //         const response = await window.govmap.getLayerData(params);
 
-        setShelters(results);
-      } catch (err) {
-        console.error("GIS Search Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [isLoaded],
-  );
+  //         if (response.status === 0 && response.data) {
+  //           results = response.data.map((item: any) => {
+  //             // B. The ignored part: Convert ITM results BACK to GPS for Leaflet
+  //             const gps = window.govmap.itmToGeo({ x: item.x, y: item.y });
+
+  //             return {
+  //               lat: gps.lat,
+  //               lng: gps.lng,
+  //               name: item.attributes?.["שם_מקלט"] || "Public Shelter",
+  //               address: item.attributes?.["כתובת"] || "Unknown Address",
+  //               distance: item.distance,
+  //             };
+  //           });
+  //         }
+  //       setShelters(results);
+  //     } catch (err) {
+  //       console.error("GIS Search Error:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   },
+  //   [isLoaded],
+  // );
 
   // 3. Leaflet Event Listener
   const MapEventsHandler = () => {
@@ -127,17 +173,31 @@ const ShelterMap: React.FC = () => {
   };
 
   // UI States for Loading/Errors
-  if (error)
-    return <div className="p-4 bg-red-100 text-red-700">Error: {error}</div>;
+  if (loaderError)
+    return (
+      <div className="p-4 bg-red-100 text-red-700">Error: {loaderError}</div>
+    );
   if (!isLoaded) return <div className="p-4">Loading Mapping SDK...</div>;
 
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
-      {/* Professional Overlay */}
-      {loading && (
+      {/* 1. Locate Button - Disabled while loading */}
+      <button
+        className="locate-button"
+        onClick={locate}
+        disabled={isGlobalLoading}
+      >
+        <span style={{ fontSize: "18px" }}>🎯</span>
+        <span>{geoLoading ? "Finding you..." : "Find Shelters Near Me"}</span>
+      </button>
+
+      {/* 2. Professional Overlay - Now reacts to both states */}
+      {isGlobalLoading && (
         <div className="map-loader-overlay">
           <div className="spinner"></div>
-          <span className="loader-text">SEARCHING NEARBY SHELTERS...</span>
+          <span className="loader-text">
+            {geoLoading ? "LOCATING YOU..." : "SEARCHING NEARBY SHELTERS..."}
+          </span>
         </div>
       )}
 
@@ -148,16 +208,41 @@ const ShelterMap: React.FC = () => {
         zoomControl={false}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {/* Helper to fly the map to the coordinates */}
+        <MapRecenter location={coordinates} />
+
         <MapEventsHandler />
 
+        {/* User Location Marker */}
+        {coordinates && (
+          <>
+            <Circle
+              center={coordinates}
+              radius={5000}
+              pathOptions={{
+                color: "#4285F4",
+                fillColor: "#4285F4",
+                fillOpacity: 0.2,
+                weight: 2,
+                dashArray: "5, 5", // Makes the border dashed for a "searching" look
+              }}
+            />
+            <Marker position={coordinates} icon={userIcon}>
+              <Popup>You are here</Popup>
+            </Marker>
+          </>
+        )}
+
         {shelters.map((s, i) => (
-          <Marker key={i} position={[s.lat, s.lng]}>
+          <Marker key={i} position={[s.y, s.x]}>
             <Popup>
               <div style={{ textAlign: "left", minWidth: "150px" }}>
                 <h3 style={{ margin: "0 0 5px 0", color: "#0066cc" }}>
-                  {s.name}
+                  {s.attributes["שם_מקלט"]}
                 </h3>
-                <p style={{ margin: "0", fontSize: "13px" }}>{s.address}</p>
+                <p style={{ margin: "0", fontSize: "13px" }}>
+                  {s.attributes["כתובת"]}
+                </p>
                 <hr
                   style={{
                     margin: "8px 0",

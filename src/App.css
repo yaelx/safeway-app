@@ -1,5 +1,6 @@
 /* Ensure the body and html don't have default margins/padding */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -33,4 +34,116 @@ html, body {
 .leaflet-container {
   width: 100%;
   height: 100%;
+}
+
+To make the UI feel like a high-end mapping tool, we’ll move away from the "floating emoji" look and create a professional Action Button with a label. We will also use Leaflet DivIcons to create that distinctive pulsing blue dot for your location.
+
+1. The "Pulsing Blue Dot" CSS
+Add this to your App.css. It creates a clean blue circle with a soft animated pulse, exactly like Google Maps or Waze.
+
+CSS
+/* The core dot */
+.user-location-dot {
+  background-color: #4285f4;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+/* The pulsing ring */
+.user-location-dot::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background-color: #4285f4;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Button Styling */
+.locate-button {
+  position: absolute; /* Relative to the map-wrapper */
+  top: 20px; /* Distance from the top */
+  left: 50%; /* Distance from the left */
+  transform: translateX(-50%);
+
+  /* Leaflet's UI layers go up to 1000, so we use 2000 */
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #ffffff;
+  color: #1a73e8;
+  border: 1px solid #dadce0;
+  padding: 14px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  white-space: nowrap; /* Prevents text from wrapping and disappearing */
+}
+.locate-button:active {
+  background-color: #f1f3f4;
+}
+
+.locate-button:hover {
+  background: #f0f0f0;
+  transform: translateX(-50%) translateY(-2px);
+}
+.locate-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dashed border animation for the circle (optional but cool) */
+.leaflet-interactive {
+  transition: stroke-dashoffset 2s linear;
+}
+
+.popup-content {
+  font-family: sans-serif;
+  padding: 5px;
+}
+
+.dist-tag {
+  display: inline-block;
+  margin-top: 8px;
+  background: #e8f0fe;
+  color: #1a73e8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+/* Spin animation for the button icon */
+@keyframes button-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  display: inline-block;
+  animation: button-spin 1s infinite linear;
 }
