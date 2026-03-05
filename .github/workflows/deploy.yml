@@ -1,0 +1,28 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ "main" ] # Make sure this matches your primary branch name
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+steps:
+      - name: Checkout 
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist # Vite builds into the dist folder
+          branch: gh-pages # This creates a separate branch for the live site
