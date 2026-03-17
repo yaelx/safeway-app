@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node",
+      "config": { "includeFiles": ["data/*.json"] }
+    }
+  ],
+  "functions": {
+    "orchestrator/server.ts": { "runtime": "@vercel/node" },
+    "logic-server/solver.py": { "runtime": "@vercel/python" }
+  },
+  "routes": [
+{ "src": "/api/(.*)", "dest": "orchestrator/server.ts" },
+    { "src": "/evaluate_route", "dest": "logic-server/solver.py" }
+  ]
+}
