@@ -14,3 +14,5 @@ SafeWay helps users navigate Israeli cities while ensuring they are always withi
 - **Mapping:** Leaflet.js
 - **Data Source:** GovMap API
 - **Styling:** CSS3 with custom pulsing animations
+
+- <img width="2184" height="1546" alt="image" src="https://github.com/user-attachments/assets/29a13b0a-ddb7-443b-9b37-5d27957d3ff7" />
