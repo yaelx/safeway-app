@@ -87,6 +87,7 @@ app.post("/api/shelters-in-bounds", async (req, res) => {
       x: s.lng,
       y: s.lat,
       name: s.name,
+      id: s.id,
       address: s.address,
       isOfficial: true, // Tag them so the frontend can style them differently
     }));
@@ -168,24 +169,46 @@ app.get("/api/get-safe-route", async (req: Request, res: Response) => {
     const points = polyline.decode(routeData.routes[0].geometry);
 
     // B. Filter Shelters (Using local mock logic for now)
-    const nearbyShelters = await fetchSheltersNearPath(points);
+    const osmShelters = await fetchSheltersNearPath(points);
+
+    // 2. Format Motzkin JSON shelters to match Python's expected format {x, y}
+    const officialShelters = kiryatMotzkinShelters.map((s) => ({
+      x: s.lng,
+      y: s.lat,
+      name: s.name,
+      address: s.address,
+      isOfficial: true,
+    }));
+
+    // 3. Merge them
+    const allShelters = [...osmShelters, ...officialShelters];
 
     // C. Delegate math to Python solver
     const pythonRes = await axios.post(
       `${process.env.LOGIC_SERVER_URL}/evaluate_route`,
       {
         routePoints: points,
-        shelterData: nearbyShelters,
+        shelterData: allShelters,
       },
     );
 
     const safetyData = pythonRes.data;
 
+    // Calculate unique safe shelters for the summary
+    // (Assuming safetyReport entries contain a shelterId or name when 's' is true)
+    const safeSheltersCount = new Set(
+      safetyData.safetyReport
+        .filter((p: any) => p.s === true)
+        .map((p: any) => p.shelterName), // Ensure Python returns the name/ID of the snapped shelter
+    ).size;
+
     // D. Response
     res.status(200).json({
       summary: {
         distance: routeData.routes[0].distance,
+        unit: "km",
         safetyScore: safetyData.safetyScore,
+        safeSheltersCount: safeSheltersCount,
       },
       routeGeometry: routeData.routes[0].geometry,
       safetyReport: safetyData.safetyReport, // Using the new solver property name

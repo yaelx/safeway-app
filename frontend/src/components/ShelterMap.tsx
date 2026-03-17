@@ -15,9 +15,11 @@ import L, { LatLng } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/leaflet.css";
 import { useGovMapLoader } from "../hooks/useGovMapLoader";
-
+import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
+import { renderToStaticMarkup } from "react-dom/server";
 import { TripSearch } from "./TripSearch";
 import { useLocationState } from "../context/LocationContext";
+import StraightenIcon from "@mui/icons-material/Straighten";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
@@ -31,6 +33,22 @@ const DefaultIcon = L.icon({
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
 });
+
+const createMuiIcon = (color: string) => {
+  const iconHTML = renderToStaticMarkup(
+    <HealthAndSafetyIcon
+      color="primary"
+      style={{ color: color, fontSize: "30px" }}
+    />,
+  );
+
+  return L.divIcon({
+    html: `<div style="display: flex; justify-content: center; align-items: center;">${iconHTML}</div>`,
+    className: "custom-mui-icon", // Clear default leaflet styles
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+  });
+};
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
@@ -205,10 +223,72 @@ const ShelterMap: React.FC = () => {
               positions={decodedPath}
               pathOptions={{
                 color:
-                  routeData.summary.safetyScore > 80 ? "#2ecc71" : "#f39c12",
+                  routeData.summary.safetyScore > 10 ? "#2ecc71" : "#f39c12",
                 weight: 4,
               }}
-            />
+            >
+              <Popup>
+                <div
+                  style={{
+                    minWidth: "200px",
+                    direction: "rtl",
+                    textAlign: "right",
+                  }}
+                >
+                  <h3
+                    style={{
+                      margin: "0 0 10px 0",
+                      borderBottom: "1px solid #ccc",
+                    }}
+                  >
+                    סיכום מסלול בטוח 🛡️
+                  </h3>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    <StraightenIcon
+                      style={{ marginLeft: "8px", color: "#666" }}
+                    />
+                    <span>
+                      מרחק כולל:{" "}
+                      <strong>
+                        {(routeData.summary.distance / 1000).toFixed(2)}
+                        {routeData.summary.unit}
+                      </strong>
+                    </span>
+                  </div>
+
+                  {/* Number of Shelters found along the route */}
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <HealthAndSafetyIcon
+                      style={{ marginLeft: "8px", color: "#2e7d32" }}
+                    />
+                    <span>
+                      מקלט זמינים בדרך:{" "}
+                      <strong>
+                        {routeData.safetyReport.filter((p: any) => p.s).length}
+                      </strong>
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <HealthAndSafetyIcon
+                      style={{ marginLeft: "8px", color: "#2e7d32" }}
+                    />
+                    <span>
+                      ציון בטיחות:{" "}
+                      <strong>
+                        {routeData.summary.safetyScore.toFixed(2)}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+              </Popup>
+            </Polyline>
           )}
 
           {/* User Location Marker */}
@@ -251,11 +331,15 @@ const ShelterMap: React.FC = () => {
             hasSelection={!!startLocation || !!endLocation}
           />
           {globalShelters.map((s, i) => (
-            <Marker key={i} position={[s.y, s.x]}>
+            <Marker
+              key={i}
+              position={[s.y, s.x]}
+              icon={createMuiIcon("#0288d1")}
+            >
               <Popup>
                 <div style={{ textAlign: "left", minWidth: "150px" }}>
                   <h3 style={{ margin: "0 0 5px 0", color: "#0066cc" }}>
-                    {s.name !== "ריק" ? s.name : "Public Shelter"}
+                    {`מקלט מס׳: ${s.id} ${s.name !== "ריק" ? s.name : ""} `}
                   </h3>
                   <hr
                     style={{

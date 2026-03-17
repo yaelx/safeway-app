@@ -69,7 +69,6 @@ def evaluate_route(req: SafetyRequest) -> Dict[str, Any]:
     # --- CRITICAL DEBUG PRINT ---
     if len(sampled_route) > 0 and len(shelter_arr) > 0:
         print(f"DEBUG: Sample Route Pt: {sampled_route[0]}") # Expect [32.x, 35.x]
-        print(f"DEBUG: Sample Shelter Pt: {shelter_arr[0]}") # Expect [32.x, 35.x]
     # ----------------------------
 
     # If NO shelters found, return 0 score but KEEP the points
