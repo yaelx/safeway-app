@@ -1,0 +1,5 @@
+# api/logic/requirements.txt
+requests==2.31.0
+# Add geospatial libraries here later if needed:
+# shapely
+# scipy

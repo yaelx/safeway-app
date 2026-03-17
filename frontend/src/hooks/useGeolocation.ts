@@ -8,6 +8,8 @@ interface GeolocationState {
   error: string | null;
 }
 
+const defaultLocation = { lat: 32.0853, lng: 34.7818 };
+
 export const useGeolocation = () => {
   const [state, setState] = useState<GeolocationState>({
     coordinates: null,

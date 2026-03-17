@@ -1,0 +1,9 @@
+{
+  "executionEnvironments": [
+    {
+      "root": "logic-server",
+      "venvPath": ".",
+      "venv": "venv"
+    }
+  ]
+}

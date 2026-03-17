@@ -36,12 +36,6 @@ body {
   height: 100%;
 }
 
-To make the UI feel like a high-end mapping tool, we’ll move away from the "floating emoji" look and create a professional Action Button with a label. We will also use Leaflet DivIcons to create that distinctive pulsing blue dot for your location.
-
-1. The "Pulsing Blue Dot" CSS
-Add this to your App.css. It creates a clean blue circle with a soft animated pulse, exactly like Google Maps or Waze.
-
-CSS
 /* The core dot */
 .user-location-dot {
   background-color: #4285f4;
@@ -146,4 +140,77 @@ CSS
 .spin {
   display: inline-block;
   animation: button-spin 1s infinite linear;
+}
+
+.trip-search-card {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+}
+
+.trip-search-card input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.trip-search-card button {
+  background: #0066cc;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.results-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 1001;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.results-dropdown li {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.results-dropdown li:hover {
+  background-color: #f7f7f7;
+}
+
+.small-locate-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
 }
