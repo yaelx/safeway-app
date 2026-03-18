@@ -1,19 +1,13 @@
 {
-  "version": 2,
+"version": 2,
   "functions": {
-    "orchestrator/server.ts": { 
-      "runtime": "@vercel/node",
-      "includeFiles": "orchestrator/*.json"
-    },
-    "logic-server/solver.py": { 
-      "runtime": "@vercel/python" 
-    }
+    "orchestrator/server.ts": { "runtime": "@vercel/node" },
+    "logic-server/solver.py": { "runtime": "@vercel/python" }
   },
   "rewrites": [
-    { "source": "/api/get-safe-route", "destination": "orchestrator/server.ts" },
-    { "source": "/api/shelters-in-bounds", "destination": "orchestrator/server.ts" },
-    { "source": "/health", "destination": "logic-server/solver.py" },
+    { "source": "/api/(.*)", "destination": "orchestrator/server.ts" },
     { "source": "/evaluate_route", "destination": "logic-server/solver.py" },
+    { "source": "/health", "destination": "logic-server/solver.py" },
     { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }
