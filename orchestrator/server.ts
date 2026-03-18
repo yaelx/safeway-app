@@ -3,23 +3,18 @@ import cors from "cors";
 import * as polyline from "@mapbox/polyline";
 import axios from "axios";
 import dotenv from "dotenv";
-import kiryatMotzkinShelters from "./kiryatMotzkinShelters.json";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
 dotenv.config();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool as any);
+const prisma = new PrismaClient({ adapter });
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// Mock Data Generator for Shelters (Temporary until DB is connected)
-interface Shelter {
-  x: number;
-  y: number;
-  attributes: {
-    שם_מקלט: string;
-    [key: string]: any;
-  };
-}
 
 async function fetchSheltersNearPath(points: [number, number][]) {
   if (points.length === 0) return [];
@@ -74,23 +69,22 @@ app.post("/api/shelters-in-bounds", async (req, res) => {
   // We round to 3 decimal places (~100m precision) to increase cache hits
   const cacheKey = `${Math.round(minLat * 1000)},${Math.round(maxLat * 1000)},${Math.round(minLng * 1000)},${Math.round(maxLng * 1000)}`;
 
-  // 1. Filter local JSON data based on current bounds
-  const matchedLocal = kiryatMotzkinShelters
-    .filter(
-      (s: any) =>
-        s.lat >= minLat &&
-        s.lat <= maxLat &&
-        s.lng >= minLng &&
-        s.lng <= maxLng,
-    )
-    .map((s: any) => ({
-      x: s.lng,
-      y: s.lat,
-      name: s.name,
-      id: s.id,
-      address: s.address,
-      isOfficial: true, // Tag them so the frontend can style them differently
-    }));
+  const dbShelters = await prisma.shelter.findMany({
+    where: {
+      lat: { gte: minLat, lte: maxLat },
+      lng: { gte: minLng, lte: maxLng },
+    },
+  });
+
+  // 2. Map back to the { x, y } format your Python solver/frontend expects
+  const matchedLocal = dbShelters.map((s: any) => ({
+    x: s.lng,
+    y: s.lat,
+    name: s.name,
+    id: s.id,
+    address: s.address,
+    isOfficial: true,
+  }));
 
   // 2. Check Cache for OSM data
   let osmShelters: never[] = [];
@@ -168,11 +162,32 @@ app.get("/api/get-safe-route", async (req: Request, res: Response) => {
     if (!routeData.routes?.length) throw new Error("No route found");
     const points = polyline.decode(routeData.routes[0].geometry);
 
-    // B. Filter Shelters (Using local mock logic for now)
-    const osmShelters = await fetchSheltersNearPath(points);
+    // B. CALCULATE BOUNDS FOR THE CURRENT ROUTE
+    // We add a small padding (e.g., 0.01 degrees ~1km) so we don't miss nearby shelters
+    const lats = points.map((p) => p[0]);
+    const lngs = points.map((p) => p[1]);
+    const padding = 0.01;
 
-    // 2. Format Motzkin JSON shelters to match Python's expected format {x, y}
-    const officialShelters = kiryatMotzkinShelters.map((s) => ({
+    const bounds = {
+      minLat: Math.min(...lats) - padding,
+      maxLat: Math.max(...lats) + padding,
+      minLng: Math.min(...lngs) - padding,
+      maxLng: Math.max(...lngs) + padding,
+    };
+
+    // C. FETCH SHELTERS (OSM + PRISMA)
+    const [osmShelters, dbShelters] = await Promise.all([
+      fetchSheltersNearPath(points),
+      prisma.shelter.findMany({
+        where: {
+          lat: { gte: bounds.minLat, lte: bounds.maxLat },
+          lng: { gte: bounds.minLng, lte: bounds.maxLng },
+        },
+      }),
+    ]);
+
+    // D. FORMAT PRISMA SHELTERS
+    const officialShelters = dbShelters.map((s: any) => ({
       x: s.lng,
       y: s.lat,
       name: s.name,
@@ -180,7 +195,7 @@ app.get("/api/get-safe-route", async (req: Request, res: Response) => {
       isOfficial: true,
     }));
 
-    // 3. Merge them
+    // E. MERGE
     const allShelters = [...osmShelters, ...officialShelters];
 
     // C. Delegate math to Python solver
