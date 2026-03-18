@@ -237,9 +237,15 @@ const checkPythonConnection = async () => {
   }
 };
 
-app.listen(PORT, HOST, () => {
-  console.log(`🚀 Orchestrator running on http://${HOST}:${PORT}`);
+export default app;
 
-  // Trigger the connection check once the Node server is up
-  checkPythonConnection();
-});
+// Use this block ONLY for local development
+if (process.env.NODE_ENV !== "production") {
+  const PORT: number = parseInt(process.env.PORT || "4000", 10);
+  const HOST: string = process.env.HOST || "0.0.0.0";
+
+  app.listen(PORT, HOST, () => {
+    console.log(`🚀 Orchestrator running on http://${HOST}:${PORT}`);
+    checkPythonConnection();
+  });
+}

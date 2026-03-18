@@ -21,7 +21,7 @@ import { TripSearch } from "./TripSearch";
 import { useLocationState } from "../context/LocationContext";
 import StraightenIcon from "@mui/icons-material/Straighten";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder

@@ -7,18 +7,16 @@
     "logic-server"
   ],
   "scripts": {
-    "start": "concurrently \"npm run start:frontend\" \"npm run start:orchestrator\" \"npm run start:logic\"",
-    "start:frontend": "cd frontend && npm run dev",
-    "start:orchestrator": "cd orchestrator && npm run dev",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=orchestrator",
+"start": "concurrently \"npm run start:frontend\" \"npm run start:orchestrator\" \"npm run start:logic\"",
+    "start:frontend": "npm run dev --workspace=frontend",
+    "start:orchestrator": "npm run dev --workspace=orchestrator",
     "start:logic": "cd logic-server && ./venv/bin/uvicorn solver:app --reload --port 8000"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^7.3.9",
-    "@mui/material": "^7.3.9"
+
   }
 }
