@@ -2,10 +2,10 @@
 "version": 2,
 "functions": {
     "orchestrator/server.ts": {
-      "runtime": "@vercel/node@latest"
+      "runtime": "nodejs22.x"
     },
     "logic-server/solver.py": {
-      "runtime": "@vercel/python@latest"
+      "runtime": "python3.12"
     }
   },
   "rewrites": [
