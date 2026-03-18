@@ -1,17 +1,10 @@
 {
 "version": 2,
-"functions": {
-    "orchestrator/server.ts": {
-      "runtime": "nodejs22.x"
-    },
-    "logic-server/solver.py": {
-      "runtime": "python3.12"
-    }
-  },
+
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "orchestrator/server.ts" },
-    { "source": "/evaluate_route", "destination": "logic-server/solver.py" },
-    { "source": "/health", "destination": "logic-server/solver.py" },
+    { "source": "/api/(.*)", "destination": "/api/server.ts" },
+    { "source": "/evaluate_route", "destination": "/api/solver.py" },
+    { "source": "/health", "destination": "/api/solver.py" },
     { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }
