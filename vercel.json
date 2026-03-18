@@ -7,12 +7,14 @@
       "config": { "includeFiles": ["data/*.json"] }
     }
   ],
-  "functions": {
+"functions": {
     "orchestrator/server.ts": { "runtime": "@vercel/node" },
     "logic-server/solver.py": { "runtime": "@vercel/python" }
   },
-  "routes": [
-{ "src": "/api/(.*)", "dest": "orchestrator/server.ts" },
-    { "src": "/evaluate_route", "dest": "logic-server/solver.py" }
+  "rewrites": [
+    { "source": "/api/get-safe-route", "destination": "orchestrator/server.ts" },
+    { "source": "/api/shelters-in-bounds", "destination": "orchestrator/server.ts" },
+    { "source": "/evaluate_route", "destination": "logic-server/solver.py" },
+    { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
 }
