@@ -12,7 +12,7 @@
   "rewrites": [
     { "source": "/api/get-safe-route", "destination": "orchestrator/server.ts" },
     { "source": "/api/shelters-in-bounds", "destination": "orchestrator/server.ts" },
-    { "source": "/health", "dest": "logic-server/solver.py" },
+    { "source": "/health", "destination": "logic-server/solver.py" },
     { "source": "/evaluate_route", "destination": "logic-server/solver.py" },
     { "source": "/(.*)", "destination": "/frontend/$1" }
   ]
