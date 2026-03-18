@@ -1,8 +1,12 @@
 {
 "version": 2,
-  "functions": {
-    "orchestrator/server.ts": { "runtime": "@vercel/node" },
-    "logic-server/solver.py": { "runtime": "@vercel/python" }
+"functions": {
+    "orchestrator/server.ts": {
+      "runtime": "@vercel/node@latest"
+    },
+    "logic-server/solver.py": {
+      "runtime": "@vercel/python@latest"
+    }
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "orchestrator/server.ts" },
