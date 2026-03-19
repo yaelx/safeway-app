@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -11,13 +5,21 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // No 'url' here anymore!
 }
+
 model Shelter {
-  id         Int      @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   name       String
   lat        Float
   lng        Float
   address    String?
-  isOfficial Boolean  @default(true)
+  isOfficial Boolean @default(true)
+}
+
+model ShelterReport {
+  id        Int      @id @default(autoincrement())
+  shelterId Int
+  reason    String   // e.g., "wrong_location", "missing", "closed"
+  comment   String?
+  createdAt DateTime @default(now())
 }

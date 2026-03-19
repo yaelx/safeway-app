@@ -21,8 +21,6 @@ import { TripSearch } from "./TripSearch";
 import { useLocationState } from "../context/LocationContext";
 import StraightenIcon from "@mui/icons-material/Straighten";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
   iconUrl:
@@ -101,7 +99,7 @@ const ShelterDiscovery = ({
       };
 
       try {
-        const res = await fetch(`/api/shelters-in-bounds`, {
+        const res = await fetch(`/api/shelters/in-bounds`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -327,39 +325,45 @@ const ShelterMap: React.FC = () => {
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}
           />
-          {globalShelters.map((s, i) => (
-            <Marker
-              key={i}
-              position={[s.y, s.x]}
-              icon={createMuiIcon("#0288d1")}
-            >
-              <Popup>
-                <div style={{ textAlign: "left", minWidth: "150px" }}>
-                  <h3 style={{ margin: "0 0 5px 0", color: "#0066cc" }}>
-                    {`מקלט מס׳: ${s.id} ${s.name !== "ריק" ? s.name : ""} `}
-                  </h3>
-                  <hr
-                    style={{
-                      margin: "8px 0",
-                      border: "0",
-                      borderTop: "1px solid #eee",
-                    }}
-                  />
-                  {s.address && (
-                    <span>
-                      {s.address}
-                      <br />
-                    </span>
-                  )}
-                  <small>
-                    {s.isOfficial
-                      ? "✅ Verified Shelter"
-                      : "📍 Community Mapped"}
-                  </small>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          {globalShelters.map((s, i) => {
+            if (s.lat === undefined || s.lng === undefined) {
+              console.warn("Skipping malformed shelter:", s);
+              return null;
+            }
+            return (
+              <Marker
+                key={i}
+                position={[s.lat, s.lng]}
+                icon={createMuiIcon("#0288d1")}
+              >
+                <Popup>
+                  <div style={{ textAlign: "left", minWidth: "150px" }}>
+                    <h3 style={{ margin: "0 0 5px 0", color: "#0066cc" }}>
+                      {`מקלט מס׳: ${s.id} ${s.name !== "ריק" ? s.name : ""} `}
+                    </h3>
+                    <hr
+                      style={{
+                        margin: "8px 0",
+                        border: "0",
+                        borderTop: "1px solid #eee",
+                      }}
+                    />
+                    {s.address && (
+                      <span>
+                        {s.address}
+                        <br />
+                      </span>
+                    )}
+                    <small>
+                      {s.isOfficial
+                        ? "✅ Verified Shelter"
+                        : "📍 Community Mapped"}
+                    </small>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
         </MapContainer>
       </div>
     </div>
