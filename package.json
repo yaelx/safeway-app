@@ -9,7 +9,7 @@
     "orchestrator"
   ],
   "scripts": {
-    "build": "npm run build --workspace=frontend",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=orchestrator",
     "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=orchestrator\""
   },
   "devDependencies": {
