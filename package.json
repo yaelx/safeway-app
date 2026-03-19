@@ -1,5 +1,8 @@
 {
   "name": "safeway-app",
+  "engines": {
+  "node": "22.x"
+},
   "private": true,
   "workspaces": [
     "frontend",

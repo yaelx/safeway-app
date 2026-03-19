@@ -1,7 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "orchestrator/server.ts": { "runtime": "nodejs22.x" }
+    "orchestrator/server.ts": { "runtime": "nodejs22.x", "memory": 1024 }
   },
   "rewrites": [
     { 
@@ -10,7 +10,7 @@
     },
     { 
       "source": "/(.*)", 
-      "destination": "/frontend/$1" 
+      "destination": "/dist/$1" 
     }
   ]
 }
