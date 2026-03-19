@@ -23,7 +23,7 @@ export async function fetchSheltersNearPath(points: [number, number][]) {
   out center;`;
 
   try {
-    console.log("Fetching real shelters from OSM...");
+    console.log("Fetching near path shelters from OSM...");
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
     const response = await axios.get(url);
 

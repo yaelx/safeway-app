@@ -1,25 +1,16 @@
 /// <reference path="../types/govmap.d.ts" />
-import React, { useState, useCallback, useEffect } from "react";
-import polyline from "@mapbox/polyline";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMapEvents,
-  useMap,
-  Circle,
-  Polyline,
-} from "react-leaflet";
-import L, { LatLng } from "leaflet";
+import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, useMapEvents, useMap } from "react-leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/leaflet.css";
-import { useGovMapLoader } from "../hooks/useGovMapLoader";
-import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
-import { renderToStaticMarkup } from "react-dom/server";
 import { TripSearch } from "./TripSearch";
 import { useLocationState } from "../context/LocationContext";
-import StraightenIcon from "@mui/icons-material/Straighten";
+import { useRouting } from "../hooks/useRouting";
+import { SafeRoute } from "./SafeRoute";
+import { UserMarker } from "./UserMarker";
+import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
+import { TileLayerUrl } from "../config/constants";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -32,22 +23,6 @@ const DefaultIcon = L.icon({
   popupAnchor: [1, -34],
 });
 
-const createMuiIcon = (color: string) => {
-  const iconHTML = renderToStaticMarkup(
-    <HealthAndSafetyIcon
-      color="primary"
-      style={{ color: color, fontSize: "30px" }}
-    />,
-  );
-
-  return L.divIcon({
-    html: `<div style="display: flex; justify-content: center; align-items: center;">${iconHTML}</div>`,
-    className: "custom-mui-icon", // Clear default leaflet styles
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-  });
-};
-
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Create the custom pulsing icon
@@ -57,8 +32,6 @@ const userIcon = L.divIcon({
   iconSize: [12, 12],
   iconAnchor: [6, 6],
 });
-
-const API_TOKEN = "YOUR_API_TOKEN";
 
 interface DiscoveryProps {
   onSheltersFetched: (s: any[]) => void;
@@ -151,50 +124,14 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  // 1. Initialize the Loader Guard
-  const { isLoaded, error: loaderError } = useGovMapLoader(API_TOKEN);
-  const { startLocation, endLocation } = useLocationState();
+  const { routeData, decodedPath, loading, planTrip } = useRouting();
   const { coordinates, locate } = useLocationState();
-  const [routeData, setRouteData] = useState<any>(null);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [decodedPath, setDecodedPath] = useState<[number, number][]>([]); // Stores the coordinates
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
-
-  // 1. The New API Caller
-  const handlePlanTrip = async (start: string, end: string) => {
-    setSearchLoading(true);
-    try {
-      // Calling your new Node Orchestrator
-      const response = await fetch(
-        `/api/get-safe-route?start=${start}&end=${end}`,
-      );
-      const data = await response.json();
-
-      console.log("Backend Verified:", data);
-
-      if (data.routeGeometry) {
-        const decoded = polyline.decode(data.routeGeometry);
-        console.log("Decoded Path:", decoded);
-        setDecodedPath(decoded);
-        setRouteData(data);
-      }
-    } catch (err) {
-      console.error("Safety Analysis Failed:", err);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  // UI States for Loading/Errors
-  if (loaderError)
-    return (
-      <div className="p-4 bg-red-100 text-red-700">Error: {loaderError}</div>
-    );
-  if (!isLoaded) return <div className="p-4">Loading Mapping SDK...</div>;
+  const { startLocation, endLocation } = useLocationState();
 
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
-      <TripSearch onPlanTrip={handlePlanTrip} loading={searchLoading} />
+      <TripSearch onPlanTrip={planTrip} loading={loading} />
 
       <div style={{ height: "100vh", width: "100%", position: "relative" }}>
         <MapContainer
@@ -203,167 +140,19 @@ const ShelterMap: React.FC = () => {
           style={{ height: "100%", width: "100%" }}
           zoomControl={false}
         >
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {/* Helper to fly the map to the coordinates */}
+          <TileLayer url={TileLayerUrl} />
           <MapRecenter location={coordinates} />
-
-          {/* 2. Fly the camera to the new route */}
           <MapController points={decodedPath} />
-
-          {/* <MapEventsHandler /> */}
-
-          {/* 2. Draw the Route Geometry from the Backend */}
-          {decodedPath.length > 0 && (
-            <Polyline
-              positions={decodedPath}
-              pathOptions={{
-                color:
-                  routeData.summary.safetyScore > 10 ? "#2ecc71" : "#f39c12",
-                weight: 4,
-              }}
-            >
-              <Popup>
-                <div
-                  style={{
-                    minWidth: "200px",
-                    direction: "rtl",
-                    textAlign: "right",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: "0 0 10px 0",
-                      borderBottom: "1px solid #ccc",
-                    }}
-                  >
-                    סיכום מסלול בטוח 🛡️
-                  </h3>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <StraightenIcon
-                      style={{ marginLeft: "8px", color: "#666" }}
-                    />
-                    <span>
-                      מרחק כולל:{" "}
-                      <strong>
-                        {(routeData.summary.distance / 1000).toFixed(2)}
-                        {routeData.summary.unit}
-                      </strong>
-                    </span>
-                  </div>
-
-                  {/* Number of Shelters found along the route */}
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <HealthAndSafetyIcon
-                      style={{ marginLeft: "8px", color: "#2e7d32" }}
-                    />
-                    <span>
-                      מקלט זמינים בדרך:{" "}
-                      <strong>
-                        {routeData.safetyReport.filter((p: any) => p.s).length}
-                      </strong>
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <HealthAndSafetyIcon
-                      style={{ marginLeft: "8px", color: "#2e7d32" }}
-                    />
-                    <span>
-                      ציון בטיחות:{" "}
-                      <strong>
-                        {routeData.summary.safetyScore.toFixed(2)}
-                      </strong>
-                    </span>
-                  </div>
-                </div>
-              </Popup>
-            </Polyline>
-          )}
-
-          {/* User Location Marker */}
-          {coordinates && (
-            <>
-              <Circle
-                center={coordinates}
-                radius={5000}
-                pathOptions={{
-                  color: "#4285F4",
-                  fillColor: "#4285F4",
-                  fillOpacity: 0.2,
-                  weight: 2,
-                  dashArray: "5, 5", // Makes the border dashed for a "searching" look
-                }}
-              />
-              <Marker position={coordinates} icon={userIcon}>
-                <Popup>You are here</Popup>
-              </Marker>
-            </>
-          )}
-
-          {/* 3. Draw Shelters used in the specific safety calculation */}
-          {routeData?.safetyReport?.map(
-            (point: any, i: number) =>
-              // Only show markers for points that the Python brain flagged as "Safe"
-              point.s && (
-                <Marker
-                  key={`point-${i}`}
-                  position={point.p} // point.p should be [lat, lng]
-                  icon={DefaultIcon}
-                >
-                  <Popup>Distance: {point.d.toFixed(1)}m</Popup>
-                </Marker>
-              ),
-          )}
-
+          {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
+          <SafeRoute routeData={routeData} path={decodedPath} />
           <ShelterDiscovery
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}
           />
-          {globalShelters.map((s, i) => {
-            if (s.lat === undefined || s.lng === undefined) {
-              console.warn("Skipping malformed shelter:", s);
-              return null;
-            }
-            return (
-              <Marker
-                key={i}
-                position={[s.lat, s.lng]}
-                icon={createMuiIcon("#0288d1")}
-              >
-                <Popup>
-                  <div style={{ textAlign: "left", minWidth: "150px" }}>
-                    <h3 style={{ margin: "0 0 5px 0", color: "#0066cc" }}>
-                      {`מקלט מס׳: ${s.id} ${s.name !== "ריק" ? s.name : ""} `}
-                    </h3>
-                    <hr
-                      style={{
-                        margin: "8px 0",
-                        border: "0",
-                        borderTop: "1px solid #eee",
-                      }}
-                    />
-                    {s.address && (
-                      <span>
-                        {s.address}
-                        <br />
-                      </span>
-                    )}
-                    <small>
-                      {s.isOfficial
-                        ? "✅ Verified Shelter"
-                        : "📍 Community Mapped"}
-                    </small>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+
+          {globalShelters.map((s, i) => (
+            <UnifiedShelterMarker key={i} shelter={s} />
+          ))}
         </MapContainer>
       </div>
     </div>

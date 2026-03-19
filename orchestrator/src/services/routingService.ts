@@ -10,7 +10,9 @@ export class RoutingService {
 
   async getSafeRoute(start: string, end: string) {
     // A. Fetch Route from OSRM
+    // routeUrl = `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=polyline`;
     const routeUrl = `${API_PATHS.OSRM_ROUTE}${start};${end}?overview=full&geometries=polyline`;
+    console.log("Calling OSRM with points:", routeUrl);
     const routeRes = await axios.get(routeUrl);
     const routeData = routeRes.data;
 
@@ -52,6 +54,9 @@ export class RoutingService {
         isOfficial: true,
       })),
     ];
+
+    console.log("Calling Python Solver at:", process.env.LOGIC_SERVER_URL);
+    console.log("Calling OSRM with points: start:", start, "end:", end);
 
     // E. Use the new Client for the Python Solver call
     const safetyData = await logicServerClient.evaluateRoute(

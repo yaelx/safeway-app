@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 export const SHELTER_TYPES = {
   BOMB_SHELTER: "bomb_shelter",
   PUBLIC: "Public Shelter",

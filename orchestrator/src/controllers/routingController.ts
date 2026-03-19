@@ -12,9 +12,6 @@ export class RoutingController {
     }
 
     try {
-      console.log("Calling Python Solver at:", process.env.LOGIC_SERVER_URL);
-      console.log("Calling OSRM with points:", start, end);
-
       const result = await this.routingService.getSafeRoute(
         start as string,
         end as string,
@@ -22,7 +19,7 @@ export class RoutingController {
 
       return res.status(200).json(result);
     } catch (error: any) {
-      console.error("Error evaluating route:", error.message);
+      console.error("Error evaluating route:", error);
       return res.status(500).json({ error: error.message });
     }
   }
