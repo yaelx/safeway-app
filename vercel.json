@@ -6,7 +6,7 @@
       "destination": "/orchestrator/server.ts"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/frontend/dist/$1"
     }
   ]

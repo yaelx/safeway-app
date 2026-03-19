@@ -100,11 +100,8 @@ const ShelterDiscovery = ({
         maxLng: bounds.getNorthEast().lng,
       };
 
-      const API_URL =
-        (import.meta as any).env.VITE_API_URL || "http://localhost:4000";
-
       try {
-        const res = await fetch(`${API_URL}/api/shelters-in-bounds`, {
+        const res = await fetch(`/api/shelters-in-bounds`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -171,7 +168,7 @@ const ShelterMap: React.FC = () => {
     try {
       // Calling your new Node Orchestrator
       const response = await fetch(
-        `${API_BASE_URL}/api/get-safe-route?start=${start}&end=${end}`,
+        `/api/get-safe-route?start=${start}&end=${end}`,
       );
       const data = await response.json();
 
