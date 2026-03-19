@@ -1,18 +1,18 @@
 {
   "version": 2,
-  "builds": [
+  "functions": {
+    "orchestrator/server.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "rewrites": [
     {
-      "src": "orchestrator/server.ts",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/orchestrator/server.ts"
     },
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "frontend/dist" }
+      "source": "/(.*)",
+      "destination": "/frontend/dist/$1"
     }
-  ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "orchestrator/server.ts" },
-    { "source": "/(.*)", "destination": "/$1" }
   ]
 }

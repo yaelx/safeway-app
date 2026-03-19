@@ -8,10 +8,8 @@
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
-    "start": "ts-node server.ts",
-    "build": "prisma generate && tsc",
-    "install": "npm install",
-    "postinstall": "prisma generate"
+    "start": "node dist/server.js",
+    "build": "prisma generate"
   },
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",
