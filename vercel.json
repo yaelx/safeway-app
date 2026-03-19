@@ -1,16 +1,18 @@
 {
   "version": 2,
-  "functions": {
-    "orchestrator/server.ts": { "runtime": "nodejs22.x", "memory": 1024 }
-  },
-  "rewrites": [
-    { 
-      "source": "/api/(.*)", 
-      "destination": "orchestrator/server.ts" 
+  "builds": [
+    {
+      "src": "orchestrator/server.ts",
+      "use": "@vercel/node"
     },
-    { 
-      "source": "/(.*)", 
-      "destination": "/dist/$1" 
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "frontend/dist" }
     }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "orchestrator/server.ts" },
+    { "source": "/(.*)", "destination": "/$1" }
   ]
 }

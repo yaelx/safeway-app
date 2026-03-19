@@ -6,15 +6,10 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "orchestrator",
-    "logic-server"
+    "orchestrator"
   ],
   "scripts": {
-    "build": "npm run build --workspace=frontend && npm run build --workspace=orchestrator",
-    "start": "concurrently \"npm run start:frontend\" \"npm run start:orchestrator\" \"npm run start:logic\"",
-    "start:frontend": "npm run dev --workspace=frontend",
-    "start:orchestrator": "npm run dev --workspace=orchestrator",
-    "start:logic": "cd logic-server && ./venv/bin/uvicorn solver:app --reload --port 8000"
+    "build": "npm run build --workspace=frontend && npm run build --workspace=orchestrator"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
