@@ -9,7 +9,7 @@
     "orchestrator"
   ],
   "scripts": {
-    "build": "npm run build --workspace=frontend && npm run build --workspace=orchestrator"
+    "build": "npm run build --workspace=frontend && cd orchestrator && npx prisma generate"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
