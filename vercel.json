@@ -1,10 +1,16 @@
 {
-"version": 2,
-
+  "version": 2,
+  "functions": {
+    "orchestrator/server.ts": { "runtime": "nodejs22.x" }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/server.ts" },
-    { "source": "/evaluate_route", "destination": "/api/solver.py" },
-    { "source": "/health", "destination": "/api/solver.py" },
-    { "source": "/(.*)", "destination": "/frontend/$1" }
+    { 
+      "source": "/api/(.*)", 
+      "destination": "orchestrator/server.ts" 
+    },
+    { 
+      "source": "/(.*)", 
+      "destination": "/frontend/$1" 
+    }
   ]
 }

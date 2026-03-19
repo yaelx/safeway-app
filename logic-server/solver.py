@@ -2,8 +2,20 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import numpy as np
+import os
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Header, HTTPException
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, replace with your specific Node Vercel URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Shelter(BaseModel):
     x: float  # lng
@@ -48,8 +60,11 @@ def vectorized_haversine(route_pts: np.ndarray, shelter_pts: np.ndarray) -> np.n
     return EARTH_RADIUS_KM * c
 
 @app.post("/evaluate_route")
-def evaluate_route(req: SafetyRequest) -> Dict[str, Any]:
+def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)) -> Dict[str, Any]:
     print(f"--- SOLVER CALLED | Points: {len(req.routePoints)} | Shelters: {len(req.shelterData)} ---")
+
+    if x_internal_token != os.getenv("INTERNAL_SECRET_TOKEN"):
+        raise HTTPException(status_code=403, detail="Unauthorized")
     
     if not req.routePoints or not req.shelterData:
         return {"safetyScore": 0.0, "safetyReport": []}

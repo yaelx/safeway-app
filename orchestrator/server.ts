@@ -205,6 +205,9 @@ app.get("/api/get-safe-route", async (req: Request, res: Response) => {
         routePoints: points,
         shelterData: allShelters,
       },
+      {
+        headers: { "X-Internal-Token": process.env.INTERNAL_SECRET_TOKEN },
+      },
     );
 
     const safetyData = pythonRes.data;
