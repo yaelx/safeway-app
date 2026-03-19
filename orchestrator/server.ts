@@ -37,6 +37,8 @@ async function fetchSheltersNearPath(points: [number, number][]) {
     node["amenity"="shelter"](${minLat},${minLng},${maxLat},${maxLng});
     way["amenity"="shelter"](${minLat},${minLng},${maxLat},${maxLng});
     node["defensive_facility"="shelter"](${minLat},${minLng},${maxLat},${maxLng});
+    node["shelter_type"="bomb_shelter"](${minLat},${minLng},${maxLat},${maxLng});
+    way["shelter_type"="bomb_shelter"](${minLat},${minLng},${maxLat},${maxLng});
   );
   out center;`;
 
@@ -49,7 +51,10 @@ async function fetchSheltersNearPath(points: [number, number][]) {
     const shelters = response.data.elements.map((el: any) => ({
       x: el.lon || el.center.lon,
       y: el.lat || el.center.lat,
-      attributes: { שם_מקלט: el.tags.name || "Public Shelter" },
+      name: el.tags.name || "Public Shelter",
+      isOfficial: false,
+      address: el.tags.address || "",
+      id: el.id,
     }));
 
     console.log(`Found ${shelters.length} shelters via OSM.`);
@@ -162,6 +167,9 @@ app.get("/api/get-safe-route", async (req: Request, res: Response) => {
     if (!routeData.routes?.length) throw new Error("No route found");
     const points = polyline.decode(routeData.routes[0].geometry);
 
+    if (!points.length)
+      throw new Error("No route points were found- failed to calculate route");
+
     // B. CALCULATE BOUNDS FOR THE CURRENT ROUTE
     // We add a small padding (e.g., 0.01 degrees ~1km) so we don't miss nearby shelters
     const lats = points.map((p) => p[0]);
@@ -185,6 +193,11 @@ app.get("/api/get-safe-route", async (req: Request, res: Response) => {
         },
       }),
     ]);
+
+    console.log("num OSM Shelters:", osmShelters.length);
+    console.log("num DB Shelters:", dbShelters.length);
+
+    console.log(osmShelters[0]);
 
     // D. FORMAT PRISMA SHELTERS
     const officialShelters = dbShelters.map((s: any) => ({

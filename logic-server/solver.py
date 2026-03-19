@@ -114,8 +114,8 @@ def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)) -> 
     return {"safetyScore": round(score, 2), "safetyReport": report}
 
 # Health check endpoint
-@app.get("/")
-def read_root():
+@app.post("/")
+async def read_root(data: dict):
     return {"status": "ok", "service": "SafeWay Logic Solver"}
 
 @app.get("/health")

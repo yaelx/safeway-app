@@ -1,6 +1,15 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "solver.py" }
+  "builds": [
+    {
+      "src": "solver.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "solver.py"
+    }
   ]
 }
