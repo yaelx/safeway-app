@@ -20,6 +20,8 @@ app.add_middleware(
 class Shelter(BaseModel):
     x: float  # lng
     y: float  # lat
+    # Add this to allow any extra fields (id, name, address, isOfficial)
+    model_config = {"extra": "allow"}
 
 class SafetyRequest(BaseModel):
     routePoints: List[List[float]]  # list of [lat, lng]
@@ -93,24 +95,29 @@ def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)) -> 
             "safetyReport": [{"p": p.tolist(), "d": 9999.0, "s": False} for p in sampled_route]
         }
 
-    # 3. Vectorized Math
+# 3. Vectorized Math
     distances_km = vectorized_haversine(sampled_route, shelter_arr)
+    # Get the INDEX of the closest shelter for every route point
+    closest_shelter_indices = np.argmin(distances_km, axis=1)
     min_dist_km = np.min(distances_km, axis=1)
     
-    # Check against 250m (0.25km)
-    is_safe = min_dist_km <= 0.250
+    is_safe = min_dist_km <= 0.250 # 250m threshold
     score = (np.sum(is_safe) / len(sampled_route)) * 100.0
-
-    # 4. JSON-Safe Report
+    
+    # 4. JSON-Safe Report with Metadata Preservation
     report = []
     for i in range(len(sampled_route)):
+        # Find the actual shelter object that was closest to this point
+        closest_shelter = req.shelterData[closest_shelter_indices[i]]
+        
         report.append({
             "p": sampled_route[i].tolist(),
             "d": float(min_dist_km[i] * 1000),
-            "s": bool(is_safe[i])
+            "s": bool(is_safe[i]),
+            # Merge the original shelter data back into the report point
+            "shelter": closest_shelter.dict() 
         })
 
-    print(f"DEBUG: Final Score: {score}%")
     return {"safetyScore": round(score, 2), "safetyReport": report}
 
 # Health check endpoint

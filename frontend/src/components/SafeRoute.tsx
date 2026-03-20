@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import FlagIcon from "@mui/icons-material/FlagRounded";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import { COLORS } from "../config/constants";
+import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
 
 // Helper to create trip-specific MUI icons
 const createTripIcon = (Component: React.ElementType, color: string) => {
@@ -59,15 +60,17 @@ export const SafeRoute = ({
         </Popup>
       </Marker>
       {routeData.safetyReport
-        .filter((p: any) => p.s)
+        .filter((point: any) => point.s === true)
         .map((point: any, i: number) => (
-          <Marker key={`safe-${i}`} position={point.p}>
-            <Popup>
-              Shelter: {point.shelterName}
-              <br />
-              Dist: {point.d.toFixed(0)}m
-            </Popup>
-          </Marker>
+          <UnifiedShelterMarker
+            key={`route-safe-${i}`}
+            shelter={{
+              ...point,
+              lat: point.lat ?? point.p[0],
+              lng: point.lng ?? point.p[1],
+            }}
+            isRoutePoint={true}
+          />
         ))}
     </>
   );

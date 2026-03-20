@@ -44,18 +44,26 @@ export class RoutingService {
       }),
     ]);
 
+    // E. Ensure OSM shelters also have x/y before merging
+    const osmFormatted = osmShelters.map((s: any) => ({
+      ...s,
+      x: s.lng || s.x,
+      y: s.lat || s.y,
+    }));
+
     // D. Merge and Format
     const allShelters = [
-      ...osmShelters,
+      ...osmFormatted,
       ...dbShelters.map((s) => ({
-        x: s.lng,
-        y: s.lat,
+        id: s.id, // Preserve ID
+        x: s.lng, // Python expects 'x' for lng
+        y: s.lat, // Python expects 'y' for lat
         name: s.name,
+        address: s.address,
         isOfficial: true,
       })),
     ];
 
-    console.log("Calling Python Solver at:", process.env.LOGIC_SERVER_URL);
     console.log("Calling OSRM with points: start:", start, "end:", end);
 
     // E. Use the new Client for the Python Solver call
@@ -68,7 +76,7 @@ export class RoutingService {
     const safeSheltersCount = new Set(
       safetyData.safetyReport
         .filter((p: any) => p.s === true)
-        .map((p: any) => p.shelterName),
+        .map((p: any) => p.name),
     ).size;
 
     return {
