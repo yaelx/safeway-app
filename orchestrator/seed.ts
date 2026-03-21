@@ -1,14 +1,71 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
+import csv from "csv-parser";
+import fs from "fs";
 import dotenv from "dotenv";
-import shelters from "./kiryatMotzkinShelters.json";
+import { NormalizedShelter, RawShelter } from "./src/types/types";
 
 dotenv.config();
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool as any);
 const prisma = new PrismaClient({ adapter });
+
+export const normalizeShelter = (city: string) => {
+  return function normalizer(s: RawShelter): NormalizedShelter {
+    return {
+      name: s.name || "לא ידוע",
+      address: s.address ?? null,
+      lat: Number(s.lat),
+      lng: Number(s.lng),
+      type: s.type || "OTHER",
+      city: city,
+    };
+  };
+};
+
+export function loadJSON(filePath: string): RawShelter[] {
+  const raw = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(raw);
+}
+
+export function loadCSV(filePath: string): Promise<RawShelter[]> {
+  return new Promise((resolve, reject) => {
+    const results: RawShelter[] = [];
+
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on("data", (data) => {
+        results.push({
+          name: data.name,
+          address: data.address,
+          lat: data.lat,
+          lng: data.lng,
+          type: data.type,
+        });
+      })
+      .on("end", () => resolve(results))
+      .on("error", reject);
+  });
+}
+
+export async function insertShelters(
+  prisma: PrismaClient,
+  shelters: NormalizedShelter[],
+) {
+  await prisma.shelter.createMany({
+    data: shelters.map((s) => ({
+      name: s.name,
+      lat: s.lat,
+      lng: s.lng,
+      address: s.address,
+      type: s.type,
+      isOfficial: true,
+      city: s.city,
+    })),
+  });
+}
 
 async function main() {
   console.log("🌱 Seeding database...");
@@ -19,18 +76,30 @@ async function main() {
   // Clear existing data to avoid duplicates during testing
   await prisma.shelter.deleteMany({});
 
-  for (const s of shelters) {
-    await prisma.shelter.create({
-      data: {
-        name: s.name,
-        lat: parseFloat(s.lat.toString()), // Ensure they are numbers
-        lng: parseFloat(s.lng.toString()),
-        address: s.address,
-        isOfficial: true,
-      },
-    });
+  let rawData;
+
+  // 👇 רק כאן מחליטים לפי סוג קובץ
+  const sheltersFiles = {
+    Haifa: "./src/data/Haifa_shelters.csv",
+    "kiryat-Motzkin": "./src/data/KiryatMotzkin_shelters.json",
+    "kiryat-Bialik": "./src/data/KiryatBialik_shelters.csv",
+  };
+
+  for (const [city, filePath] of Object.entries(sheltersFiles)) {
+    if (filePath.endsWith(".json")) {
+      rawData = loadJSON(filePath);
+    } else if (filePath.endsWith(".csv")) {
+      rawData = await loadCSV(filePath);
+    } else {
+      throw new Error("Unsupported file type");
+    }
+
+    const normalizer = normalizeShelter(city);
+    const normalized = rawData.map(normalizer);
+    await insertShelters(prisma, normalized);
   }
-  console.log("✅ Seed complete!");
+
+  console.log("✅ Done!");
 }
 
 main()

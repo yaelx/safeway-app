@@ -13,7 +13,9 @@ model Shelter {
   lat        Float
   lng        Float
   address    String?
+  type       String?
   isOfficial Boolean @default(true)
+  city       String?
 }
 
 model ShelterReport {
@@ -22,4 +24,5 @@ model ShelterReport {
   reason    String   // e.g., "wrong_location", "missing", "closed"
   comment   String?
   createdAt DateTime @default(now())
+  city      String?
 }
