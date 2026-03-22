@@ -16,6 +16,8 @@ model Shelter {
   type       String?
   isOfficial Boolean @default(true)
   city       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model ShelterReport {

@@ -18,9 +18,15 @@ export const COLORS = {
 };
 
 export const SHELTER_COLORS = {
-  OFFICIAL: "#0288d1", // Deep Blue for Prisma DB
+  OFFICIAL: "#1976d2", // Deep Blue for Prisma DB
   COMMUNITY: "#7b1fa2", // Purple for OSM/Community
   ROUTE_SAFE: "#2e7d32", // Green for Python-verified points
+  PUBLIC_SHELTER: "#1976d2",
+  SCHOOL: "#e06819ff",
+  PARKING: "#83da1f85",
+  PROTECTED_SPACE: "#f54de1ff",
+  CARMELIT: "#120fdeff",
+  default: "#757575", // Grey for unknown types
 };
 
 export const TileLayerUrl =

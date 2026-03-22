@@ -5,13 +5,29 @@ import { renderToStaticMarkup } from "react-dom/server";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import { SHELTER_COLORS } from "../config/constants";
 
-// Helper to create the MUI icon
+const getShelterColor = (shelterType: string | undefined) => {
+  return typeof shelterType === "string"
+    ? SHELTER_COLORS[shelterType as keyof typeof SHELTER_COLORS]
+    : SHELTER_COLORS["default"];
+};
+
 const createMuiIcon = (color: string) => {
+  // Select color based on type, fallback to default
+
   const iconHTML = renderToStaticMarkup(
-    <HealthAndSafetyIcon style={{ color: color, fontSize: "30px" }} />,
+    <HealthAndSafetyIcon style={{ fontSize: "30px" }} />,
   );
+
   return L.divIcon({
-    html: `<div style="display: flex; justify-content: center;">${iconHTML}</div>`,
+    html: `
+      <div style="
+        display: flex; 
+        justify-content: center; 
+        color: ${color}; 
+        fill: ${color};
+      ">
+        ${iconHTML}
+      </div>`,
     className: "custom-mui-icon",
     iconSize: [30, 30],
     iconAnchor: [15, 15],
@@ -27,6 +43,7 @@ interface UnifiedShelterProps {
     name?: string;
     address?: string;
     isOfficial?: boolean;
+    type?: string;
   };
   isRoutePoint?: boolean;
 }
@@ -39,11 +56,7 @@ export const UnifiedShelterMarker: React.FC<UnifiedShelterProps> = ({
 
   // 2. Guard Clause: Skip if data is corrupted
   if (shelter.lat === undefined || shelter.lng === undefined) return null;
-
-  // 3. Determine Color based on Source
-  let markerColor = SHELTER_COLORS.COMMUNITY;
-  if (isRoutePoint) markerColor = SHELTER_COLORS.ROUTE_SAFE;
-  else if (shelter.isOfficial) markerColor = SHELTER_COLORS.OFFICIAL;
+  const markerColor = getShelterColor(shelter.type);
 
   return (
     <Marker
