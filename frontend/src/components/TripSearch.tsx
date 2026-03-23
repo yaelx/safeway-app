@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocationState } from "../context/LocationContext";
 import { useAddressSearch } from "../hooks/useAddressSearch";
-import {
-  FmdGood,
-  MyLocation,
-  Navigation,
-  RadioButtonChecked,
-} from "@mui/icons-material";
+import { useRecentSearches } from "../hooks/useRecentSearches";
 
 interface TripSearchProps {
   onPlanTrip: (start: string, end: string) => void;
@@ -28,6 +23,19 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   // Use the custom hook for both inputs
   const fromSearch = useAddressSearch();
   const toSearch = useAddressSearch();
+  const { recentSearches, saveRecent } = useRecentSearches();
+  const [showRecent, setShowRecent] = useState(false);
+
+  const selectDestination = (r: any) => {
+    const loc = {
+      coords: { lat: parseFloat(r.lat), lng: parseFloat(r.lon) },
+      address: r.display_name,
+    };
+    setEndLocation(loc);
+    toSearch.selectAddress(r.display_name);
+    saveRecent(loc);
+    setShowRecent(false);
+  };
 
   const handleStartPlan = () => {
     if (startLocation && endLocation) {
@@ -150,6 +158,8 @@ export const TripSearch: React.FC<TripSearchProps> = ({
           placeholder="Destination..."
           value={toSearch.query}
           onChange={(e) => toSearch.setQuery(e.target.value)}
+          onFocus={() => setShowRecent(true)}
+          onBlur={() => setTimeout(() => setShowRecent(false), 200)}
           style={{
             width: "100%",
             paddingRight: "30px",
@@ -173,20 +183,32 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             ✕
           </button>
         )}
+        {/* Show recents if query is empty and we have saved data */}
+        {!toSearch.query && showRecent && recentSearches.length > 0 && (
+          <ul className="results-dropdown recent-list">
+            <li className="dropdown-header">RECENT DESTINATIONS</li>
+            {recentSearches.map((res, idx) => (
+              <li
+                key={idx}
+                onClick={() => {
+                  setEndLocation(res);
+                  toSearch.selectAddress(res.address);
+                  setShowRecent(false);
+                }}
+              >
+                🕒 {res.address}
+              </li>
+            ))}
+          </ul>
+        )}
+
         {toSearch.results.length > 0 && (
           <ul className="results-dropdown">
             {toSearch.results.map((r) => (
               <li
                 key={r.place_id}
                 onClick={() => {
-                  setEndLocation({
-                    coords: {
-                      lat: parseFloat(r.lat),
-                      lng: parseFloat(r.lon),
-                    },
-                    address: r.display_name,
-                  });
-                  toSearch.selectAddress(r.display_name);
+                  selectDestination(r);
                 }}
               >
                 {r.display_name}
@@ -214,81 +236,4 @@ export const TripSearch: React.FC<TripSearchProps> = ({
       </button>
     </div>
   );
-  // return (
-  //   <div className="trip-search-card">
-  //     <h3>🛡️ SafeWay Navigator</h3>
-
-  //     {/* From Input */}
-  //     <div className="input-group">
-  //       {/* START LOCATION INPUT */}
-  //       <div className="input-group">
-  //         <input
-  //           placeholder="From..."
-  //           value={fromSearch.query}
-  //           onChange={(e) => fromSearch.setQuery(e.target.value)}
-  //         />
-  //         <button onClick={handleLocateMe} className="small-locate-btn">
-  //           🎯
-  //         </button>
-  //         {fromSearch.results.length > 0 && (
-  //           <ul className="results-dropdown">
-  //             {fromSearch.results.map((r) => (
-  //               <li
-  //                 key={r.place_id}
-  //                 onClick={() => {
-  //                   setStartLocation({
-  //                     coords: {
-  //                       lat: parseFloat(r.lat),
-  //                       lng: parseFloat(r.lon),
-  //                     },
-  //                     address: r.display_name,
-  //                   });
-  //                   fromSearch.selectAddress(r.display_name);
-  //                 }}
-  //               >
-  //                 {r.display_name}
-  //               </li>
-  //             ))}
-  //           </ul>
-  //         )}
-  //       </div>
-  //       {/* END LOCATION INPUT */}
-  //       <div className="input-group">
-  //         <input
-  //           placeholder="To..."
-  //           value={toSearch.query}
-  //           onChange={(e) => toSearch.setQuery(e.target.value)}
-  //         />
-  //         {toSearch.results.length > 0 && (
-  //           <ul className="results-dropdown">
-  //             {toSearch.results.map((r) => (
-  //               <li
-  //                 key={r.place_id}
-  //                 onClick={() => {
-  //                   setEndLocation({
-  //                     coords: {
-  //                       lat: parseFloat(r.lat),
-  //                       lng: parseFloat(r.lon),
-  //                     },
-  //                     address: r.display_name,
-  //                   });
-  //                   toSearch.selectAddress(r.display_name);
-  //                 }}
-  //               >
-  //                 {r.display_name}
-  //               </li>
-  //             ))}
-  //           </ul>
-  //         )}
-  //       </div>
-
-  //       <button
-  //         onClick={handleStartPlan}
-  //         disabled={loading || !startLocation || !endLocation}
-  //       >
-  //         {loading ? "Analyzing..." : "Plan Safe Route"}
-  //       </button>
-  //     </div>
-  //   </div>
-  // );
 };
