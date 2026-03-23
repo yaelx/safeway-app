@@ -16,8 +16,11 @@ model Shelter {
   type       String?
   isOfficial Boolean @default(true)
   city       String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([lat, lng], name: "lat_lng") 
+  @@map("shelters")
 }
 
 model ShelterReport {
@@ -25,6 +28,8 @@ model ShelterReport {
   shelterId Int
   reason    String   // e.g., "wrong_location", "missing", "closed"
   comment   String?
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
   city      String?
+
+  @@map("shelter_reports")
 }

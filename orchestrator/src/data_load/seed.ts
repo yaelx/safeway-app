@@ -4,7 +4,7 @@ import pg from "pg";
 import csv from "csv-parser";
 import fs from "fs";
 import dotenv from "dotenv";
-import { NormalizedShelter, RawShelter } from "./src/types/types";
+import { NormalizedShelter, RawShelter } from "../types/types";
 
 dotenv.config();
 
@@ -17,8 +17,8 @@ export const normalizeShelter = (city: string) => {
     return {
       name: s.name || "לא ידוע",
       address: s.address ?? null,
-      lat: Number(s.lat),
-      lng: Number(s.lng),
+      lat: parseFloat(Number(s.lat).toFixed(6)),
+      lng: parseFloat(Number(s.lng).toFixed(6)),
       type: s.type || "OTHER",
       city: city,
     };
@@ -54,17 +54,33 @@ export async function insertShelters(
   prisma: PrismaClient,
   shelters: NormalizedShelter[],
 ) {
-  await prisma.shelter.createMany({
-    data: shelters.map((s) => ({
-      name: s.name,
-      lat: s.lat,
-      lng: s.lng,
-      address: s.address,
-      type: s.type,
-      isOfficial: true,
-      city: s.city,
-    })),
-  });
+  for (const s of shelters) {
+    await prisma.shelter.upsert({
+      where: {
+        lat_lng: {
+          lat: s.lat,
+          lng: s.lng,
+        },
+      },
+      update: {
+        name: s.name,
+        address: s.address,
+        type: s.type,
+        city: s.city,
+        // updatedAt will auto-update here!
+      },
+      create: {
+        name: s.name,
+        lat: s.lat,
+        lng: s.lng,
+        address: s.address,
+        type: s.type,
+        isOfficial: true,
+        city: s.city,
+        // createdAt will auto-set here!
+      },
+    });
+  }
 }
 
 async function main() {
@@ -73,8 +89,6 @@ async function main() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is missing!");
   }
-  // Clear existing data to avoid duplicates during testing
-  await prisma.shelter.deleteMany({});
 
   let rawData;
 
@@ -83,6 +97,7 @@ async function main() {
     Haifa: "./src/data/Haifa_shelters.csv",
     "kiryat-Motzkin": "./src/data/KiryatMotzkin_shelters.json",
     "kiryat-Bialik": "./src/data/KiryatBialik_shelters.csv",
+    "kiryat-Ata": "./src/data/kiryatAta_shelters.csv",
   };
 
   for (const [city, filePath] of Object.entries(sheltersFiles)) {

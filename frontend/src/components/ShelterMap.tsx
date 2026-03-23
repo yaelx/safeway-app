@@ -11,6 +11,7 @@ import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
 import { TileLayerUrl } from "../config/constants";
+import { LocationMarker } from "./LocationMarker";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -125,7 +126,7 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 
 const ShelterMap: React.FC = () => {
   const { routeData, decodedPath, loading, planTrip } = useRouting();
-  const { coordinates, locate } = useLocationState();
+  const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
 
@@ -141,7 +142,13 @@ const ShelterMap: React.FC = () => {
           zoomControl={false}
         >
           <TileLayer url={TileLayerUrl} />
-          <MapRecenter location={coordinates} />
+          <MapRecenter
+            location={
+              startLocation
+                ? L.latLng(startLocation.coords.lat, startLocation.coords.lng)
+                : coordinates
+            }
+          />
           <MapController points={decodedPath} />
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           <SafeRoute routeData={routeData} path={decodedPath} />
@@ -149,6 +156,10 @@ const ShelterMap: React.FC = () => {
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}
           />
+
+          {startLocation && !routeData && (
+            <LocationMarker markerLocation={startLocation} type="start" />
+          )}
 
           {globalShelters.map((s, i) => (
             <UnifiedShelterMarker key={i} shelter={s} />

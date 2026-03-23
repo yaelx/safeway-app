@@ -12,7 +12,7 @@ export const useAddressSearch = (delay = 600) => {
     if (
       !query ||
       query.length < 3 ||
-      query === "My Current Location" ||
+      query === "Current Location" ||
       isSelected
     ) {
       setResults([]);
@@ -48,23 +48,22 @@ export const useAddressSearch = (delay = 600) => {
     return () => clearTimeout(delayDebounceFn);
   }, [query, delay, isSelected]);
 
-  // Wrapper for setQuery to reset the selection lock when typing
-  const updateQuery = (val: string) => {
-    setQuery(val);
-    setIsSelected(false);
+  const selectAddress = (name: string) => {
+    setIsSelected(true);
+    setQuery(name);
+    setResults([]); // Close dropdown
   };
 
-  const selectAddress = (val: string) => {
-    setIsSelected(true);
+  const updateQuery = (val: string) => {
+    setIsSelected(false); // Unlock when user types
     setQuery(val);
-    setResults([]);
   };
 
   return {
     query,
     setQuery: updateQuery,
-    selectAddress,
     results,
+    selectAddress,
     setResults,
     loading,
   };
