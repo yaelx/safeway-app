@@ -12,6 +12,7 @@ import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
 import { TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
+import { RouteData } from "../types/types";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -125,7 +126,7 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  const { routeData, decodedPath, loading, planTrip } = useRouting();
+  const { routeData, decodedPaths, loading, planTrip } = useRouting();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
@@ -149,9 +150,12 @@ const ShelterMap: React.FC = () => {
                 : coordinates
             }
           />
-          <MapController points={decodedPath} />
+          <MapController points={decodedPaths[0]} />
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
-          <SafeRoute routeData={routeData} path={decodedPath} />
+          {routeData &&
+            routeData.map((r: RouteData, i: number) => (
+              <SafeRoute key={i} routeData={r} path={decodedPaths[i]} />
+            ))}
           <ShelterDiscovery
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}

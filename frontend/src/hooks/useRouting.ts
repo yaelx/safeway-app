@@ -1,10 +1,11 @@
 import { useState } from "react";
 import polyline from "@mapbox/polyline";
 import { API_ENDPOINTS } from "../config/constants";
+import { RouteData } from "../types/types";
 
 export const useRouting = () => {
-  const [routeData, setRouteData] = useState<any>(null);
-  const [decodedPath, setDecodedPath] = useState<[number, number][]>([]);
+  const [routeData, setRouteData] = useState<RouteData[] | null>(null);
+  const [decodedPaths, setDecodedPaths] = useState<[number, number][][]>([]);
   const [loading, setLoading] = useState(false);
 
   const planTrip = async (start: string, end: string) => {
@@ -15,9 +16,11 @@ export const useRouting = () => {
       );
       const data = await response.json();
 
-      if (data.routeGeometry) {
-        setDecodedPath(polyline.decode(data.routeGeometry));
-        setRouteData(data);
+      if (data.routes?.length) {
+        setRouteData(data.routes);
+        setDecodedPaths(
+          data.routes.map((r: RouteData) => polyline.decode(r.geometry)),
+        );
       }
     } catch (err) {
       console.error("Safety Analysis Failed:", err);
@@ -26,5 +29,5 @@ export const useRouting = () => {
     }
   };
 
-  return { routeData, decodedPath, loading, planTrip };
+  return { routeData, decodedPaths, loading, planTrip };
 };

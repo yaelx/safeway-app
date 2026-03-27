@@ -39,7 +39,7 @@ export async function fetchSheltersNearPath(points: [number, number][]) {
     console.log(`Found ${shelters.length} shelters via OSM.`);
     return shelters;
   } catch (err) {
-    console.error("OSM Fetch failed, using empty list.");
+    console.error("OSM Shelters in bounds Fetch failed, using empty list.");
     return [];
   }
 }

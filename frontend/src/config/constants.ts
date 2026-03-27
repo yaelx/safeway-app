@@ -10,6 +10,11 @@ export const MAP_CONFIG = {
   DISCOVERY_DELAY: 800,
 };
 
+export const BUTTON_TEXT = {
+  FIND_SAFE_ROUTE: "Find Safest Route",
+  CALCULATING_SAFETY: "Calculating Safety...",
+};
+
 export const COLORS = {
   SAFE: "#2ecc71",
   WARNING: "#f39c12",

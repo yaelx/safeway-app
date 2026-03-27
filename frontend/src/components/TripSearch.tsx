@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useLocationState } from "../context/LocationContext";
 import { useAddressSearch } from "../hooks/useAddressSearch";
 import { useRecentSearches } from "../hooks/useRecentSearches";
+import { BUTTON_TEXT } from "../config/constants";
+import { Button } from "@mui/material";
 
 interface TripSearchProps {
   onPlanTrip: (start: string, end: string) => void;
@@ -218,8 +220,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({
         )}
       </div>
 
-      <button
-        className="plan-button"
+      <Button
+        loading={loading}
+        loadingPosition="start"
         onClick={handleStartPlan}
         disabled={loading || !startLocation || !endLocation}
         style={{
@@ -227,13 +230,13 @@ export const TripSearch: React.FC<TripSearchProps> = ({
           backgroundColor:
             loading || !startLocation || !endLocation ? "#ccc" : "#000",
           color: "#fff",
-          padding: "12px",
+          padding: "12px 8px",
           borderRadius: "8px",
           fontWeight: "bold",
         }}
       >
-        {loading ? "Calculating Safety..." : "Find Safest Route"}
-      </button>
+        {loading ? BUTTON_TEXT.CALCULATING_SAFETY : BUTTON_TEXT.FIND_SAFE_ROUTE}
+      </Button>
     </div>
   );
 };
