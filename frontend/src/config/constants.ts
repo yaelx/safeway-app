@@ -22,6 +22,13 @@ export const COLORS = {
   SHELTER_BLUE: "#0288d1",
 };
 
+export const RouteColors = {
+  Safest: "#10b981", // Emerald (Safest)
+  Fastest: "#3b82f6", // Blue (Fastest)
+  Alternative: "#f59e0b", // Amber (Alternative)
+};
+export const RouteColorsArray = Object.values(RouteColors);
+
 export const SHELTER_COLORS = {
   OFFICIAL: "#1976d2", // Deep Blue for Prisma DB
   COMMUNITY: "#7b1fa2", // Purple for OSM/Community

@@ -1,4 +1,5 @@
 /// <reference path="../types/govmap.d.ts" />
+import "leaflet/dist/leaflet.css";
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -10,9 +11,10 @@ import { useRouting } from "../hooks/useRouting";
 import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
-import { TileLayerUrl } from "../config/constants";
+import { RouteColorsArray, TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
 import { RouteData } from "../types/types";
+import { RouteResultsSheet } from "./RouteResultsSheet";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -132,10 +134,12 @@ const ShelterMap: React.FC = () => {
   const { startLocation, endLocation } = useLocationState();
 
   return (
-    <div style={{ height: "100vh", width: "100%", position: "relative" }}>
-      <TripSearch onPlanTrip={planTrip} loading={loading} />
+    <div className="relative h-screen w-screen overflow-hidden bg-slate-200">
+      <div className="absolute top-0 left-0 z-[2000] p-4 pointer-events-none w-full max-w-sm">
+        <TripSearch onPlanTrip={planTrip} loading={loading} />
+      </div>
 
-      <div style={{ height: "100vh", width: "100%", position: "relative" }}>
+      <div className="absolute inset-0 z-0">
         <MapContainer
           center={[32.0853, 34.7818]}
           zoom={14}
@@ -143,6 +147,7 @@ const ShelterMap: React.FC = () => {
           zoomControl={false}
         >
           <TileLayer url={TileLayerUrl} />
+
           <MapRecenter
             location={
               startLocation
@@ -154,7 +159,12 @@ const ShelterMap: React.FC = () => {
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           {routeData &&
             routeData.map((r: RouteData, i: number) => (
-              <SafeRoute key={i} routeData={r} path={decodedPaths[i]} />
+              <SafeRoute
+                key={i}
+                routeData={r}
+                path={decodedPaths[i]}
+                routeColor={RouteColorsArray[i] || "#64748b"}
+              />
             ))}
           <ShelterDiscovery
             onSheltersFetched={setGlobalShelters}
@@ -169,6 +179,12 @@ const ShelterMap: React.FC = () => {
             <UnifiedShelterMarker key={i} shelter={s} />
           ))}
         </MapContainer>
+
+        {routeData && (
+          <div className="z-[3000]">
+            <RouteResultsSheet routes={routeData} />
+          </div>
+        )}
       </div>
     </div>
   );

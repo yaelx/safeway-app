@@ -1,5 +1,4 @@
 import { Polyline, Popup } from "react-leaflet";
-import { COLORS } from "../config/constants";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
 import { useLocationState } from "../context/LocationContext";
 import { LocationMarker } from "./LocationMarker";
@@ -8,9 +7,11 @@ import { RouteData, RoutePoint } from "../types/types";
 export const SafeRoute = ({
   routeData,
   path,
+  routeColor,
 }: {
   routeData: RouteData;
   path: [number, number][];
+  routeColor: string;
 }) => {
   const { startLocation, endLocation } = useLocationState();
   if (!routeData || !path.length) return null;
@@ -20,7 +21,7 @@ export const SafeRoute = ({
       <Polyline
         positions={path}
         pathOptions={{
-          color: routeData.safetyScore > 10 ? COLORS.SAFE : COLORS.WARNING,
+          color: routeColor,
           weight: 5,
         }}
       >
