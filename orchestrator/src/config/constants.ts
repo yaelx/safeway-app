@@ -1,4 +1,9 @@
 import dotenv from "dotenv";
+import path from "path";
+
+// Load .env.local FIRST. If a variable is found here,
+// it won't be overwritten by the standard .env
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 dotenv.config();
 
 export const SHELTER_TYPES = {
@@ -21,7 +26,7 @@ export const INTERNAL_SERVICES = {
   PYTHON_SOLVER: {
     BASE_URL: process.env.LOGIC_SERVER_URL,
     ENDPOINTS: {
-      EVALUATE: "/evaluate_route",
+      EVALUATE: "/evaluate_alternatives",
       HEALTH: "/health",
     },
     HEADER_KEY: "X-Internal-Token",

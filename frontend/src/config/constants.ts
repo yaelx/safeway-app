@@ -10,12 +10,24 @@ export const MAP_CONFIG = {
   DISCOVERY_DELAY: 800,
 };
 
+export const BUTTON_TEXT = {
+  FIND_SAFE_ROUTE: "Find Safest Route",
+  CALCULATING_SAFETY: "Calculating Safety...",
+};
+
 export const COLORS = {
   SAFE: "#2ecc71",
   WARNING: "#f39c12",
   USER_BLUE: "#4285F4",
   SHELTER_BLUE: "#0288d1",
 };
+
+export const RouteColors = {
+  Safest: "#10b981", // Emerald (Safest)
+  Fastest: "#3b82f6", // Blue (Fastest)
+  Alternative: "#f59e0b", // Amber (Alternative)
+};
+export const RouteColorsArray = Object.values(RouteColors);
 
 export const SHELTER_COLORS = {
   OFFICIAL: "#1976d2", // Deep Blue for Prisma DB

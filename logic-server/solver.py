@@ -3,8 +3,11 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 import numpy as np
 import os
+import logging
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Header, HTTPException
+from pathlib import Path
+from dotenv import load_dotenv
 
 app = FastAPI()
 
@@ -20,11 +23,11 @@ app.add_middleware(
 class Shelter(BaseModel):
     x: float  # lng
     y: float  # lat
-    # Add this to allow any extra fields (id, name, address, isOfficial)
+    name: str = "Unknown Shelter"
     model_config = {"extra": "allow"}
 
 class SafetyRequest(BaseModel):
-    routePoints: List[List[float]]  # list of [lat, lng]
+    routes: List[List[List[float]]]  # list of [lat, lng]
     shelterData: List[Shelter]      # list of {x: lng, y: lat}
 
 # ==========================================
@@ -36,6 +39,16 @@ SAFE_THRESHOLD_METERS = 500.0
 
 EARTH_RADIUS_KM = 6371.0
 SAFE_DISTANCE_KM = SAFE_THRESHOLD_METERS / 1000.0
+
+# Set up logging to show in the terminal
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Manually point to the .env file in the parent directory
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+INTERNAL_SECRET_TOKEN = os.getenv("INTERNAL_SECRET_TOKEN")
 
 def vectorized_haversine(route_pts: np.ndarray, shelter_pts: np.ndarray) -> np.ndarray:
     """
@@ -63,9 +76,10 @@ def vectorized_haversine(route_pts: np.ndarray, shelter_pts: np.ndarray) -> np.n
 
 @app.post("/evaluate_route")
 def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)) -> Dict[str, Any]:
-    print(f"--- SOLVER CALLED | Points: {len(req.routePoints)} | Shelters: {len(req.shelterData)} ---")
-
-    if x_internal_token != os.getenv("INTERNAL_SECRET_TOKEN"):
+    logger.info(f"--- SOLVER CALLED | Points: {len(req.routePoints)} | Shelters: {len(req.shelterData)} ---")
+    
+    if x_internal_token != INTERNAL_SECRET_TOKEN:
+        print("DEBUG: Token Mismatch!")
         raise HTTPException(status_code=403, detail="Unauthorized")
     
     if not req.routePoints or not req.shelterData:
@@ -77,7 +91,7 @@ def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)) -> 
     if route_array[0][0] > 33:
         route_array = route_array[:, [1, 0]]
     
-    sampled_route = route_array[::10]
+    sampled_route = route_array[::5]
 
     # 2. Prepare Shelters (Ensure Lat/Lng)
     # req.shelterData has {x: lng, y: lat}
@@ -101,7 +115,7 @@ def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)) -> 
     closest_shelter_indices = np.argmin(distances_km, axis=1)
     min_dist_km = np.min(distances_km, axis=1)
     
-    is_safe = min_dist_km <= 0.250 # 250m threshold
+    is_safe = min_dist_km <= SAFE_DISTANCE_KM
     score = (np.sum(is_safe) / len(sampled_route)) * 100.0
     
     # 4. JSON-Safe Report with Metadata Preservation
@@ -119,6 +133,70 @@ def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)) -> 
         })
 
     return {"safetyScore": round(score, 2), "safetyReport": report}
+
+@app.post("/evaluate_alternatives")
+async def evaluate_alternatives(req: SafetyRequest, x_internal_token: str = Header(None)):
+# 1. Security Check
+    if x_internal_token != INTERNAL_SECRET_TOKEN:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    logger.info(f"Received {len(req.routes)} routes and {len(req.shelterData)} shelters")
+    
+    if not req.routes or not req.shelterData:
+        return []
+
+    # 2. Prepare Shelter Data once for all routes
+    shelter_arr = np.array([[s.y, s.x] for s in req.shelterData])
+    all_evaluated_routes = []
+
+    # 3. Process each route candidate
+    for route_index, original_points in enumerate(req.routes):
+        route_array = np.array(original_points)
+        
+        # Ensure correct Lat/Lng order (assuming Israel coordinates)
+        if route_array.size > 0 and route_array[0][0] > 33: # Coordinate swap logic
+            route_array = route_array[:, [1, 0]]
+        
+        # Sample points for performance (every 5th point)
+        sampled_route = route_array[::5]
+        
+        if len(sampled_route) == 0:
+            continue
+
+        # 4. Matrix Distance Calculation
+        distances_km = vectorized_haversine(sampled_route, shelter_arr)
+        
+        # Find closest shelter for each sampled point
+        min_dist_km = np.min(distances_km, axis=1)
+        closest_shelter_indices = np.argmin(distances_km, axis=1)
+        
+        # Calculate safety
+        is_safe_mask = min_dist_km <= SAFE_DISTANCE_KM
+        safety_score = (np.sum(is_safe_mask) / len(sampled_route)) * 100.0
+        
+        # 5. Build detailed segment report
+        report = []
+        for i in range(len(sampled_route)):
+            closest_shelter = req.shelterData[closest_shelter_indices[i]]
+            report.append({
+                "p": sampled_route[i].tolist(), # Point [lat, lng]
+                "d": float(min_dist_km[i] * 1000), # Distance in meters
+                "s": bool(is_safe_mask[i]), # Is safe?
+                "shelter": closest_shelter.dict() # Metadata of nearest shelter
+            })
+
+        all_evaluated_routes.append({
+            "routeIndex": route_index,
+            "safetyScore": round(safety_score, 2),
+            "safetyReport": report,
+            "fullGeometry": original_points # Return for frontend rendering
+        })
+
+    # 6. Rank routes: Safest first
+    all_evaluated_routes.sort(key=lambda x: x["safetyScore"], reverse=True)
+    
+    return all_evaluated_routes
+
 
 # Health check endpoint
 @app.post("/")

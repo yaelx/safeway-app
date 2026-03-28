@@ -6,7 +6,7 @@ import { Location } from "../types/types";
 interface LocationContextType {
   coordinates: L.LatLng | null;
   loading: boolean;
-  handleLocateMe: () => void;
+  handleLocateMe: (target: "start" | "end") => void;
   startLocation: Location | null;
   endLocation: Location | null;
   setStartLocation: (c: Location | null) => void;
@@ -26,7 +26,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Auto-sync GPS to Start Location once discovered
   useEffect(() => {
-    if (coordinates && !startLocation) {
+    if (coordinates && !startLocation && !endLocation) {
       setStartLocation({
         coords: { lat: coordinates.lat, lng: coordinates.lng },
         address: "Current Location",
@@ -34,14 +34,29 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [coordinates]);
 
-  // Handle "My Location" Click
-  const handleLocateMe = () => {
+  // const handleLocateMe = () => {
+  //   locate();
+  //   if (coordinates) {
+  //     setStartLocation({
+  //       coords: { lat: coordinates.lat, lng: coordinates.lng },
+  //       address: "Current Location",
+  //     } as Location);
+  //   }
+  // };
+
+  const handleLocateMe = (target: "start" | "end" = "start") => {
     locate();
     if (coordinates) {
-      setStartLocation({
+      const loc = {
         coords: { lat: coordinates.lat, lng: coordinates.lng },
         address: "Current Location",
-      } as Location);
+      } as Location;
+
+      if (target === "start") {
+        setStartLocation(loc);
+      } else {
+        setEndLocation(loc);
+      }
     }
   };
 

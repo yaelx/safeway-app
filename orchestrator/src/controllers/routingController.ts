@@ -12,7 +12,7 @@ export class RoutingController {
     }
 
     try {
-      const result = await this.routingService.getSafeRoute(
+      const result = await this.routingService.getSafeRoutes(
         start as string,
         end as string,
       );
