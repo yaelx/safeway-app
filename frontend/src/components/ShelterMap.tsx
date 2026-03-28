@@ -180,11 +180,11 @@ const ShelterMap: React.FC = () => {
           ))}
         </MapContainer>
 
-        {routeData && (
+        {/* {routeData && (
           <div className="z-[3000]">
             <RouteResultsSheet routes={routeData} />
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
