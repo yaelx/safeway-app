@@ -172,6 +172,8 @@ const ShelterMap: React.FC = () => {
                 routeData={r}
                 path={decodedPaths[i]}
                 routeColor={RouteColorsArray[i] || "#64748b"}
+                isSelected={selectedRoute?.index === r.index}
+                setSelectedRoute={setSelectedRoute}
               />
             ))}
           <ShelterDiscovery

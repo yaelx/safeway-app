@@ -81,7 +81,11 @@ export const openInGoogleMaps = (geometryStr: string) => {
 
 export const openInWaze = (geometryStr: string) => {
   const coords = decodePolyline(geometryStr);
-  if (coords.length === 0) return;
+  if (!coords || coords.length === 0) {
+    console.error("Could not decode path for Waze");
+    return;
+  }
+
   const destination = coords[coords.length - 1];
 
   // Waze deep link - Note: Waze only reliably supports 1 destination via URL
@@ -96,5 +100,5 @@ export const openInWaze = (geometryStr: string) => {
     if (Date.now() - start < 1000) {
       window.open(fallbackUrl, "_blank");
     }
-  }, 500);
+  }, 1000);
 };
