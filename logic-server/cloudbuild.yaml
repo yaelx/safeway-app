@@ -1,0 +1,23 @@
+steps:
+  # 1. Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/safe-route-solver', '.']
+
+  # 2. Push the image to the Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/safe-route-solver']
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'safe-route-solver'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/safe-route-solver'
+      - '--region'
+      - 'me-west1' # Israel region (Tel Aviv)
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'

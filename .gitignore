@@ -26,5 +26,6 @@ dist-ssr
 venv/
 __pycache__/
 .env
+data/
 orchestrator/src/data/*
 !orchestrator/src/data/.gitkeep

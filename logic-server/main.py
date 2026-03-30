@@ -1,0 +1,84 @@
+# main.py
+import subprocess
+import time
+import os
+import requests
+import numpy as np
+import logging
+import uvicorn
+from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from solver import SafetyRequest, calculate_safety_for_geometry, INTERNAL_SECRET_TOKEN
+
+# Set up logging to show in the terminal
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI()
+# Setup Middleware ONCE
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- START OSRM SUBPROCESS ---
+# This launches the C++ engine using the data "baked" in the Dockerfile
+osrm_process = subprocess.Popen([
+    "osrm-routed", 
+    "--algorithm", "mld", 
+    "/app/data/israel-and-palestine-latest.osrm"
+])
+# Give OSRM a few seconds to load the map into RAM before accepting requests
+time.sleep(2) 
+
+@app.get("/health")
+async def health():
+    return {"status": "online", "engine": "OSRM MLD Active"}
+
+
+
+@app.get("/")
+async def root():
+    """Health check endpoint for Cloud Run."""
+    return {
+        "status": "online",
+        "service": "SafeWay Logic Solver",
+        "region": "Israel (me-west1)"
+    }
+
+@app.post("/evaluate_route")
+async def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)):
+    if x_internal_token != INTERNAL_SECRET_TOKEN:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    # We use the helper from solver.py
+    result = calculate_safety_for_geometry(req.routes[0], req.shelterData)
+    return {"safetyScore": result["score"], "safetyReport": result["report"]}
+
+
+@app.post("/evaluate_alternatives")
+async def evaluate_alternatives(req: SafetyRequest, x_internal_token: str = Header(None)):
+    if x_internal_token != INTERNAL_SECRET_TOKEN:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    all_results = []
+    for idx, route_geom in enumerate(req.routes):
+        res = calculate_safety_for_geometry(route_geom, req.shelterData)
+        all_results.append({
+            "routeIndex": idx,
+            "safetyScore": res["score"],
+            "safetyReport": res["report"],
+            "fullGeometry": route_geom
+        })
+    
+    all_results.sort(key=lambda x: x["safetyScore"], reverse=True)
+    return all_results
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
