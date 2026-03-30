@@ -24,11 +24,19 @@ export interface OSMLocation {
   place_rank: number;
 }
 
+export interface RouteShelter {
+  id: number;
+  name: string;
+  x: number;
+  y: number;
+  isOfficial: boolean;
+}
+
 export interface RoutePoint {
   p: number[]; // [lat, lng]
   d: number; // distance from previous point
   s: boolean; // is safe
-  shelter: any;
+  shelter: RouteShelter;
 }
 
 export interface RouteData {
