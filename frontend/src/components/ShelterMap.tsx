@@ -15,6 +15,7 @@ import { RouteColorsArray, TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
 import { RouteData } from "../types/types";
 import { RouteResultsSheet } from "./RouteResultsSheet";
+import { NavigationPanel } from "./NavigationPanel";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -132,6 +133,13 @@ const ShelterMap: React.FC = () => {
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
+  const [selectedRoute, setSelectedRoute] = useState<RouteData | null>(null);
+
+  useEffect(() => {
+    if (routeData && routeData.length > 0 && !selectedRoute) {
+      setSelectedRoute(routeData[0]); // Auto-select the first (safest) route
+    }
+  }, [routeData, selectedRoute]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-slate-200">
@@ -164,6 +172,8 @@ const ShelterMap: React.FC = () => {
                 routeData={r}
                 path={decodedPaths[i]}
                 routeColor={RouteColorsArray[i] || "#64748b"}
+                isSelected={selectedRoute?.index === r.index}
+                setSelectedRoute={setSelectedRoute}
               />
             ))}
           <ShelterDiscovery
@@ -179,6 +189,8 @@ const ShelterMap: React.FC = () => {
             <UnifiedShelterMarker key={i} shelter={s} />
           ))}
         </MapContainer>
+
+        {selectedRoute && <NavigationPanel route={selectedRoute} />}
 
         {/* {routeData && (
           <div className="z-[3000]">

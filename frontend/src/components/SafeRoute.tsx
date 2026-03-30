@@ -1,4 +1,5 @@
 import { Polyline, Popup } from "react-leaflet";
+import L from "leaflet";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
 import { useLocationState } from "../context/LocationContext";
 import { LocationMarker } from "./LocationMarker";
@@ -8,10 +9,14 @@ export const SafeRoute = ({
   routeData,
   path,
   routeColor,
+  isSelected,
+  setSelectedRoute,
 }: {
   routeData: RouteData;
   path: [number, number][];
   routeColor: string;
+  isSelected: boolean;
+  setSelectedRoute: (route: RouteData) => void;
 }) => {
   const { startLocation, endLocation } = useLocationState();
   if (!routeData || !path.length) return null;
@@ -22,18 +27,18 @@ export const SafeRoute = ({
         positions={path}
         pathOptions={{
           color: routeColor,
-          weight: 5,
+          weight: isSelected ? 7 : 5,
+          opacity: isSelected ? 1 : 0.4,
+          lineJoin: "round",
         }}
-      >
-        <Popup>
-          <div style={{ textAlign: "left" }}>
-            <strong>route: {routeData.index + 1}</strong>
-            <p>safety score: {routeData.safetyScore} </p>
-            <p>distance: {Math.ceil(routeData.distance / 1000)} km</p>
-            <p>time: {Math.round(routeData.duration / 60)} min</p>
-          </div>
-        </Popup>
-      </Polyline>
+        eventHandlers={{
+          click: (e: any) => {
+            L.DomEvent.stopPropagation(e);
+            setSelectedRoute(routeData);
+          },
+        }}
+        interactive={true}
+      />
 
       <LocationMarker markerLocation={startLocation} type="start" />
       <LocationMarker markerLocation={endLocation} type="end" />
