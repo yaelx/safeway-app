@@ -15,6 +15,7 @@ interface SearchInputWrapperProps {
   showRecent?: boolean;
   recentSearches?: any[];
   handleLocate: () => void;
+  onFocus: () => void;
 }
 
 export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
@@ -26,18 +27,22 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
   onClear,
   handleLocate,
   recentResults,
+  onFocus,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <div className="relative w-full">
-      <div className="bg-[#f8fafc] rounded-2xl px-4 py-3 flex items-center gap-2 border border-transparent focus-within:border-slate-200 transition-all min-h-[48px]">
+      <div className="bg-[#f8fafc] rounded-2xl px-4 py-1.5 flex items-center gap-2 border border-transparent focus-within:border-slate-200 transition-all">
         <input
-          className="bg-transparent border-none text-[15px] flex-1 outline-none text-slate-800 placeholder:text-slate-400 font-medium py-2.5"
+          className="bg-transparent border-none text-[15px] flex-1 outline-none text-slate-800 placeholder:text-slate-400 font-medium py-1.5"
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsFocused(true)}
+          onFocus={() => {
+            onFocus();
+            setIsFocused(true);
+          }}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         />
 
@@ -48,20 +53,9 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
               onClick={onClear}
               className="text-slate-300 hover:text-slate-500 p-1"
             >
-              <Close sx={{ fontSize: 16 }} />
+              <Close sx={{ fontSize: 14 }} />
             </button>
           )}
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleLocate();
-            }}
-            className="text-slate-400 hover:text-blue-600 transition-colors p-1"
-            title="Locate Me"
-          >
-            <MyLocationRoundedIcon sx={{ fontSize: 18 }} />
-          </button>
         </div>
       </div>
 
@@ -69,6 +63,18 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
       {isFocused &&
         (results.length > 0 || (recentResults.length > 0 && !query)) && (
           <ul className="absolute z-[3000] w-full mt-2 bg-white border border-slate-100 shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+            <li
+              onMouseDown={(e) => {
+                // Use onMouseDown to trigger before onBlur
+                e.preventDefault();
+                handleLocate();
+              }}
+              className="px-4 py-4 hover:bg-blue-50 cursor-pointer text-sm text-blue-600 font-bold flex items-center gap-3 border-b border-slate-100 sticky top-0 bg-white z-10"
+            >
+              <MyLocationRoundedIcon sx={{ fontSize: 20 }} />
+              Your location
+            </li>
+
             {!query && recentResults.length > 0 && (
               <>
                 <li className="px-4 py-2 text-[10px] font-bold text-slate-400 bg-slate-50 uppercase tracking-tighter">

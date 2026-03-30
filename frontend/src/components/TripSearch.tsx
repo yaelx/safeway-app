@@ -33,6 +33,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   const toSearch = useAddressSearch();
   const { recentSearches, saveRecent } = useRecentSearches();
   const [expanded, setIsExpanded] = useState(false);
+  const [activeField, setActiveField] = useState<"start" | "end" | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState("Analyzing route...");
+
+  const handleSharedLocate = () => {
+    if (activeField) {
+      handleLocateMe(activeField);
+    }
+  };
 
   const selectstart = (r: Location) => {
     setStartLocation(r);
@@ -67,6 +75,22 @@ export const TripSearch: React.FC<TripSearchProps> = ({
     }
   }, [endLocation]);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (loading) {
+      // Reset to initial message when loading starts
+      setLoadingMessage("Analyzing route...");
+
+      // Change message after 8 seconds (typical for cold starts or complex OSRM)
+      timer = setTimeout(() => {
+        setLoadingMessage("Still working... Calculating the safest path.");
+      }, 8000);
+    }
+
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   const clearFrom = () => {
     fromSearch.setQuery("");
     setStartLocation(null);
@@ -80,6 +104,23 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   return (
     <div className="w-full max-w-md mx-auto pointer-events-auto">
       <AnimatePresence mode="wait">
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="flex items-center justify-center gap-3 py-2 text-blue-600 bg-blue-50 rounded-xl mb-4"
+          >
+            <div className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </div>
+            <span className="text-xs font-bold tracking-wide uppercase">
+              {loadingMessage}
+            </span>
+          </motion.div>
+        )}
+
         {!expanded ? (
           /* The Floating "Pill" */
           <motion.div
@@ -109,7 +150,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({
           <motion.div
             key="card"
             initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            animate={
+              loading
+                ? {
+                    opacity: [0.9, 1, 0.9],
+                    transition: { repeat: Infinity, duration: 2 },
+                  }
+                : { opacity: 1 }
+            }
             exit={{ scale: 0.95, opacity: 0 }}
             className="bg-white shadow-2xl rounded-[28px] p-6 border border-slate-50"
           >
@@ -139,15 +187,6 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             <div className="flex gap-4 relative">
               {/* Left Column: Icons and Connector Line */}
               <div className="flex flex-col items-center pt-3 pb-3 relative">
-                <PlaceRoundedIcon
-                  sx={{
-                    color: "#2563eb",
-                    fontSize: 18,
-                    zIndex: 10,
-                    bgcolor: "white",
-                  }}
-                />
-                <div className="w-[1px] flex-grow bg-slate-200 my-1" />
                 <MyLocationRoundedIcon
                   sx={{
                     color: "#1e293b",
@@ -156,10 +195,19 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                     bgcolor: "white",
                   }}
                 />
+                <div className="w-[1px] flex-grow bg-slate-200 my-1" />
+                <PlaceRoundedIcon
+                  sx={{
+                    color: "#2563eb",
+                    fontSize: 18,
+                    zIndex: 10,
+                    bgcolor: "white",
+                  }}
+                />
               </div>
 
               {/* Right Column: The Input Fields */}
-              <div className="flex-1 space-y-4">
+              <div className="flex-1 space-y-2">
                 <SearchInputWrapper
                   placeholder="From..."
                   query={fromSearch.query}
@@ -168,7 +216,8 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                   results={fromSearch.results}
                   onSelect={selectstart}
                   onClear={clearFrom}
-                  handleLocate={() => handleLocateMe("start")}
+                  onFocus={() => setActiveField("start")}
+                  handleLocate={handleSharedLocate}
                 />
 
                 <SearchInputWrapper
@@ -179,7 +228,8 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                   results={toSearch.results}
                   onSelect={selectDestination}
                   onClear={clearTo}
-                  handleLocate={() => handleLocateMe("end")}
+                  onFocus={() => setActiveField("end")}
+                  handleLocate={handleSharedLocate}
                 />
               </div>
             </div>
@@ -191,18 +241,25 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               loading={loading}
               loadingPosition="start"
               onClick={() => {
-                setIsExpanded(false);
+                //setIsExpanded(false);
                 handleStartPlan();
               }}
+              startIcon={<Navigation className="rotate-45" />}
               sx={{
-                mt: 4, // Increased spacing from input
-                py: 2,
+                mt: 2,
+                py: 1,
                 borderRadius: "16px",
                 backgroundColor: "#0f172a",
                 textTransform: "none",
                 fontWeight: "bold",
                 fontSize: "1rem",
                 boxShadow: "0 10px 15px -3px rgba(15, 23, 42, 0.2)",
+                transition: "all 0.2s ease",
+                "&.Mui-disabled": {
+                  backgroundColor: "#1e293b",
+                  opacity: 0.7,
+                  color: "white",
+                },
                 "&:hover": { backgroundColor: "#1e293b" },
               }}
             >
