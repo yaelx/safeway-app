@@ -26,13 +26,20 @@ app.add_middleware(
 
 # --- START OSRM SUBPROCESS ---
 # This launches the C++ engine using the data "baked" in the Dockerfile
-osrm_process = subprocess.Popen([
-    "osrm-routed", 
-    "--algorithm", "mld", 
-    "/app/data/israel-and-palestine-latest.osrm"
-])
-# Give OSRM a few seconds to load the map into RAM before accepting requests
-time.sleep(2) 
+# the path here should match the path in the Dockerfile
+try:
+    print("DEBUG: Starting OSRM Engine...")
+    osrm_process = subprocess.Popen([
+        "osrm-routed", 
+        "--algorithm", "mld", 
+        "/app/data/israel-and-palestine-latest.osrm"
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    print("DEBUG: OSRM process initiated.")
+except Exception as e:
+    print(f"ERROR: Failed to start OSRM: {e}")
+
+# Give it time, but don't block the whole app if it takes longer
+time.sleep(5)
 
 @app.get("/health")
 async def health():

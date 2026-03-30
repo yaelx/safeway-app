@@ -22,4 +22,7 @@ steps:
       - '2Gi'
       - '--cpu'
       - '1'
+      - '--cpu-boost'
+      - '--timeout'
+      - '300'
       - '--allow-unauthenticated'
