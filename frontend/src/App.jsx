@@ -1,11 +1,14 @@
 import "./App.css";
 import ShelterMap from "./components/ShelterMap";
 import { LocationProvider } from "./context/LocationContext";
+import { RoutingProvider } from "./context/RoutingContext";
 
 function App() {
   return (
     <LocationProvider>
-      <ShelterMap />
+      <RoutingProvider>
+        <ShelterMap />
+      </RoutingProvider>
     </LocationProvider>
   );
 }
