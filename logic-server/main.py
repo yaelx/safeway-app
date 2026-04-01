@@ -8,7 +8,7 @@ import logging
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from solver import SafetyRequest, calculate_safety_for_geometry, INTERNAL_SECRET_TOKEN
+from solver import SafetyRequest, calculate_safety_for_geometry
 
 # Set up logging to show in the terminal
 logging.basicConfig(level=logging.INFO)

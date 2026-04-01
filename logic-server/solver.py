@@ -17,14 +17,10 @@ else:
     pass
 
 # 2. Access the variable
-INTERNAL_SECRET_TOKEN = os.getenv("INTERNAL_SECRET_TOKEN")
+
 SAFE_THRESHOLD_METERS = 500.0  
 EARTH_RADIUS_KM = 6371.0
 SAFE_DISTANCE_KM = SAFE_THRESHOLD_METERS / 1000.0
-
-# 3. Add a safety check to catch configuration issues early
-if not INTERNAL_SECRET_TOKEN:
-    print("WARNING: INTERNAL_SECRET_TOKEN is not set in environment!")
 
 
 class Shelter(BaseModel):
