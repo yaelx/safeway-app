@@ -6,10 +6,12 @@ import { useRecentSearches } from "../hooks/useRecentSearches";
 import { BUTTON_TEXT } from "../config/constants";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
+import AltRouteIcon from "@mui/icons-material/AltRoute";
 import { Search, Close, Navigation } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { SearchInputWrapper } from "./SearchInputWrapper";
 import { Location } from "../types/types";
+import { useRoutingContext } from "../context/RoutingContext";
 
 interface TripSearchProps {
   onPlanTrip: (start: string, end: string) => void;
@@ -35,6 +37,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   const [expanded, setIsExpanded] = useState(false);
   const [activeField, setActiveField] = useState<"start" | "end" | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("Analyzing route...");
+  const { routeData } = useRoutingContext();
 
   const handleSharedLocate = () => {
     if (activeField) {
@@ -132,10 +135,25 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             className="bg-white/95 backdrop-blur-sm border border-slate-200 shadow-lg rounded-full px-5 py-3.5 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
           >
             <div className="flex items-center gap-3">
-              <Search sx={{ color: "#94a3b8", fontSize: 20 }} />
-              <span className="text-slate-500 text-sm font-medium">
-                Plan safe route...
-              </span>
+              {/* Dynamic Icon based on results */}
+              {routeData ? (
+                <AltRouteIcon sx={{ color: "#2563eb", fontSize: 24 }} />
+              ) : (
+                <Search sx={{ color: "#94a3b8", fontSize: 20 }} />
+              )}
+
+              <div className="flex flex-col">
+                <span className="text-slate-900 text-sm font-bold leading-none">
+                  {routeData
+                    ? `${routeData.length} Routes Found`
+                    : "Plan safe route..."}
+                </span>
+                {routeData && (
+                  <span className="text-slate-500 text-[10px] font-medium mt-1">
+                    Tap lines on map to compare
+                  </span>
+                )}
+              </div>
             </div>
             <Navigation
               sx={{
@@ -159,27 +177,31 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 : { opacity: 1 }
             }
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white shadow-2xl rounded-[28px] p-6 border border-slate-50"
+            className="bg-white shadow-2xl rounded-[28px] p-5 border border-slate-50"
           >
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
+              {" "}
+              {/* Changed mb-6 to mb-4 */}
               <div className="flex items-center gap-2.5">
                 <Navigation
                   sx={{
                     color: "#2563eb",
-                    fontSize: 22,
+                    fontSize: 20,
                     transform: "rotate(45deg)",
                   }}
                 />
-                <span className="font-bold text-[#1e293b] text-xl tracking-tight">
+                <span className="font-bold text-[#1e293b] text-lg tracking-tight">
+                  {" "}
+                  {/* text-xl to text-lg */}
                   Route Planner
                 </span>
               </div>
               <button
                 onClick={() => setIsExpanded(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400"
               >
-                <Close sx={{ fontSize: 24 }} />
+                <Close sx={{ fontSize: 22 }} />
               </button>
             </div>
 

@@ -3,19 +3,16 @@ import "leaflet/dist/leaflet.css";
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import "leaflet/dist/leaflet.css";
 import { TripSearch } from "./TripSearch";
 import { useLocationState } from "../context/LocationContext";
-import { useRouting } from "../hooks/useRouting";
 import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
 import { RouteColorsArray, TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
-import { RouteData } from "../types/types";
-import { RouteResultsSheet } from "./RouteResultsSheet";
 import { NavigationPanel } from "./NavigationPanel";
+import { useRoutingContext } from "../context/RoutingContext";
+import { RouteData } from "../types/types";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -129,11 +126,17 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  const { routeData, decodedPaths, loading, planTrip } = useRouting();
+  const {
+    routeData,
+    decodedPaths,
+    selectedRoute,
+    setSelectedRoute,
+    loading,
+    planTrip,
+  } = useRoutingContext();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
-  const [selectedRoute, setSelectedRoute] = useState<RouteData | null>(null);
 
   useEffect(() => {
     if (routeData && routeData.length > 0 && !selectedRoute) {
@@ -190,13 +193,7 @@ const ShelterMap: React.FC = () => {
           ))}
         </MapContainer>
 
-        {selectedRoute && <NavigationPanel route={selectedRoute} />}
-
-        {/* {routeData && (
-          <div className="z-[3000]">
-            <RouteResultsSheet routes={routeData} />
-          </div>
-        )} */}
+        <NavigationPanel />
       </div>
     </div>
   );
