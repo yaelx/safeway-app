@@ -57,19 +57,15 @@ async def root():
     }
 
 @app.post("/evaluate_route")
-async def evaluate_route(req: SafetyRequest, x_internal_token: str = Header(None)):
-    if x_internal_token != INTERNAL_SECRET_TOKEN:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    
+async def evaluate_route(req: SafetyRequest):
+
     # We use the helper from solver.py
     result = calculate_safety_for_geometry(req.routes[0], req.shelterData)
     return {"safetyScore": result["score"], "safetyReport": result["report"]}
 
 
 @app.post("/evaluate_alternatives")
-async def evaluate_alternatives(req: SafetyRequest, x_internal_token: str = Header(None)):
-    if x_internal_token != INTERNAL_SECRET_TOKEN:
-        raise HTTPException(status_code=403, detail="Unauthorized")
+async def evaluate_alternatives(req: SafetyRequest):
     
     all_results = []
     for idx, route_geom in enumerate(req.routes):

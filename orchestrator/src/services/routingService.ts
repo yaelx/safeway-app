@@ -5,6 +5,7 @@ import { fetchSheltersNearPath } from "./osmService";
 import { API_PATHS } from "../config/constants";
 import { logicServerClient } from "./logicServerClient";
 import { ScoredRoute } from "../types/types";
+import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
 
 export type OSMRoute = {
   geometry: string;
@@ -22,7 +23,10 @@ export type OSMRoute = {
 };
 
 export class RoutingService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(
+    private prisma: PrismaClient,
+    private authenticator: IAuthenticator,
+  ) {}
 
   async getSafeRoutes(start: string, end: string) {
     let routeData: any;
@@ -90,9 +94,15 @@ export class RoutingService {
       })),
     ];
 
+    const authHeader = await this.authenticator.getAccessToken();
+
     // D. Call the updated Bulk Client
     const scoredRoutes: ScoredRoute[] =
-      await logicServerClient.evaluateAlternatives(allRoutePoints, allShelters);
+      await logicServerClient.evaluateAlternatives(
+        allRoutePoints,
+        allShelters,
+        authHeader,
+      );
 
     // E. Merge OSRM metadata (distance/duration) with Python safety data
     // Python returns these sorted by safetyScore

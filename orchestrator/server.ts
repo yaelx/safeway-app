@@ -4,6 +4,7 @@ import axios from "axios";
 import dotenv from "dotenv";
 import shelterRoutes from "./src/routes/shelterRoutes";
 import routingRoutes from "./src/routes/routingRoutes";
+import { authProvider } from "./src/infrastructure/auth/authProvider";
 
 dotenv.config();
 
@@ -17,14 +18,22 @@ app.use("/api/get-safe-route", routingRoutes);
 
 // ─── Python Health Check ──────────────────────────────────────────────────────
 const checkPythonConnection = async () => {
-  const url = `${process.env.LOGIC_SERVER_URL}/health`;
+  const healthUrl = `${process.env.LOGIC_SERVER_URL}/health`;
   try {
-    const response = await axios.get(url);
+    const token = await authProvider.getAccessToken();
+
+    // 3. Call with the Authorization header
+    const response = await axios.get(healthUrl, {
+      headers: { Authorization: token },
+    });
+
     if (response.data.status === "online") {
       console.log("✅ Python Logic Server is healthy and responding.");
     }
   } catch (err: any) {
-    console.error("❌ Bridge Failed: Node cannot reach Python at " + url);
+    console.error(
+      "❌ Bridge Failed: Node cannot reach Python at: " + healthUrl,
+    );
     console.error("   Reason: " + (err.response?.statusText || err.message));
   }
 };
