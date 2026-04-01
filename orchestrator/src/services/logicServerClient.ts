@@ -47,7 +47,11 @@ export const logicServerClient = {
   //   }
   // },
 
-  evaluateAlternatives: async (routes: number[][][], shelterData: any[]) => {
+  evaluateAlternatives: async (
+    routes: number[][][],
+    shelterData: any[],
+    authHeader: string,
+  ) => {
     const url = `${BASE_URL}${ENDPOINTS.EVALUATE}`; // Ensure this points to /evaluate_alternatives
 
     try {
@@ -55,7 +59,7 @@ export const logicServerClient = {
         url,
         { routes, shelterData }, // Sending 'routes' as an array of arrays
         {
-          headers: { [HEADER_KEY]: process.env.INTERNAL_SECRET_TOKEN },
+          headers: { Authorization: authHeader },
           timeout: 15000, // Increased timeout for multiple route processing
         },
       );
