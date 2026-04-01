@@ -9,6 +9,20 @@ export class LocalAuthenticator implements IAuthenticator {
     // This looks for the JSON key path in your .env
     this.auth = new GoogleAuth();
     this.targetAudience = targetAudience;
+
+    const jsonKey = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+
+    if (jsonKey) {
+      // PROD/VERCEL: Use the raw JSON string from the env var
+      const credentials = JSON.parse(jsonKey);
+      this.auth = new GoogleAuth({
+        credentials,
+        projectId: credentials.project_id,
+      });
+    } else {
+      // DEV/MAC: Uses the file path from GOOGLE_APPLICATION_CREDENTIALS automatically
+      this.auth = new GoogleAuth();
+    }
   }
 
   async getAccessToken(): Promise<string> {
