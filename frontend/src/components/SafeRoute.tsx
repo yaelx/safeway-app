@@ -44,16 +44,15 @@ export const SafeRoute = ({
       <LocationMarker markerLocation={endLocation} type="end" />
 
       {routeData.safetyReport
-        .filter((point: RoutePoint) => point.s === true)
+        .filter((point: RoutePoint) => point.isSafe === true)
         .map((point: RoutePoint, i: number) => (
           <UnifiedShelterMarker
             key={`route-safe-${i}`}
             shelter={{
-              ...point,
-              lat: point.p[0],
-              lng: point.p[1],
+              ...point.shelter,
+              lat: point.coords[0],
+              lng: point.coords[1],
             }}
-            isRoutePoint={true}
           />
         ))}
     </>

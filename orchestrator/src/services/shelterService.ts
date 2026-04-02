@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { API_PATHS } from "../config/constants";
+import { RouteShelter, DBShelter } from "../types/types";
 
 const shelterCache = new Map<string, any[]>();
 
@@ -35,14 +36,17 @@ export class ShelterService {
         { timeout: 5000 },
       );
 
-      const osmShelters = response.data.elements.map((el: any) => ({
-        id: `osm-${el.id}`, // Give OSM items a unique ID string
-        lat: el.lat || el.center.lat, // Change 'y' to 'lat'
-        lng: el.lon || el.center.lon, // Change 'x' to 'lng'
-        name: el.tags.name || "Public Shelter",
-        address: el.tags.address || "",
-        isOfficial: false,
-      }));
+      const osmShelters: RouteShelter[] = response.data.elements.map(
+        (el: any) => ({
+          id: `osm-${el.id}`, // Give OSM items a unique ID string
+          lat: el.lat || el.center.lat,
+          lng: el.lon || el.center.lon,
+          name: el.tags.name || "Public Shelter",
+          address: el.tags.address || "",
+          isOfficial: false,
+          type: el.tags.type || "OSM",
+        }),
+      );
 
       shelterCache.set(cacheKey, osmShelters);
       return [...matchedLocal, ...osmShelters];

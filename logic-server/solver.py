@@ -24,15 +24,25 @@ SAFE_DISTANCE_KM = SAFE_THRESHOLD_METERS / 1000.0
 
 
 class Shelter(BaseModel):
-    x: float  # lng
-    y: float  # lat
+    id: int
+    lng: float 
+    lat: float
     name: str = "Unknown Shelter"
+    address: str = ""
+    isOfficial: bool = False
+    type: str = ""
     model_config = {"extra": "allow"}
 
 class SafetyRequest(BaseModel):
     routes: List[List[List[float]]]  # list of [lat, lng]
-    shelterData: List[Shelter]      # list of {x: lng, y: lat}
+    shelterData: List[Shelter]   
 
+class RoutePoint(BaseModel):
+    coords: List[float]
+    distance: float
+    isSafe: bool
+    shelter: Shelter
+    
 # Set up logging to show in the terminal
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -72,7 +82,7 @@ def calculate_safety_for_geometry(coords: List[List[float]], shelters: List[Shel
         route_array = route_array[:, [1, 0]]
     
     sampled = route_array[::5]
-    shelter_arr = np.array([[s.y, s.x] for s in shelters])
+    shelter_arr = np.array([[s.lat, s.lng] for s in shelters])
     
     dist_matrix = vectorized_haversine(sampled, shelter_arr)
     min_dists = np.min(dist_matrix, axis=1)
@@ -81,12 +91,12 @@ def calculate_safety_for_geometry(coords: List[List[float]], shelters: List[Shel
     is_safe = min_dists <= SAFE_DISTANCE_KM
     score = (np.sum(is_safe) / len(sampled)) * 100.0
     
-    report = []
+    report: List[RoutePoint] = []
     for i in range(len(sampled)):
         report.append({
-            "p": sampled[i].tolist(),
-            "d": float(min_dists[i] * 1000),
-            "s": bool(is_safe[i]),
+            "coords": sampled[i].tolist(),
+            "distance": float(min_dists[i] * 1000),
+            "isSafe": bool(is_safe[i]),
             "shelter": shelters[indices[i]].dict()
         })
     return {"score": round(score, 2), "report": report}

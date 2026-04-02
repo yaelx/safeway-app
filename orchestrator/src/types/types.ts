@@ -1,3 +1,8 @@
+export interface Coords {
+  lat: number;
+  lng: number;
+}
+
 export type RawShelter = {
   name?: string;
   address?: string;
@@ -6,25 +11,61 @@ export type RawShelter = {
   type?: string;
 };
 
-export type NormalizedShelter = {
+// for prisma db insertion
+export type NormalizedShelter = Omit<
+  DBShelter,
+  "id" | "createdAt" | "updatedAt"
+>;
+
+export type DBShelter = {
   name: string;
-  address?: string | null;
+  id: number;
   lat: number;
   lng: number;
-  type: string | null;
-  city: string | null;
+  address: string;
+  type: string;
+  isOfficial: boolean;
+  city?: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-export interface RoutePoint {
-  p: number[]; // [lat, lng]
-  d: number; // distance from previous point
-  s: boolean; // is safe
-  shelter: any;
+export interface RouteShelter {
+  id: number;
+  name: string;
+  lng: number;
+  lat: number;
+  address: string;
+  isOfficial: boolean;
+  type: string;
 }
 
-export type ScoredRoute = {
-  routeIndex: number;
+export interface RoutePoint {
+  coords: number[]; // [lat, lng]
+  distance: number; // distance from previous point
+  isSafe: boolean; // is safe
+  shelter: RouteShelter;
+}
+
+// format of response from python server
+export type ScoredRoute<TGeometry = number[][]> = {
+  index: number;
   safetyScore: number;
   safetyReport: RoutePoint[];
-  fullGeometry: number[][];
+  geometry: TGeometry;
 };
+
+export type RouteData = ScoredRoute<string> & {
+  distance: number;
+  duration: number;
+};
+
+export interface IRoutingRequest {
+  start: string; // "lng,lat"
+  end: string; // "lng,lat"
+}
+
+export interface IRoutingResponse {
+  totalFound: number;
+  routes: RouteData[];
+}
