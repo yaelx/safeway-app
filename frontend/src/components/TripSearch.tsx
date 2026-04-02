@@ -251,7 +251,6 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                   onSelect={selectDestination}
                   onClear={clearTo}
                   onFocus={() => setActiveField("end")}
-                  handleLocate={handleSharedLocate}
                 />
               </div>
             </div>
