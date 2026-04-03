@@ -1,4 +1,5 @@
 import axios from "axios";
+import { RouteShelter } from "../types/types";
 
 export async function fetchSheltersNearPath(points: [number, number][]) {
   if (points.length === 0) return [];
@@ -27,13 +28,14 @@ export async function fetchSheltersNearPath(points: [number, number][]) {
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
     const response = await axios.get(url);
 
-    const shelters = response.data.elements.map((el: any) => ({
-      x: el.lon || el.center.lon,
-      y: el.lat || el.center.lat,
+    const shelters: RouteShelter[] = response.data.elements.map((el: any) => ({
+      lng: el.lon || el.center.lon,
+      lat: el.lat || el.center.lat,
       name: el.tags.name || "Public Shelter",
       isOfficial: false,
       address: el.tags.address || "",
       id: el.id,
+      type: el.tags.type || "",
     }));
 
     console.log(`Found ${shelters.length} shelters via OSM.`);

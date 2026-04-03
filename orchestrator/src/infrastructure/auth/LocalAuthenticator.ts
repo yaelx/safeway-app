@@ -29,6 +29,7 @@ export class LocalAuthenticator implements IAuthenticator {
     try {
       const client = await this.auth.getIdTokenClient(this.targetAudience);
       const headers = await client.getRequestHeaders();
+      // ALREADY returns { "Authorization": "Bearer eyJ..." }
       return headers.get("Authorization") || "";
     } catch (err) {
       console.error(

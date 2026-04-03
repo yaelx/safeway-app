@@ -35,6 +35,7 @@ const checkPythonConnection = async () => {
       "❌ Bridge Failed: Node cannot reach Python at: " + healthUrl,
     );
     console.error("   Reason: " + (err.response?.statusText || err.message));
+    console.log("GOOGLE SAYS:", err.response.data);
   }
 };
 

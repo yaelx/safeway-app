@@ -4,8 +4,8 @@
 declare global {
   namespace govmap {
     interface Point {
-      x: number;
-      y: number;
+      lng: number;
+      lat: number;
     }
 
     interface LatLng {
@@ -41,8 +41,8 @@ declare global {
     }
 
     interface ShelterResult {
-      x: number;
-      y: number;
+      lng: number;
+      lat: number;
       distance: number;
       attributes: Record<string, any>;
     }

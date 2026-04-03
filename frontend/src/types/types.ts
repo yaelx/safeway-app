@@ -8,6 +8,32 @@ export interface Location {
   coords: Coords;
 }
 
+export interface RouteShelter {
+  id: number;
+  name: string;
+  lng: number;
+  lat: number;
+  address: string;
+  isOfficial: boolean;
+  type: string;
+}
+
+export interface RoutePoint {
+  coords: number[]; // [lat, lng]
+  distance: number; // distance from previous point
+  isSafe: boolean; // is safe
+  shelter: RouteShelter;
+}
+
+export interface RouteData {
+  index: number;
+  geometry: string;
+  distance: number;
+  duration: number;
+  safetyScore: number;
+  safetyReport: RoutePoint[];
+}
+
 export interface OSMLocation {
   addresstype: string;
   boundingbox: number[];
@@ -22,28 +48,4 @@ export interface OSMLocation {
   osm_type: string;
   place_id: number;
   place_rank: number;
-}
-
-export interface RouteShelter {
-  id: number;
-  name: string;
-  x: number;
-  y: number;
-  isOfficial: boolean;
-}
-
-export interface RoutePoint {
-  p: number[]; // [lat, lng]
-  d: number; // distance from previous point
-  s: boolean; // is safe
-  shelter: RouteShelter;
-}
-
-export interface RouteData {
-  index: number;
-  geometry: string;
-  distance: number;
-  duration: number;
-  safetyScore: number;
-  safetyReport: RoutePoint[];
 }

@@ -4,6 +4,7 @@ import L from "leaflet";
 import { renderToStaticMarkup } from "react-dom/server";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import { SHELTER_COLORS } from "../config/constants";
+import { RouteShelter } from "../types/types";
 
 const getShelterColor = (shelterType: string | undefined) => {
   return typeof shelterType === "string"
@@ -35,22 +36,11 @@ const createMuiIcon = (color: string) => {
 };
 
 interface UnifiedShelterProps {
-  shelter: {
-    lat: number;
-    lng: number;
-    d?: number; // distance in meters
-    s?: boolean; // is safe
-    name?: string;
-    address?: string;
-    isOfficial?: boolean;
-    type?: string;
-  };
-  isRoutePoint?: boolean;
+  shelter: RouteShelter;
 }
 
 export const UnifiedShelterMarker: React.FC<UnifiedShelterProps> = ({
   shelter,
-  isRoutePoint,
 }) => {
   // 1. Robust Coordinate Extraction (Handles both DB and OSM formats)
 
@@ -70,12 +60,6 @@ export const UnifiedShelterMarker: React.FC<UnifiedShelterProps> = ({
           {shelter.address && (
             <small>
               {shelter.address}
-              <br />
-            </small>
-          )}
-          {shelter.d && (
-            <small>
-              {Math.round(shelter.d / 10)} מטר
               <br />
             </small>
           )}

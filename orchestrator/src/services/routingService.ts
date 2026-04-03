@@ -4,35 +4,46 @@ import { PrismaClient } from "@prisma/client";
 import { fetchSheltersNearPath } from "./osmService";
 import { API_PATHS } from "../config/constants";
 import { logicServerClient } from "./logicServerClient";
-import { ScoredRoute } from "../types/types";
+import { RedisCache } from "../infrastructure/cache/RedisCache";
+import {
+  IRoutingResponse,
+  RouteShelter,
+  RouteData,
+  ScoredRoute,
+} from "../types/types";
 import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
-
-export type OSMRoute = {
-  geometry: string;
-  distance: number;
-  duration: number;
-  weight: number;
-  weight_name: string;
-  legs: {
-    steps: any[];
-    weight: number;
-    summary: string;
-    duration: number;
-    distance: number;
-  }[];
-};
+import { OSMRoute } from "../types/osmType";
 
 export class RoutingService {
+  private cache = new RedisCache();
+
   constructor(
     private prisma: PrismaClient,
     private authenticator: IAuthenticator,
   ) {}
 
+  private parseCoords(coordStr: string): [number, number] {
+    const [lng, lat] = coordStr.split(",").map(Number);
+    if (isNaN(lng) || isNaN(lat)) {
+      throw new Error(`Invalid coordinate format: ${coordStr}`);
+    }
+    return [lng, lat];
+  }
+
   async getSafeRoutes(start: string, end: string) {
     let routeData: any;
     console.log("\nReceiced new getSafeRoutes request");
+    // start is "34.123,32.456"
+    const startCoords = this.parseCoords(start);
+    const endCoords = this.parseCoords(end);
 
-    // 1. Robust OSRM Fetching
+    // 2. Check Cache using the numeric arrays [lng, lat]
+    const cachedData = await this.cache.getRoute(startCoords, endCoords);
+    if (cachedData) {
+      return cachedData as IRoutingResponse;
+    }
+
+    // 3. Cache Miss -> Call OSM
     try {
       const routeUrl = `${API_PATHS.OSRM_ROUTE}${start};${end}?alternatives=true&overview=full&geometries=polyline`;
       const routeRes = await axios.get(routeUrl);
@@ -74,23 +85,17 @@ export class RoutingService {
       }),
     ]);
 
-    // E. Ensure OSM shelters also have x/y before merging
-    const osmFormatted = osmShelters.map((s: any) => ({
-      ...s,
-      x: s.lng || s.x,
-      y: s.lat || s.y,
-    }));
-
     // D. Merge and Format
-    const allShelters = [
-      ...osmFormatted,
+    const allShelters: RouteShelter[] = [
+      ...osmShelters,
       ...dbShelters.map((s) => ({
-        id: s.id, // Preserve ID
-        x: s.lng, // Python expects 'x' for lng
-        y: s.lat, // Python expects 'y' for lat
+        id: s.id,
+        lng: s.lng,
+        lat: s.lat,
         name: s.name,
-        address: s.address,
+        address: s.address || "",
         isOfficial: true,
+        type: s.type || "Public Shelter",
       })),
     ];
 
@@ -106,106 +111,29 @@ export class RoutingService {
 
     // E. Merge OSRM metadata (distance/duration) with Python safety data
     // Python returns these sorted by safetyScore
-    const top3Routes = scoredRoutes.slice(0, 3).map((scored: ScoredRoute) => {
-      const originalOSRM: OSMRoute = routeData.routes[scored.routeIndex];
-      return {
-        index: scored.routeIndex,
-        geometry: originalOSRM.geometry, // use original OSM route data since we want string geometry
-        safetyScore: scored.safetyScore,
-        safetyReport: scored.safetyReport,
-        distance: originalOSRM.distance,
-        duration: originalOSRM.duration,
-      };
-    });
+    const top3Routes: RouteData[] = scoredRoutes
+      .slice(0, 3)
+      .map((scored: ScoredRoute) => {
+        const originalOSRM: OSMRoute = routeData.routes[scored.index];
+        return {
+          index: scored.index,
+          geometry: originalOSRM.geometry as string, // use original OSM route data since we want string geometry
+          safetyScore: scored.safetyScore,
+          safetyReport: scored.safetyReport,
+          distance: originalOSRM.distance,
+          duration: originalOSRM.duration,
+        };
+      });
 
-    return {
+    const resp = {
       routes: top3Routes, // Now returning an array of 3 routes
       totalFound: routeData.routes.length,
-    };
+    } as IRoutingResponse;
+
+    this.cache
+      .setRoute(startCoords, endCoords, resp)
+      .catch((err) => console.error("Redis Set Error:", err));
+
+    return resp;
   }
-
-  // async getSafeRoute(start: string, end: string) {
-  //   // A. Fetch Route from OSRM
-  //   // routeUrl = `https://router.project-osrm.org/route/v1/driving/${start};${end}?alternatives=true&overview=full&geometries=polyline`;
-  //   const alternatives = 5;
-  //   const routeUrl = `${API_PATHS.OSRM_ROUTE}${start};${end}?alternatives=${alternatives}&overview=full&geometries=polyline&annotations=true`;
-  //   console.log("Calling OSRM with points:", routeUrl);
-  //   const routeRes = await axios.get(routeUrl);
-  //   const routeData = routeRes.data;
-  //   console.log("OSRM response:", routeData);
-
-  //   if (!routeData.routes?.length) throw new Error("No route found");
-  //   const points = polyline.decode(routeData.routes[0].geometry) as [
-  //     number,
-  //     number,
-  //   ][];
-
-  //   // B. Calculate bounds for database query
-  //   const lats = points.map((p) => p[0]);
-  //   const lngs = points.map((p) => p[1]);
-  //   const padding = 0.01;
-
-  //   // C. Fetch shelters (Prisma + OSM)
-  //   const [osmShelters, dbShelters] = await Promise.all([
-  //     fetchSheltersNearPath(points),
-  //     this.prisma.shelter.findMany({
-  //       where: {
-  //         lat: {
-  //           gte: Math.min(...lats) - padding,
-  //           lte: Math.max(...lats) + padding,
-  //         },
-  //         lng: {
-  //           gte: Math.min(...lngs) - padding,
-  //           lte: Math.max(...lngs) + padding,
-  //         },
-  //       },
-  //     }),
-  //   ]);
-
-  //   // E. Ensure OSM shelters also have x/y before merging
-  //   const osmFormatted = osmShelters.map((s: any) => ({
-  //     ...s,
-  //     x: s.lng || s.x,
-  //     y: s.lat || s.y,
-  //   }));
-
-  //   // D. Merge and Format
-  //   const allShelters = [
-  //     ...osmFormatted,
-  //     ...dbShelters.map((s) => ({
-  //       id: s.id, // Preserve ID
-  //       x: s.lng, // Python expects 'x' for lng
-  //       y: s.lat, // Python expects 'y' for lat
-  //       name: s.name,
-  //       address: s.address,
-  //       isOfficial: true,
-  //     })),
-  //   ];
-
-  //   console.log("Calling OSRM with points: start:", start, "end:", end);
-
-  //   // E. Use the new Client for the Python Solver call
-  //   const safetyData = await logicServerClient.evaluateRoute(
-  //     points,
-  //     allShelters,
-  //   );
-
-  //   // F. Keep your specific math for unique safe shelters
-  //   const safeSheltersCount = new Set(
-  //     safetyData.safetyReport
-  //       .filter((p: any) => p.s === true)
-  //       .map((p: any) => p.name),
-  //   ).size;
-
-  //   return {
-  //     summary: {
-  //       distance: routeData.routes[0].distance,
-  //       unit: "km",
-  //       safetyScore: safetyData.safetyScore,
-  //       safeSheltersCount,
-  //     },
-  //     routeGeometry: routeData.routes[0].geometry,
-  //     safetyReport: safetyData.safetyReport,
-  //   };
-  // }
 }

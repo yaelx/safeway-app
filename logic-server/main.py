@@ -30,7 +30,7 @@ app.add_middleware(
 try:
     print("DEBUG: Starting OSRM Engine...")
     osrm_process = subprocess.Popen([
-        "osrm-routed", 
+        "/usr/local/bin/osrm-routed", 
         "--algorithm", "mld", 
         "/app/data/israel-and-palestine-latest.osrm"
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -71,10 +71,10 @@ async def evaluate_alternatives(req: SafetyRequest):
     for idx, route_geom in enumerate(req.routes):
         res = calculate_safety_for_geometry(route_geom, req.shelterData)
         all_results.append({
-            "routeIndex": idx,
+            "index": idx,
             "safetyScore": res["score"],
             "safetyReport": res["report"],
-            "fullGeometry": route_geom
+            "geometry": route_geom
         })
     
     all_results.sort(key=lambda x: x["safetyScore"], reverse=True)
