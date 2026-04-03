@@ -30,7 +30,7 @@ app.add_middleware(
 try:
     print("DEBUG: Starting OSRM Engine...")
     osrm_process = subprocess.Popen([
-        "osrm-routed", 
+        "/usr/local/bin/osrm-routed", 
         "--algorithm", "mld", 
         "/app/data/israel-and-palestine-latest.osrm"
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

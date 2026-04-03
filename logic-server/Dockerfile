@@ -4,6 +4,15 @@ FROM ghcr.io/project-osrm/osrm-backend AS osrm_engine
 # STAGE 2: Build your Python app
 FROM python:3.11-slim
 
+# --- Install OSRM Runtime Dependencies ---
+RUN apt-get update && apt-get install -y \
+    libboost-all-dev \
+    libtbb-dev \
+    liblua5.3-0 \
+    libstxxl1v5 \
+    expat \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy the OSRM "executable" from the first stage

@@ -21,6 +21,34 @@ export class RedisCache {
   }
 
   /**
+   * Generic GET for non-route data (like Shelters)
+   */
+  async getRaw(key: string): Promise<any | null> {
+    try {
+      const data = await this.redis.get(key);
+      if (data) {
+        console.log(`[Cache] HIT for key: ${key}`);
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error("[Cache] Redis Get Error:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Generic SET for non-route data
+   */
+  async setRaw(key: string, data: any, ttl = this.DEFAULT_TTL): Promise<void> {
+    try {
+      await this.redis.set(key, data, { ex: ttl });
+    } catch (error) {
+      console.error("[Redis] Set Error:", error);
+    }
+  }
+
+  /**
    * Generates a unique key for a route.
    * Rounds to 5 decimal places (~1.1 meters precision).
    * This ensures that neighbors searching for the same shelter get the same cache key.
