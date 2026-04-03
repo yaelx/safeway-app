@@ -22,15 +22,11 @@ export class RedisCache {
 
   /**
    * Generic GET for non-route data (like Shelters)
+   * @upstash/redis returns the parsed type (number/string/obj)
    */
   async getRaw(key: string): Promise<any | null> {
     try {
-      const data = await this.redis.get(key);
-      if (data) {
-        console.log(`[Cache] HIT for key: ${key}`);
-        return data;
-      }
-      return null;
+      return await this.redis.get(key);
     } catch (error) {
       console.error("[Cache] Redis Get Error:", error);
       return null;

@@ -12,6 +12,7 @@ import {
   PRODUCTION_URL,
   API_ENDPOINTS,
 } from "./src/config/constants";
+import { apiLimiter, strictLimiter } from "./src/middleware/rateLimiter";
 
 dotenv.config();
 
@@ -36,21 +37,15 @@ app.use(
   }),
 );
 
-const limiter = isRateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute window
-  max: 10, // Limit each IP to 10 requests per window
-  message: {
-    status: 429,
-    message: "Too many requests from this IP, please try again after a minute.",
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
-
 // Trust Proxy - from Google/Vercel IP. so won't block users.
 app.set("trust proxy", 1);
-// Apply the limiter specifically to routing endpoint
-app.use(API_ENDPOINTS.SAFE_ROUTE, limiter);
+// 1. General API Protection (Applied to everything starting with /api)
+// This acts as a "Catch-all" for your database-heavy endpoints
+app.use("/api", apiLimiter);
+// 2. Strict Protection (Specifically for the OSRM/Python logic)
+// Since API_ENDPOINTS.SAFE_ROUTE is "/api/get-safe-route",
+// this limiter will stack on top of the general apiLimiter.
+app.use(API_ENDPOINTS.SAFE_ROUTE, strictLimiter);
 
 app.use(express.json());
 app.use(API_ENDPOINTS.SHELTERS, shelterRoutes);
@@ -75,7 +70,10 @@ const checkPythonConnection = async () => {
       "❌ Bridge Failed: Node cannot reach Python at: " + healthUrl,
     );
     console.error("   Reason: " + (err.response?.statusText || err.message));
-    console.log("GOOGLE SAYS:", err.response.data);
+    console.log(
+      "GOOGLE SAYS:",
+      err.response?.data || "No response data available",
+    );
   }
 };
 
