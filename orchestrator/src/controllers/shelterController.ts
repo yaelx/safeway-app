@@ -4,9 +4,9 @@ import { ShelterService } from "../services/shelterService";
 export class ShelterController {
   constructor(private shelterService: ShelterService) {}
 
-  getSheltersInBounds = async (req: Request, res: Response) => {
+  async getSheltersInBounds(req: Request, res: Response) {
     try {
-      const { minLat, maxLat, minLng, maxLng } = req.body;
+      const { minLat, maxLat, minLng, maxLng } = req.query as any;
       const shelters = await this.shelterService.getSheltersInBounds(
         minLat,
         maxLat,
@@ -19,7 +19,7 @@ export class ShelterController {
         .status(500)
         .json({ error: "Failed to fetch shelters", details: e.message });
     }
-  };
+  }
 
   async add(req: Request, res: Response) {
     try {
