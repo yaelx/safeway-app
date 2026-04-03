@@ -1,34 +1,18 @@
 import isRateLimit from "express-rate-limit";
-import { RedisCache } from "../infrastructure/cache/RedisCache";
+import { UpstashRateLimitStore } from "../infrastructure/cache/RateLimitStore";
 
-const cache = new RedisCache();
+const customStore = new UpstashRateLimitStore();
 
-export const createLimiter = (
-  maxRequests: number,
-  windowMinutes: number = 1,
-) => {
+const createLimiter = (maxRequests: number, windowMinutes: number = 1) => {
   return isRateLimit({
     windowMs: windowMinutes * 60 * 1000,
     max: maxRequests,
-    standardHeaders: true,
+    standardHeaders: true, // Professional X-RateLimit headers
     legacyHeaders: false,
-    // Custom store using your Upstash REST client
-    handler: async (req, res, next, options) => {
-      const key = `rate-limit:${req.ip}`;
-
-      // 1. Get current count from Redis
-      const currentUsage = (await cache.getRaw(key)) || 0;
-
-      if (currentUsage >= maxRequests) {
-        return res
-          .status(429)
-          .json({ error: "Too many requests. Please slow down." });
-      }
-
-      // 2. Increment and set TTL (windowMinutes converted to seconds)
-      await cache.setRaw(key, currentUsage + 1, windowMinutes * 60);
-
-      next();
+    store: customStore,
+    message: {
+      error: "Too many requests. Please slow down.",
+      limit: maxRequests,
     },
   });
 };
