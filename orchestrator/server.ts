@@ -23,14 +23,39 @@ app.use(helmet());
 const allowedOrigins = [PRODUCTION_URL, LOCAL_URL];
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl)
-      // OR if the origin is in our whitelist
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS - Nice try!"));
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // 1. Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+
+      // 2. Check if the origin is in our static whitelist
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
       }
+
+      // 3. ALLOW VERCEL PREVIEW URLS
+      // This Regex allows any URL ending in .vercel.app that belongs to your project
+      const isVercelPreview =
+        /^https:\/\/safeway-app-git-.*-yaelxs-projects\.vercel\.app$/.test(
+          origin,
+        );
+
+      if (isVercelPreview) {
+        return callback(null, true);
+      }
+
+      // 4. INFORMATIVE ERROR: Tell yourself exactly what went wrong
+      console.error(
+        `[CORS Blocked]: Origin "${origin}" is not in whitelist or allowed patterns.`,
+      );
+
+      // We send a more descriptive error back to the logs
+      return callback(
+        new Error(`CORS Reject: ${origin} is not authorized.`),
+        false,
+      );
     },
     methods: ["GET", "POST"],
     credentials: true,
