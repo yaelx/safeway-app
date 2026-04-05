@@ -4,7 +4,7 @@ import { ShelterService } from "../services/shelterService";
 import { prisma } from "../config/db";
 import { API_ENDPOINTS } from "../config/constants";
 import { validate } from "../middleware/validate";
-import { getInBoundsSchema } from "../schemas/shelterSchema";
+import { getInBoundsSchema } from "../schemas/shelterInBoundsSchema";
 
 const router = Router();
 const service = new ShelterService(prisma);
