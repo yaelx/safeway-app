@@ -6,7 +6,7 @@ export class ShelterController {
 
   async getSheltersInBounds(req: Request, res: Response) {
     try {
-      const { minLat, maxLat, minLng, maxLng } = req.query as any;
+      const { minLat, maxLat, minLng, maxLng } = req.body as any;
       const shelters = await this.shelterService.getSheltersInBounds(
         minLat,
         maxLat,

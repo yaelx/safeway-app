@@ -80,7 +80,7 @@ export class ShelterService {
     lat: number;
     lng: number;
     address: string;
-    type?: string;
+    type: string;
   }) {
     return this.prisma.shelter.create({
       data: { ...data, isOfficial: false },
