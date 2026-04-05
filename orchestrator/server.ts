@@ -2,19 +2,79 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import isRateLimit from "express-rate-limit";
 import shelterRoutes from "./src/routes/shelterRoutes";
 import routingRoutes from "./src/routes/routingRoutes";
 import { authProvider } from "./src/infrastructure/auth/authProvider";
+import {
+  LOCAL_URL,
+  PRODUCTION_URL,
+  API_ENDPOINTS,
+} from "./src/config/constants";
+import { apiLimiter, strictLimiter } from "./src/middleware/rateLimiter";
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+// Sets secure HTTP headers (hides Express, prevents clickjacking
+app.use(helmet());
+// "Digital ID" Check
+const allowedOrigins = [PRODUCTION_URL, LOCAL_URL];
+app.use(
+  cors({
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // 1. Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
 
-// ─── Shelter CRUD & Reporting Endpoints ──────────────────────────────────────
-app.use("/api/shelters", shelterRoutes);
-app.use("/api/get-safe-route", routingRoutes);
+      // 2. Check if the origin is in our static whitelist
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+
+      // 3. ALLOW VERCEL PREVIEW URLS
+      // This Regex allows any URL ending in .vercel.app that belongs to your project
+      const isVercelPreview =
+        /^https:\/\/safeway-app-git-.*-yaelxs-projects\.vercel\.app$/.test(
+          origin,
+        );
+
+      if (isVercelPreview) {
+        return callback(null, true);
+      }
+
+      // 4. INFORMATIVE ERROR: Tell yourself exactly what went wrong
+      console.error(
+        `[CORS Blocked]: Origin "${origin}" is not in whitelist or allowed patterns.`,
+      );
+
+      // We send a more descriptive error back to the logs
+      return callback(
+        new Error(`CORS Reject: ${origin} is not authorized.`),
+        false,
+      );
+    },
+    methods: ["GET", "POST"],
+    credentials: true,
+  }),
+);
+
+// Trust Proxy - from Google/Vercel IP. so won't block users.
+app.set("trust proxy", 1);
+// 1. General API Protection (Applied to everything starting with /api)
+// This acts as a "Catch-all" for your database-heavy endpoints
+app.use("/api", apiLimiter);
+// 2. Strict Protection (Specifically for the OSRM/Python logic)
+// Since API_ENDPOINTS.SAFE_ROUTE is "/api/get-safe-route",
+// this limiter will stack on top of the general apiLimiter.
+app.use(API_ENDPOINTS.SAFE_ROUTE, strictLimiter);
+
+app.use(express.json());
+app.use(API_ENDPOINTS.SHELTERS, shelterRoutes);
+app.use(API_ENDPOINTS.SAFE_ROUTE, routingRoutes);
 
 // ─── Python Health Check ──────────────────────────────────────────────────────
 const checkPythonConnection = async () => {
@@ -35,7 +95,10 @@ const checkPythonConnection = async () => {
       "❌ Bridge Failed: Node cannot reach Python at: " + healthUrl,
     );
     console.error("   Reason: " + (err.response?.statusText || err.message));
-    console.log("GOOGLE SAYS:", err.response.data);
+    console.log(
+      "GOOGLE SAYS:",
+      err.response?.data || "No response data available",
+    );
   }
 };
 

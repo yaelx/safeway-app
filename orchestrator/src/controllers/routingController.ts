@@ -6,20 +6,17 @@ export class RoutingController {
   constructor(private routingService: RoutingService) {}
 
   async getSafeRoute(
-    req: Request<any, any, any, IRoutingRequest>,
+    req: Request,
     res: Response<IRoutingResponse | { error: string }>,
   ) {
-    const { start, end } = req.query;
+    const { start, end } = req.query as unknown as IRoutingRequest;
 
     if (!start || !end) {
       return res.status(400).json({ error: "Missing coords" });
     }
 
     try {
-      const result: IRoutingResponse = await this.routingService.getSafeRoutes(
-        start,
-        end,
-      );
+      const result = await this.routingService.getSafeRoutes(start, end);
 
       return res.status(200).json(result);
     } catch (error: any) {

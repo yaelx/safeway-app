@@ -17,16 +17,21 @@
     "@mapbox/polyline": "^1.2.1",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@upstash/redis": "^1.37.0",
     "axios": "^1.6.8",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "csv-parse": "^6.2.1",
     "csv-parser": "^3.2.0",
     "csv-stringify": "^6.7.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.3.2",
     "google-auth-library": "^10.6.2",
+    "helmet": "^8.1.0",
     "node-fetch": "^3.3.2",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "redis": "^5.11.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

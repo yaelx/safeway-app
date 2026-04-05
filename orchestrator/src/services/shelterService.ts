@@ -79,7 +79,8 @@ export class ShelterService {
     name: string;
     lat: number;
     lng: number;
-    address?: string;
+    address: string;
+    type: string;
   }) {
     return this.prisma.shelter.create({
       data: { ...data, isOfficial: false },

@@ -32,3 +32,12 @@ export const INTERNAL_SERVICES = {
     HEADER_KEY: "X-Internal-Token",
   },
 };
+
+export const PRODUCTION_URL = "https://safeway-app.vercel.app";
+export const LOCAL_URL = "http://localhost:3000";
+
+export const API_ENDPOINTS = {
+  SHELTERS: "/api/shelters",
+  SHELTERS_IN_BOUNDS: "/in-bounds",
+  SAFE_ROUTE: "/api/get-safe-route",
+};
