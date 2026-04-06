@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-slate: #1a1a1a;
+  --color-brand-border: #333333;
+
+  --color-brand-hover: #2563eb;
+  /* Brand Core */
+  --color-brand-black: #080808;
+  --color-brand-dark: #101010;
+  --color-brand-blue: #4dabf5;
+
+  /* Routing & Safety (Functional Colors) */
+  --color-route-safest: #10b981; /* Emerald */
+  --color-route-fastest: #3b82f6; /* Blue */
+  --color-route-alt: #f59e0b; /* Amber */
+
+  /* Markers */
+  --color-marker-start: #3b82f6; /* Blue */
+  --color-marker-end: #ef4444; /* Red */
+
+  /* Text */
+  --color-text-main: #ffffff;
+  --color-text-muted: #94a3b8;
+}
+
 html,
 body,
 #root {
@@ -7,7 +31,8 @@ body,
   width: 100vw;
   margin: 0;
   padding: 0;
-  background-color: #080808;
+  background-color: var(--color-brand-black);
+  color: var(--color-text-main);
   overflow-x: hidden;
 }
 

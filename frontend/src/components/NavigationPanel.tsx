@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import { openInGoogleMaps, openInWaze } from "../utils/navigation";
-import { Coords, RouteData, RoutePoint } from "../types/types";
+import { RoutePoint } from "../types/types";
 import { useRoutingContext } from "../context/RoutingContext";
+import { NavigationPanelStrings } from "../config/constants";
 
 export const NavigationPanel: React.FC = () => {
   const { routeData, selectedRoute } = useRoutingContext();
@@ -27,10 +28,10 @@ export const NavigationPanel: React.FC = () => {
   );
 
   const routeMode = isHighestSafety
-    ? "Recommended"
+    ? NavigationPanelStrings.RouteModeRecommended
     : isShortestTime
-      ? "Fastest"
-      : "Alternative";
+      ? NavigationPanelStrings.RouteModeFastest
+      : NavigationPanelStrings.RouteModeAlternative;
 
   return (
     <div className="fixed bottom-[130px] left-0 right-0 z-[1000] p-3 animate-in slide-in-from-bottom duration-300 pointer-events-none">
@@ -41,12 +42,13 @@ export const NavigationPanel: React.FC = () => {
         >
           <div className="flex-1">
             <h3 className="text-lg font-bold text-gray-900 leading-tight">
-              {routeMode} Route
+              {routeMode} {NavigationPanelStrings.RouteLabel}
             </h3>
             {/* Improved Visibility for Duration & Distance */}
             <div className="flex items-center gap-2 mt-1.5">
               <span className="bg-[#334155] text-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
-                {Math.round(selectedRoute.duration / 60)} mins
+                {Math.round(selectedRoute.duration / 60)}{" "}
+                {NavigationPanelStrings.MinsUnit}
               </span>
               <span className="text-slate-500 text-[10px] font-medium">
                 • {(selectedRoute.distance / 1000).toFixed(1)} km
@@ -74,15 +76,14 @@ export const NavigationPanel: React.FC = () => {
         <div
           className={`overflow-hidden transition-all duration-500 ${isExpanded ? "max-h-[450px] opacity-100 mt-5" : "max-h-0 opacity-0"}`}
         >
-          {/* Shelter Summary logic remains the same */}
+          {/* Shelter Summary */}
           <div className="bg-[#1e293b] rounded-xl p-3 mb-4 flex items-center gap-3 border border-blue-900/20">
             <span className="text-2xl leading-none">🏠</span>
             <div className="text-[13px] text-blue-100 leading-tight">
-              {/* text-blue-100 */}
               <span className="font-bold">
-                {uniqueShelters} Unique Shelters
+                {uniqueShelters} {NavigationPanelStrings.ShelterSummaryLabel}
               </span>{" "}
-              along this trajectory.
+              {NavigationPanelStrings.ShelterSummaryTrail}
             </div>
           </div>
 
@@ -92,13 +93,13 @@ export const NavigationPanel: React.FC = () => {
               onClick={() => openInGoogleMaps(selectedRoute.geometry)}
               className="w-full bg-[#2563eb] text-white font-bold py-4 rounded-2xl shadow-md hover:bg-[#1d4ed8]"
             >
-              Navigate with Google Maps
+              {NavigationPanelStrings.BtnGoogleMaps}
             </button>
             <button
               onClick={() => openInWaze(selectedRoute.geometry)}
               className="w-full bg-[#1a1a1a] border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm"
             >
-              Open in Waze
+              {NavigationPanelStrings.BtnWaze}
             </button>
           </div>
         </div>

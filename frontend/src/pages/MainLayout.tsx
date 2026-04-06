@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation, useNavigate, Link } from "@tanstack/react-router";
+import { useLocation, Link } from "@tanstack/react-router";
 import {
   Box,
   Drawer,
@@ -13,42 +13,21 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { Footer } from "../components/Footer";
-
-// export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
-//   children,
-// }) => {
-//   return (
-//     <div className="flex flex-col min-h-screen bg-[#101010] text-[#E0E0E0]">
-//       {/* This is the KEY for termination: The map container
-//         takes up all available height, pushing the footer down.
-//       */}
-//       <main className="flex-grow overflow-y-auto bg-[#101010] h-[calc(100vh-80px)]">
-//         {children}
-//       </main>
-
-//       {/* Footer has a defined height, matching the layout math.
-//        */}
-//       <div className="h-[80px] bg-[#1a1a1a] text-[#E0E0E0] p-4 flex flex-col justify-between border-t border-[#333]">
-//         <Footer />
-//       </div>
-//     </div>
-//   );
-// };
+import { MainLayoutStrings } from "../config/constants";
 
 export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const isMapView = location.pathname === "/";
 
   const menuItems = [
-    { text: "Map", to: "/" },
-    { text: "About", to: "/about" },
-    { text: "Contact", to: "/contact" },
-    { text: "Privacy", to: "/privacy" },
-    { text: "Terms", to: "/terms" },
+    { text: MainLayoutStrings.MenuItemMap, to: "/" },
+    { text: MainLayoutStrings.MenuItemAbout, to: "/about" },
+    { text: MainLayoutStrings.MenuItemContact, to: "/contact" },
+    { text: MainLayoutStrings.MenuItemPrivacy, to: "/privacy" },
+    { text: MainLayoutStrings.MenuItemTerms, to: "/terms" },
   ];
 
   return (
@@ -104,7 +83,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           }}
         >
           <Typography variant="h6" fontWeight="bold" color="primary">
-            SafeWay
+            {MainLayoutStrings.AppName}
           </Typography>
           <IconButton onClick={() => setIsOpen(false)} sx={{ color: "white" }}>
             <CloseIcon />

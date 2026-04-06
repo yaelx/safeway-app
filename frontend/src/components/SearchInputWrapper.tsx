@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Search, Close, Navigation } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import { OSMLocation, Location } from "../types/types";
 import { converOSMLocationToLocation } from "../utils/utils";
+import { SearchInputWrapperStrings } from "../config/constants";
 
 interface SearchInputWrapperProps {
   placeholder: string;
@@ -72,14 +73,14 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
               className="px-4 py-4 hover:bg-[#334155] cursor-pointer text-sm text-[#4dabf5] font-bold flex items-center gap-3 border-b border-[#334155] sticky top-0 bg-[#1e293b] z-10 transition-colors"
             >
               <MyLocationRoundedIcon sx={{ fontSize: 20 }} />
-              Your location
+              {SearchInputWrapperStrings.YourLocation}
             </li>
           )}
 
           {!query && recentResults.length > 0 && (
             <>
               <li className="px-4 py-2 text-[10px] font-bold text-slate-500 bg-[#0f172a] uppercase tracking-wider">
-                Recent Destinations
+                {SearchInputWrapperStrings.RecentDestinations}
               </li>
               {recentResults.map((r: Location, i: number) => (
                 <li

@@ -3,7 +3,10 @@ import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { renderToStaticMarkup } from "react-dom/server";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
-import { SHELTER_COLORS } from "../config/constants";
+import {
+  SHELTER_COLORS,
+  UnifiedShelterMarkerStrings,
+} from "../config/constants";
 import { RouteShelter } from "../types/types";
 
 const getShelterColor = (shelterType: string | undefined) => {
@@ -55,7 +58,7 @@ export const UnifiedShelterMarker: React.FC<UnifiedShelterProps> = ({
     >
       <Popup>
         <div style={{ textAlign: "right", direction: "rtl" }}>
-          <strong>{shelter.name || "מקלט"}</strong>
+          <strong>{shelter.name || UnifiedShelterMarkerStrings.DefaultShelterName}</strong>
           <br />
           {shelter.address && (
             <small>
@@ -64,7 +67,7 @@ export const UnifiedShelterMarker: React.FC<UnifiedShelterProps> = ({
             </small>
           )}
           <span style={{ color: markerColor, fontWeight: "bold" }}>
-            {shelter.isOfficial ? "✅ מקלט רשמי" : "📍 דיווח קהילתי"}
+            {shelter.isOfficial ? UnifiedShelterMarkerStrings.OfficialShelter : UnifiedShelterMarkerStrings.CommunityShelter}
           </span>
         </div>
       </Popup>

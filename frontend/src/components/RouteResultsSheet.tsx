@@ -4,13 +4,13 @@ import { BottomSheet } from "react-spring-bottom-sheet";
 import "react-spring-bottom-sheet/dist/style.css";
 import { SafetySidebar } from "./SafetySidebar";
 import { RouteData } from "../types/types";
+import { RouteResultsSheetStrings } from "../config/constants";
 
 export const RouteResultsSheet = ({ routes }: { routes: RouteData[] }) => {
   const [open, setOpen] = useState(false);
 
   // Define the 'snap points' for mobile
   const handleSnapPoints = ({
-    minHeight,
     maxHeight,
   }: {
     minHeight: number;
@@ -28,12 +28,12 @@ export const RouteResultsSheet = ({ routes }: { routes: RouteData[] }) => {
     <>
       {/* Floating Summary Bar (Alternative trigger) */}
       {!open && routes.length > 0 && (
-        <div className="fixed bottom-10 left-4 right-4 z-[1000] p-4">
+        <div className="fixed bottom-10 left-4 right-4 z-1000 p-4">
           <button
             onClick={() => setOpen(true)}
             className="w-full bg-slate-900 text-white rounded-xl py-3 text-center shadow-xl active:scale-95 transition"
           >
-            {routes.length} Routes Found. Tap to compare.
+            {routes.length} {RouteResultsSheetStrings.BtnRoutesSummary}
           </button>
         </div>
       )}
@@ -67,7 +67,7 @@ export const RouteResultsSheet = ({ routes }: { routes: RouteData[] }) => {
             onClick={() => setOpen(false)}
             className="w-full mt-6 text-slate-500 text-sm"
           >
-            Dismiss
+            {RouteResultsSheetStrings.BtnDismiss}
           </button>
         </div>
       </BottomSheet>

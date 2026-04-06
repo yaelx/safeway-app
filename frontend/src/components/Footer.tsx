@@ -1,5 +1,6 @@
 import { Box, Link, Typography, Container } from "@mui/material";
 import { Link as RouterLink } from "@tanstack/react-router";
+import { FooterStrings } from "../config/constants";
 
 export const Footer = () => {
   return (
@@ -26,12 +27,12 @@ export const Footer = () => {
             variant="caption"
             sx={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}
           >
-            © {new Date().getFullYear()} SafeWay Israel. All rights reserved.
+            {FooterStrings.Copyright}
           </Typography>
 
           {/* Minimal Secondary Links */}
           <Box sx={{ display: "flex", gap: 3 }}>
-            {["Privacy", "Terms"].map((text) => (
+            {FooterStrings.NavLinks.map((text) => (
               <Link
                 key={text}
                 component={RouterLink}

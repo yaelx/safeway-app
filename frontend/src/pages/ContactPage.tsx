@@ -1,6 +1,7 @@
 import { Box, Typography, Button, TextField, Container } from "@mui/material";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import SendIcon from "@mui/icons-material/Send";
+import { ContactPageStrings } from "../config/constants";
 
 // Common style for all text fields to ensure visibility
 const textFieldStyle = {
@@ -22,10 +23,10 @@ export const ContactPage = () => {
     <Box sx={{ bgcolor: "#101010", minHeight: "100%", py: 8 }}>
       <Container maxWidth="sm" sx={{ color: "white" }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Contact
+          {ContactPageStrings.Title}
         </Typography>
         <Typography variant="body1" sx={{ mb: 4, opacity: 0.8 }}>
-          Have a question or feedback? Reach out below.
+          {ContactPageStrings.Subtitle}
         </Typography>
 
         {/* LinkedIn Box (Keep your existing dark styling) */}
@@ -39,44 +40,44 @@ export const ContactPage = () => {
           }}
         >
           <Typography variant="h6" fontWeight="bold" gutterBottom>
-            Preferred Contact
+            {ContactPageStrings.PreferredContactHeading}
           </Typography>
           <Button
             variant="contained"
             startIcon={<LinkedInIcon />}
-            href="https://www.linkedin.com/in/yaelsa"
+            href={ContactPageStrings.LinkedInUrl}
             sx={{ textTransform: "none", bgcolor: "#2563eb" }}
           >
-            Connect on LinkedIn
+            {ContactPageStrings.BtnLinkedIn}
           </Button>
         </Box>
 
         <Typography variant="h6" gutterBottom sx={{ color: "#4dabf5" }}>
-          Send a Message
+          {ContactPageStrings.SendMessageHeading}
         </Typography>
 
         <Box component="form" sx={{ display: "flex", flexDirection: "column" }}>
           <TextField
-            label="Name"
+            label={ContactPageStrings.FieldLabelName}
             variant="filled"
             fullWidth
-            placeholder="Your name"
+            placeholder={ContactPageStrings.FieldPlaceholderName}
             sx={textFieldStyle}
           />
           <TextField
-            label="Email"
+            label={ContactPageStrings.FieldLabelEmail}
             variant="filled"
             fullWidth
-            placeholder="you@example.com"
+            placeholder={ContactPageStrings.FieldPlaceholderEmail}
             sx={textFieldStyle}
           />
           <TextField
-            label="Message"
+            label={ContactPageStrings.FieldLabelMessage}
             variant="filled"
             fullWidth
             multiline
             rows={4}
-            placeholder="How can I help?"
+            placeholder={ContactPageStrings.FieldPlaceholderMessage}
             sx={textFieldStyle}
           />
           <Button
@@ -92,7 +93,7 @@ export const ContactPage = () => {
               fontWeight: "bold",
             }}
           >
-            Send Message
+            {ContactPageStrings.BtnSendMessage}
           </Button>
         </Box>
       </Container>

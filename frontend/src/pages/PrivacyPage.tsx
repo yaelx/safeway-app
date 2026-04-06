@@ -7,6 +7,7 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
+import { PrivacyPageStrings } from "../config/constants";
 
 export const PrivacyPage = () => {
   return (
@@ -18,16 +19,15 @@ export const PrivacyPage = () => {
           gutterBottom
           sx={{ color: "white" }}
         >
-          Privacy Policy
+          {PrivacyPageStrings.Title}
         </Typography>
 
         <Box sx={{ mt: 6 }}>
           <Typography variant="h6" gutterBottom sx={{ color: "#4dabf5" }}>
-            What Data We Collect
+            {PrivacyPageStrings.DataCollectionHeading}
           </Typography>
           <Typography variant="body1" paragraph sx={{ opacity: 0.8 }}>
-            SafeWay is designed with "Privacy by Design." We do not require
-            accounts, names, or phone numbers to use the mapping features.
+            {PrivacyPageStrings.DataCollectionBody}
           </Typography>
 
           <Paper
@@ -45,26 +45,10 @@ export const PrivacyPage = () => {
               fontWeight="bold"
               sx={{ color: "white", mb: 2 }}
             >
-              Technical Data Processing:
+              {PrivacyPageStrings.TechDataHeading}
             </Typography>
             <List disablePadding>
-              {[
-                {
-                  primary: "Anonymized Routing Requests",
-                  secondary:
-                    "When you request a route, coordinates are sent to our logic server. These are not stored permanently or linked to your identity.",
-                },
-                {
-                  primary: "Security Logs & Rate Limiting",
-                  secondary:
-                    "We use Upstash (Redis) to store temporary request counts per IP address to prevent DDoS attacks. This data expires automatically within 24 hours.",
-                },
-                {
-                  primary: "Google Maps API",
-                  secondary:
-                    "The map interface uses Google Maps. Their privacy policy applies to the interaction with the map tile data.",
-                },
-              ].map((item, index) => (
+              {PrivacyPageStrings.DataItems.map((item, index) => (
                 <ListItem
                   key={index}
                   sx={{
@@ -74,8 +58,8 @@ export const PrivacyPage = () => {
                   }}
                 >
                   <ListItemText
-                    primary={item.primary}
-                    secondary={item.secondary}
+                    primary={item.Primary}
+                    secondary={item.Secondary}
                     primaryTypographyProps={{
                       sx: { color: "#4dabf5", fontWeight: 500 },
                     }}
@@ -93,13 +77,10 @@ export const PrivacyPage = () => {
             gutterBottom
             sx={{ color: "#4dabf5", mt: 4 }}
           >
-            Third-Party Services
+            {PrivacyPageStrings.ThirdPartyHeading}
           </Typography>
           <Typography variant="body1" sx={{ opacity: 0.8 }}>
-            Our infrastructure is hosted on <strong>Vercel</strong>
-            (Frontend/Orchestrator) and <strong>Google Cloud</strong> (Python
-            Logic Server). These providers may log basic metadata (IP, Browser
-            version) for security and maintenance purposes.
+            {PrivacyPageStrings.ThirdPartyBody}
           </Typography>
 
           <Box
@@ -111,8 +92,7 @@ export const PrivacyPage = () => {
             }}
           >
             <Typography variant="body2" sx={{ opacity: 0.6 }}>
-              For privacy inquiries or to request data deletion (for the Contact
-              form), please reach out via the Contact page.
+              {PrivacyPageStrings.FootnoteBody}
             </Typography>
           </Box>
         </Box>

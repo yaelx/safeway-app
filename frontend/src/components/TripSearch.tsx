@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocationState } from "../context/LocationContext";
 import { useAddressSearch } from "../hooks/useAddressSearch";
 import { useRecentSearches } from "../hooks/useRecentSearches";
-import { BUTTON_TEXT } from "../config/constants";
+import { BUTTON_TEXT, TripSearchStrings } from "../config/constants";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import AltRouteIcon from "@mui/icons-material/AltRoute";
@@ -36,7 +36,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   const { recentSearches, saveRecent } = useRecentSearches();
   const [expanded, setIsExpanded] = useState(false);
   const [activeField, setActiveField] = useState<"start" | "end" | null>(null);
-  const [loadingMessage, setLoadingMessage] = useState("Analyzing route...");
+  const [loadingMessage, setLoadingMessage] = useState(
+    TripSearchStrings.LoadingAnalyzing,
+  );
   const { routeData } = useRoutingContext();
 
   const handleSharedLocate = () => {
@@ -67,14 +69,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   };
 
   useEffect(() => {
-    if (startLocation?.address === "Current Location") {
-      fromSearch.selectAddress("Current Location");
+    if (startLocation?.address === TripSearchStrings.CurrentLocation) {
+      fromSearch.selectAddress(TripSearchStrings.CurrentLocation);
     }
   }, [startLocation]);
 
   useEffect(() => {
-    if (endLocation?.address === "Current Location") {
-      toSearch.selectAddress("Current Location");
+    if (endLocation?.address === TripSearchStrings.CurrentLocation) {
+      toSearch.selectAddress(TripSearchStrings.CurrentLocation);
     }
   }, [endLocation]);
 
@@ -83,11 +85,11 @@ export const TripSearch: React.FC<TripSearchProps> = ({
 
     if (loading) {
       // Reset to initial message when loading starts
-      setLoadingMessage("Analyzing route...");
+      setLoadingMessage(TripSearchStrings.LoadingAnalyzing);
 
       // Change message after 8 seconds (typical for cold starts or complex OSRM)
       timer = setTimeout(() => {
-        setLoadingMessage("Still working... Calculating the safest path.");
+        setLoadingMessage(TripSearchStrings.LoadingStillWorking);
       }, 8000);
     }
 
@@ -145,12 +147,12 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               <div className="flex flex-col">
                 <span className="text-slate-400 text-sm font-medium text-[15px]">
                   {routeData
-                    ? `${routeData.length} Routes Found`
-                    : "Plan safe route..."}
+                    ? `${routeData.length} ${TripSearchStrings.PillRoutesFound}`
+                    : TripSearchStrings.PillPlanRoute}
                 </span>
                 {routeData && (
                   <span className="text-slate-400 text-[15px] font-medium mt-1">
-                    Tap lines on map to compare
+                    {TripSearchStrings.PillTapToCompare}
                   </span>
                 )}
               </div>
@@ -194,7 +196,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 <span className="font-bold text-white text-lg tracking-tight">
                   {" "}
                   {/* text-xl to text-lg */}
-                  Route Planner
+                  {TripSearchStrings.HeaderRoutePlanner}
                 </span>
               </div>
               <button
@@ -231,7 +233,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               {/* Right Column: The Input Fields */}
               <div className="flex-1 space-y-2">
                 <SearchInputWrapper
-                  placeholder="From..."
+                  placeholder={TripSearchStrings.PlaceholderFrom}
                   query={fromSearch.query}
                   setQuery={fromSearch.setQuery}
                   recentResults={recentSearches}
@@ -243,7 +245,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 />
 
                 <SearchInputWrapper
-                  placeholder="Where to?"
+                  placeholder={TripSearchStrings.PlaceholderWhereTo}
                   query={toSearch.query}
                   setQuery={toSearch.setQuery}
                   recentResults={recentSearches}

@@ -1,6 +1,6 @@
-import React from "react";
 import { ShieldCheck, Clock, MapPin, AlertTriangle } from "lucide-react";
 import { RouteData } from "../types/types";
+import { SafetySidebarStrings } from "../config/constants";
 
 interface SafetySidebarProps {
   routes: RouteData[];
@@ -28,7 +28,7 @@ export const SafetySidebar = ({
           {/* Header: Type and Score */}
           <div className="flex justify-between items-start mb-2">
             <span className="bg-slate-700 text-slate-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-              {selectedRouteId === route.index ? "Safest Route" : "Alternative"}
+              {selectedRouteId === route.index ? SafetySidebarStrings.LabelSafestRoute : SafetySidebarStrings.LabelAlternative}
             </span>
             <div className="flex items-center gap-1 text-emerald-400 font-bold">
               <span className="text-lg">{route.safetyScore}%</span>
@@ -51,7 +51,7 @@ export const SafetySidebar = ({
           {/* The "Safety Segment" Bar */}
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] text-slate-500 font-medium uppercase">
-              <span>Path Safety</span>
+              <span>{SafetySidebarStrings.LabelPathSafety}</span>
             </div>
             <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden flex">
               {/* This represents the ratio of safe vs unsafe segments */}
@@ -69,7 +69,7 @@ export const SafetySidebar = ({
           {route.safetyScore < 80 && (
             <div className="mt-3 flex items-center gap-1.5 text-amber-500 text-[11px]">
               <AlertTriangle size={12} />
-              Route has exposure gaps
+              {SafetySidebarStrings.WarningExposureGaps}
             </div>
           )}
         </button>

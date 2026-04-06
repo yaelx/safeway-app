@@ -1,5 +1,5 @@
 import { Marker, Circle, Popup } from "react-leaflet";
-import { COLORS } from "../config/constants";
+import { COLORS, UserMarkerStrings } from "../config/constants";
 
 export const UserMarker = ({
   coords,
@@ -15,7 +15,7 @@ export const UserMarker = ({
       pathOptions={{ color: COLORS.USER_BLUE, fillOpacity: 0.2 }}
     />
     <Marker position={coords} icon={icon}>
-      <Popup>You are here</Popup>
+      <Popup>{UserMarkerStrings.PopupYouAreHere}</Popup>
     </Marker>
   </>
 );
