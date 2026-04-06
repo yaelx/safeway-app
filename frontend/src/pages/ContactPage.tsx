@@ -36,6 +36,7 @@ export const ContactPage = () => {
     email: "",
     subject: "SafeWay Inquiry", // Default subject
     message: "",
+    honeypot: "",
   });
 
   // Handle input changes and reset the status (clears old errors/success messages)
@@ -53,7 +54,13 @@ export const ContactPage = () => {
 
     if (isSent) {
       // Clear form on success
-      setForm({ name: "", email: "", subject: "SafeWay Inquiry", message: "" });
+      setForm({
+        name: "",
+        email: "",
+        subject: "SafeWay Inquiry",
+        message: "",
+        honeypot: "",
+      });
     }
   };
 
@@ -129,6 +136,17 @@ export const ContactPage = () => {
             onChange={handleChange}
             placeholder={ContactPageStrings.FieldPlaceholderName}
             sx={textFieldStyle}
+          />
+          <TextField
+            name="honeypot"
+            value={form.honeypot}
+            onChange={handleChange}
+            sx={{
+              display: "none",
+              position: "absolute",
+              left: "-9999px",
+            }}
+            autoComplete="off"
           />
           <TextField
             name="email"

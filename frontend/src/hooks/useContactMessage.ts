@@ -1,11 +1,5 @@
 import { useState, useCallback } from "react";
-
-interface ContactFormData {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
+import { ContactFormData } from "../types/types";
 
 export const useContactMessage = () => {
   const [loading, setLoading] = useState(false);
@@ -24,7 +18,11 @@ export const useContactMessage = () => {
     // Handle non-200 responses
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to send message");
+      const errorMessage =
+        errorData.error === "Failed to fetch"
+          ? "Our server is currently offline. Please try again in a few minutes."
+          : errorData.error;
+      throw new Error(errorMessage);
     }
 
     return response.json();
