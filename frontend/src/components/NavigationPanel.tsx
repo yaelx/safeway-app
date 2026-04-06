@@ -33,8 +33,8 @@ export const NavigationPanel: React.FC = () => {
       : "Alternative";
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[1000] p-3 animate-in slide-in-from-bottom duration-300 pointer-events-none">
-      <div className="bg-white rounded-[24px] shadow-2xl border border-slate-50 p-4 max-w-md mx-auto pointer-events-auto transition-all duration-300">
+    <div className="fixed bottom-[130px] left-0 right-0 z-[1000] p-3 animate-in slide-in-from-bottom duration-300 pointer-events-none">
+      <div className="bg-[#1a1a1a] rounded-[24px] shadow-2xl border border-[#333] p-4 max-w-md mx-auto pointer-events-auto transition-all duration-300">
         <div
           className="flex justify-between items-center cursor-pointer group"
           onClick={() => setIsExpanded(!isExpanded)}
@@ -45,10 +45,10 @@ export const NavigationPanel: React.FC = () => {
             </h3>
             {/* Improved Visibility for Duration & Distance */}
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
+              <span className="bg-[#334155] text-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
                 {Math.round(selectedRoute.duration / 60)} mins
               </span>
-              <span className="text-slate-400 text-[10px] font-medium">
+              <span className="text-slate-500 text-[10px] font-medium">
                 • {(selectedRoute.distance / 1000).toFixed(1)} km
               </span>
             </div>
@@ -56,12 +56,12 @@ export const NavigationPanel: React.FC = () => {
 
           <div className="flex items-center gap-3">
             {/* Safety Score Badge - Kept as the primary visual hook */}
-            <div className="bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-100 flex-shrink-0">
-              <span className="text-emerald-700 text-[12px] font-black flex items-center gap-1">
+            <div className="bg-[#064e3b]/30 px-2.5 py-1.5 rounded-xl border border-emerald-900/50 flex-shrink-0">
+              <span className="text-emerald-400 text-[12px] font-black flex items-center gap-1">
                 🛡️ {selectedRoute.safetyScore}%
               </span>
             </div>
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400">
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[#333] text-slate-500">
               <span
                 className={`text-[10px] transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`}
               >
@@ -75,9 +75,10 @@ export const NavigationPanel: React.FC = () => {
           className={`overflow-hidden transition-all duration-500 ${isExpanded ? "max-h-[450px] opacity-100 mt-5" : "max-h-0 opacity-0"}`}
         >
           {/* Shelter Summary logic remains the same */}
-          <div className="bg-[#f0f7ff] rounded-xl p-3 mb-4 flex items-center gap-3 border border-blue-100/30">
+          <div className="bg-[#1e293b] rounded-xl p-3 mb-4 flex items-center gap-3 border border-blue-900/20">
             <span className="text-2xl leading-none">🏠</span>
-            <div className="text-[13px] text-blue-900 leading-tight">
+            <div className="text-[13px] text-blue-100 leading-tight">
+              {/* text-blue-100 */}
               <span className="font-bold">
                 {uniqueShelters} Unique Shelters
               </span>{" "}
@@ -89,13 +90,13 @@ export const NavigationPanel: React.FC = () => {
           <div className="space-y-2">
             <button
               onClick={() => openInGoogleMaps(selectedRoute.geometry)}
-              className="w-full bg-[#2563eb] text-white font-bold py-4 rounded-2xl shadow-md"
+              className="w-full bg-[#2563eb] text-white font-bold py-4 rounded-2xl shadow-md hover:bg-[#1d4ed8]"
             >
               Navigate with Google Maps
             </button>
             <button
               onClick={() => openInWaze(selectedRoute.geometry)}
-              className="w-full bg-white border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm"
+              className="w-full bg-[#1a1a1a] border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm"
             >
               Open in Waze
             </button>

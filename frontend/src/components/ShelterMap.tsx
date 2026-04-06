@@ -145,7 +145,10 @@ const ShelterMap: React.FC = () => {
   }, [routeData, selectedRoute]);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-slate-200">
+    <div
+      className="relative h-full w-full overflow-hidden bg-[#080808]"
+      style={{ minHeight: "calc(100vh - 80px)" }}
+    >
       <div className="absolute top-0 left-0 z-[2000] p-4 pointer-events-none w-full max-w-sm">
         <TripSearch onPlanTrip={planTrip} loading={loading} />
       </div>
@@ -154,7 +157,7 @@ const ShelterMap: React.FC = () => {
         <MapContainer
           center={[32.0853, 34.7818]}
           zoom={14}
-          style={{ height: "100%", width: "100%" }}
+          style={{ height: "100%", width: "100%", backgroundColor: "#101010" }}
           zoomControl={false}
         >
           <TileLayer url={TileLayerUrl} />
