@@ -145,14 +145,11 @@ const ShelterMap: React.FC = () => {
   }, [routeData, selectedRoute]);
 
   return (
-    <div
-      className="relative h-full w-full overflow-hidden bg-[#080808]"
-      style={{ minHeight: "calc(100vh - 80px)" }}
-    >
-      <div className="absolute top-0 left-0 z-[2000] p-4 pointer-events-none w-full max-w-sm">
+    <div className="relative h-screen w-full overflow-hidden bg-[#080808]">
+      {/* TripSearch Overlay */}
+      <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
         <TripSearch onPlanTrip={planTrip} loading={loading} />
       </div>
-
       <div className="absolute inset-0 z-0">
         <MapContainer
           center={[32.0853, 34.7818]}

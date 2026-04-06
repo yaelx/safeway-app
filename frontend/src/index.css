@@ -7,9 +7,13 @@ body,
   width: 100vw;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  background-color: #080808;
+  overflow-x: hidden;
 }
 
+#root {
+  min-height: 100vh;
+}
 .leaflet-container {
   height: 100vh !important;
   width: 100vw !important;
