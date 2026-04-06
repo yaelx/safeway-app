@@ -34,7 +34,7 @@ export const NavigationPanel: React.FC = () => {
       : NavigationPanelStrings.RouteModeAlternative;
 
   return (
-    <div className="fixed bottom-[130px] left-0 right-0 z-menu p-3 animate-in slide-in-from-bottom duration-300 pointer-events-none">
+    <div className="fixed bottom-[130px] left-0 right-0 z-[1002] p-3 animate-in slide-in-from-bottom duration-300 pointer-events-none">
       <div className="bg-brand-slate rounded-[24px] shadow-2xl border border-brand-border p-4 max-w-md mx-auto pointer-events-auto transition-all duration-300">
         <div
           className="flex justify-between items-center cursor-pointer group"
