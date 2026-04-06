@@ -1,27 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-slate: #1a1a1a;
-  --color-brand-border: #333333;
+  --color-brand-slate: #1a1a1a; /* dark grey */
+  --color-brand-border: #333333; /* dark grey */
 
-  --color-brand-hover: #2563eb;
+  --color-brand-hover: #2563eb; /* royal blue */
   /* Brand Core */
-  --color-brand-black: #080808;
-  --color-brand-dark: #101010;
-  --color-brand-blue: #4dabf5;
+  --color-brand-black: #080808; /* black */
+  --color-brand-dark: #101010; /* dark grey */
+  --color-brand-blue: #4dabf5; /* sky blue */
 
   /* Routing & Safety (Functional Colors) */
   --color-route-safest: #10b981; /* Emerald */
-  --color-route-fastest: #3b82f6; /* Blue */
+  --color-route-fastest: #3b82f6; /* royal Blue */
   --color-route-alt: #f59e0b; /* Amber */
+  --color-error: #ef4444;
 
   /* Markers */
-  --color-marker-start: #3b82f6; /* Blue */
+  --color-marker-start: #3b82f6; /* royal Blue */
   --color-marker-end: #ef4444; /* Red */
+  --color-shelter-purple: #7b1fa2;
+  --color-shelter-pink: #f54de1;
 
   /* Text */
-  --color-text-main: #ffffff;
-  --color-text-muted: #94a3b8;
+  --color-text-main: #ffffff; /* white */
+  --color-text-muted: #94a3b8; /* light blue grey */
 }
 
 html,

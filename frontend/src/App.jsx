@@ -1,4 +1,5 @@
 import "./App.css";
+import "./index.css";
 import { RouterProvider } from "@tanstack/react-router";
 import { ThemeProvider } from "@mui/material/styles";
 import { darkTheme } from "./theme/theme";

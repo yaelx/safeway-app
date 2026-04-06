@@ -1,30 +1,59 @@
 import { createTheme } from "@mui/material/styles";
 
+export const BRAND_COLORS = {
+  black: "#080808",
+  dark: "#101010",
+  slate: "#1a1a1a",
+  border: "#333333",
+  blue: "#4dabf5",
+  hover: "#2563eb",
+  safest: "#10b981", // Emerald
+  fastest: "#3b82f6", // Blue
+  alt: "#f59e0b", // Amber
+  error: "#ef4444",
+  text: {
+    main: "#ffffff", // hite
+    muted: "#94a3b8", // light grey
+  },
+  startMarker: "#3b82f6",
+  endMarker: "#ef4444",
+};
+
+declare module "@mui/material/styles" {
+  interface Palette {
+    brand: typeof BRAND_COLORS;
+  }
+  interface PaletteOptions {
+    brand?: Partial<typeof BRAND_COLORS>;
+  }
+}
+
 export const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "var(--brand-blue)" as any,
+      main: BRAND_COLORS.blue,
     },
     background: {
-      default: "var(--brand-black)",
-      paper: "var(--brand-dark)",
+      default: BRAND_COLORS.black,
+      paper: BRAND_COLORS.dark,
     },
     text: {
-      primary: "var(--text-main)",
-      secondary: "var(--text-muted)",
+      primary: BRAND_COLORS.text.main,
+      secondary: BRAND_COLORS.text.muted,
     },
-    success: { main: "var(--color-route-safest)" },
-    info: { main: "var(--color-route-fastest)" },
-    warning: { main: "var(--color-route-alt)" },
-    error: { main: "var(--color-marker-end)" },
+    success: { main: BRAND_COLORS.safest },
+    warning: { main: BRAND_COLORS.alt },
+    info: { main: BRAND_COLORS.fastest },
+    error: { main: BRAND_COLORS.error },
+    brand: BRAND_COLORS,
   },
   components: {
     MuiTextField: {
       styleOverrides: {
         root: {
           "& .MuiFilledInput-root": {
-            backgroundColor: "var(--brand-slate)",
+            backgroundColor: BRAND_COLORS.slate,
             borderRadius: "12px",
             "&:hover": { backgroundColor: "#222" },
           },
