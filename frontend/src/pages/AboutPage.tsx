@@ -4,9 +4,9 @@ import { AboutPageStrings } from "../config/constants";
 export const AboutPage = () => {
   return (
     /* We use 'background.default' from your new global theme */
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", py: 8 }}>
+    <Box sx={{ bgcolor: "brand.black", minHeight: "100vh", py: 8 }}>
       <Container maxWidth="md">
-        <Typography variant="h3" fontWeight="bold" gutterBottom color="white">
+        <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ color: "brand.text.main" }}>
           {AboutPageStrings.Title}
         </Typography>
 
@@ -20,11 +20,12 @@ export const AboutPage = () => {
         <Typography
           variant="body1"
           sx={{
-            color: "text.secondary",
+            color: "brand.text.muted",
             mb: 6,
             lineHeight: 1.8,
             fontSize: "1.1rem",
-            borderLeft: "4px solid #4dabf5",
+            borderLeft: "4px solid",
+            borderColor: "brand.blue",
             pl: 3,
           }}
         >
@@ -40,22 +41,22 @@ export const AboutPage = () => {
                 sx={{
                   p: 3,
                   height: "100%",
-                  bgcolor: "#1a1a1a",
-                  border: "1px solid #333",
+                  bgcolor: "brand.slate",
+                  border: "1px solid",
+                  borderColor: "brand.border",
                   borderRadius: "16px",
                 }}
               >
                 <Typography
                   variant="h6"
-                  color="white"
                   gutterBottom
-                  sx={{ fontWeight: "bold" }}
+                  sx={{ color: "brand.text.main", fontWeight: "bold" }}
                 >
                   {item.Title}
                 </Typography>
                 <Typography
                   variant="body2"
-                  sx={{ color: "text.secondary", lineHeight: 1.6 }}
+                  sx={{ color: "brand.text.muted", lineHeight: 1.6 }}
                 >
                   {item.Desc}
                 </Typography>

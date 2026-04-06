@@ -28,27 +28,26 @@ export const RouteResultsSheet = ({ routes }: { routes: RouteData[] }) => {
     <>
       {/* Floating Summary Bar (Alternative trigger) */}
       {!open && routes.length > 0 && (
-        <div className="fixed bottom-10 left-4 right-4 z-1000 p-4">
+        <div className="fixed bottom-10 left-4 right-4 z-menu p-4">
           <button
             onClick={() => setOpen(true)}
-            className="w-full bg-slate-900 text-white rounded-xl py-3 text-center shadow-xl active:scale-95 transition"
+            className="w-full bg-brand-slate text-text-main rounded-xl py-3 text-center shadow-xl active:scale-95 transition"
           >
             {routes.length} {RouteResultsSheetStrings.BtnRoutesSummary}
           </button>
         </div>
       )}
 
-      {/* The Actual Bottom Sheet */}
       <BottomSheet
         open={open}
         onDismiss={() => setOpen(false)}
         snapPoints={handleSnapPoints}
         // Tailwind styling for the sheet itself
-        className="bg-slate-900 text-slate-100 rounded-t-3xl shadow-2xl border-t border-slate-800"
+        className="bg-brand-slate text-text-main rounded-t-3xl shadow-2xl border-t border-brand-border"
         header={
           // The Handle (Library adds this, but you can style the header)
-          <div className="p-4 border-b border-slate-800 flex justify-center">
-            <div className="w-12 h-1.5 bg-slate-700 rounded-full" />{" "}
+          <div className="p-4 border-b border-brand-border flex justify-center">
+            <div className="w-12 h-1.5 bg-brand-border rounded-full" />{" "}
             {/* The swipe handle */}
           </div>
         }
@@ -65,7 +64,7 @@ export const RouteResultsSheet = ({ routes }: { routes: RouteData[] }) => {
           {/* Add a close button within the content for clarity */}
           <button
             onClick={() => setOpen(false)}
-            className="w-full mt-6 text-slate-500 text-sm"
+            className="w-full mt-6 text-text-muted text-sm"
           >
             {RouteResultsSheetStrings.BtnDismiss}
           </button>

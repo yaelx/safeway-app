@@ -34,8 +34,8 @@ export const NavigationPanel: React.FC = () => {
       : NavigationPanelStrings.RouteModeAlternative;
 
   return (
-    <div className="fixed bottom-[130px] left-0 right-0 z-[1000] p-3 animate-in slide-in-from-bottom duration-300 pointer-events-none">
-      <div className="bg-[#1a1a1a] rounded-[24px] shadow-2xl border border-[#333] p-4 max-w-md mx-auto pointer-events-auto transition-all duration-300">
+    <div className="fixed bottom-[130px] left-0 right-0 z-menu p-3 animate-in slide-in-from-bottom duration-300 pointer-events-none">
+      <div className="bg-brand-slate rounded-[24px] shadow-2xl border border-brand-border p-4 max-w-md mx-auto pointer-events-auto transition-all duration-300">
         <div
           className="flex justify-between items-center cursor-pointer group"
           onClick={() => setIsExpanded(!isExpanded)}
@@ -46,7 +46,7 @@ export const NavigationPanel: React.FC = () => {
             </h3>
             {/* Improved Visibility for Duration & Distance */}
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="bg-[#334155] text-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
+              <span className="bg-brand-border text-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
                 {Math.round(selectedRoute.duration / 60)}{" "}
                 {NavigationPanelStrings.MinsUnit}
               </span>
@@ -58,12 +58,12 @@ export const NavigationPanel: React.FC = () => {
 
           <div className="flex items-center gap-3">
             {/* Safety Score Badge - Kept as the primary visual hook */}
-            <div className="bg-[#064e3b]/30 px-2.5 py-1.5 rounded-xl border border-emerald-900/50 flex-shrink-0">
-              <span className="text-emerald-400 text-[12px] font-black flex items-center gap-1">
+            <div className="bg-route-safest/30 px-2.5 py-1.5 rounded-xl border border-route-safest/50 flex-shrink-0">
+              <span className="text-route-safest text-[12px] font-black flex items-center gap-1">
                 🛡️ {selectedRoute.safetyScore}%
               </span>
             </div>
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[#333] text-slate-500">
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-border text-slate-500">
               <span
                 className={`text-[10px] transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`}
               >
@@ -77,7 +77,7 @@ export const NavigationPanel: React.FC = () => {
           className={`overflow-hidden transition-all duration-500 ${isExpanded ? "max-h-[450px] opacity-100 mt-5" : "max-h-0 opacity-0"}`}
         >
           {/* Shelter Summary */}
-          <div className="bg-[#1e293b] rounded-xl p-3 mb-4 flex items-center gap-3 border border-blue-900/20">
+          <div className="bg-brand-dark rounded-xl p-3 mb-4 flex items-center gap-3 border border-brand-blue/20">
             <span className="text-2xl leading-none">🏠</span>
             <div className="text-[13px] text-blue-100 leading-tight">
               <span className="font-bold">
@@ -91,13 +91,13 @@ export const NavigationPanel: React.FC = () => {
           <div className="space-y-2">
             <button
               onClick={() => openInGoogleMaps(selectedRoute.geometry)}
-              className="w-full bg-[#2563eb] text-white font-bold py-4 rounded-2xl shadow-md hover:bg-[#1d4ed8]"
+              className="w-full bg-brand-hover text-white font-bold py-4 rounded-2xl shadow-md hover:opacity-90"
             >
               {NavigationPanelStrings.BtnGoogleMaps}
             </button>
             <button
               onClick={() => openInWaze(selectedRoute.geometry)}
-              className="w-full bg-[#1a1a1a] border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm"
+              className="w-full bg-brand-slate border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm"
             >
               {NavigationPanelStrings.BtnWaze}
             </button>

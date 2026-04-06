@@ -34,7 +34,7 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
 
   return (
     <div className="relative w-full">
-      <div className="bg-[#0f172a] rounded-2xl px-4 py-1.5 flex items-center gap-2 border border-[#334155] focus-within:border-[#4dabf5] transition-all">
+      <div className="bg-brand-dark rounded-2xl px-4 py-1.5 flex items-center gap-2 border border-brand-border focus-within:border-brand-blue transition-all">
         <input
           className="bg-transparent border-none text-[15px] flex-1 outline-none text-slate-400 placeholder:text-slate-300 font-medium py-1.5"
           placeholder={placeholder}
@@ -62,7 +62,7 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
 
       {/* Results Dropdown (Same as before) */}
       {isFocused && (
-        <ul className="absolute z-[3000] w-full mt-2 bg-[#1e293b] border border-[#334155] shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+        <ul className="absolute z-[3000] w-full mt-2 bg-brand-slate border border-brand-border shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
           {handleLocate && !query && (
             <li
               onMouseDown={(e) => {
@@ -70,7 +70,7 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
                 e.preventDefault();
                 handleLocate();
               }}
-              className="px-4 py-4 hover:bg-[#334155] cursor-pointer text-sm text-[#4dabf5] font-bold flex items-center gap-3 border-b border-[#334155] sticky top-0 bg-[#1e293b] z-10 transition-colors"
+              className="px-4 py-4 hover:bg-brand-border cursor-pointer text-sm text-brand-blue font-bold flex items-center gap-3 border-b border-brand-border sticky top-0 bg-brand-slate z-10 transition-colors"
             >
               <MyLocationRoundedIcon sx={{ fontSize: 20 }} />
               {SearchInputWrapperStrings.YourLocation}
@@ -79,14 +79,14 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
 
           {!query && recentResults.length > 0 && (
             <>
-              <li className="px-4 py-2 text-[10px] font-bold text-slate-500 bg-[#0f172a] uppercase tracking-wider">
+              <li className="px-4 py-2 text-[10px] font-bold text-slate-500 bg-brand-dark uppercase tracking-wider">
                 {SearchInputWrapperStrings.RecentDestinations}
               </li>
               {recentResults.map((r: Location, i: number) => (
                 <li
                   key={`recent-${i}`}
                   onClick={() => onSelect(r)}
-                  className="px-4 py-3 hover:bg-[#334155] cursor-pointer text-sm text-slate-200 flex items-center gap-3 border-b border-[#334155] transition-colors"
+                  className="px-4 py-3 hover:bg-brand-border cursor-pointer text-sm text-slate-200 flex items-center gap-3 border-b border-brand-border transition-colors"
                 >
                   <span className="opacity-40">🕒</span> {r.address}
                 </li>
@@ -101,7 +101,7 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
                   const location = converOSMLocationToLocation(r);
                   onSelect(location);
                 }}
-                className="px-4 py-3 hover:bg-[#334155] cursor-pointer text-sm text-slate-200 border-b border-[#334155] last:border-none transition-colors"
+                className="px-4 py-3 hover:bg-brand-border cursor-pointer text-sm text-slate-200 border-b border-brand-border last:border-none transition-colors"
               >
                 {r.display_name}
               </li>

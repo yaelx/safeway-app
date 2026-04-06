@@ -11,19 +11,19 @@ import { PrivacyPageStrings } from "../config/constants";
 
 export const PrivacyPage = () => {
   return (
-    <Box sx={{ bgcolor: "#101010", minHeight: "100%", py: 8 }}>
-      <Container maxWidth="md" sx={{ color: "#E0E0E0" }}>
+    <Box sx={{ bgcolor: "brand.dark", minHeight: "100%", py: 8 }}>
+      <Container maxWidth="md" sx={{ color: "brand.text.muted" }}>
         <Typography
           variant="h3"
           fontWeight="bold"
           gutterBottom
-          sx={{ color: "white" }}
+          sx={{ color: "brand.text.main" }}
         >
           {PrivacyPageStrings.Title}
         </Typography>
 
         <Box sx={{ mt: 6 }}>
-          <Typography variant="h6" gutterBottom sx={{ color: "#4dabf5" }}>
+          <Typography variant="h6" gutterBottom sx={{ color: "brand.blue" }}>
             {PrivacyPageStrings.DataCollectionHeading}
           </Typography>
           <Typography variant="body1" paragraph sx={{ opacity: 0.8 }}>
@@ -33,17 +33,18 @@ export const PrivacyPage = () => {
           <Paper
             elevation={0}
             sx={{
-              bgcolor: "#1a1a1a",
+              bgcolor: "brand.slate",
               p: 4,
               my: 4,
-              border: "1px solid #333",
+              border: "1px solid",
+              borderColor: "brand.border",
               borderRadius: "12px",
             }}
           >
             <Typography
               variant="subtitle1"
               fontWeight="bold"
-              sx={{ color: "white", mb: 2 }}
+              sx={{ color: "brand.text.main", mb: 2 }}
             >
               {PrivacyPageStrings.TechDataHeading}
             </Typography>
@@ -54,17 +55,18 @@ export const PrivacyPage = () => {
                   sx={{
                     px: 0,
                     py: 1.5,
-                    borderBottom: index < 2 ? "1px solid #2a2a2a" : "none",
+                    borderBottom: index < 2 ? "1px solid" : "none",
+                    borderColor: "brand.border",
                   }}
                 >
                   <ListItemText
                     primary={item.Primary}
                     secondary={item.Secondary}
                     primaryTypographyProps={{
-                      sx: { color: "#4dabf5", fontWeight: 500 },
+                      sx: { color: "brand.blue", fontWeight: 500 },
                     }}
                     secondaryTypographyProps={{
-                      sx: { color: "rgba(255,255,255,0.5)", mt: 0.5 },
+                      sx: { color: "brand.text.muted", mt: 0.5 },
                     }}
                   />
                 </ListItem>
@@ -75,7 +77,7 @@ export const PrivacyPage = () => {
           <Typography
             variant="h6"
             gutterBottom
-            sx={{ color: "#4dabf5", mt: 4 }}
+            sx={{ color: "brand.blue", mt: 4 }}
           >
             {PrivacyPageStrings.ThirdPartyHeading}
           </Typography>
@@ -87,8 +89,9 @@ export const PrivacyPage = () => {
             sx={{
               mt: 8,
               p: 3,
-              borderLeft: "4px solid #4dabf5",
-              bgcolor: "#1a1a1a",
+              borderLeft: "4px solid",
+              borderColor: "brand.blue",
+              bgcolor: "brand.slate",
             }}
           >
             <Typography variant="body2" sx={{ opacity: 0.6 }}>

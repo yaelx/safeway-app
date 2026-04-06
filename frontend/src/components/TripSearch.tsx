@@ -134,14 +134,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
             onClick={() => setIsExpanded(true)}
-            className="bg-[#1a1a1a] backdrop-blur-sm border  shadow-2xl rounded-full p-4 flex items-center justify-between cursor-pointer border border-[#333] hover:border-[#444] transition-colors pointer-events-auto"
+            className="bg-brand-slate backdrop-blur-sm border shadow-2xl rounded-full p-4 flex items-center justify-between cursor-pointer border-brand-border hover:border-brand-border transition-colors pointer-events-auto"
           >
             <div className="flex items-center gap-3">
               {/* Dynamic Icon based on results */}
               {routeData ? (
-                <AltRouteIcon sx={{ color: "#94a3b8", fontSize: 24 }} />
+                <AltRouteIcon sx={{ color: "brand.text.muted", fontSize: 24 }} />
               ) : (
-                <Search sx={{ color: "#94a3b8", fontSize: 20 }} />
+                <Search sx={{ color: "brand.text.muted", fontSize: 20 }} />
               )}
 
               <div className="flex flex-col">
@@ -159,7 +159,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             </div>
             <Navigation
               sx={{
-                color: "#2563eb",
+                color: "brand.hover",
                 fontSize: 18,
                 transform: "rotate(45deg)",
               }}
@@ -179,7 +179,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 : { opacity: 1 }
             }
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-[#1a1a1a] shadow-2xl rounded-[28px] p-5 border border-[#333]"
+            className="bg-brand-slate shadow-2xl rounded-[28px] p-5 border border-brand-border"
           >
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
@@ -188,7 +188,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               <div className="flex items-center gap-2.5">
                 <Navigation
                   sx={{
-                    color: "#4dabf5",
+                    color: "brand.blue",
                     fontSize: 20,
                     transform: "rotate(45deg)",
                   }}
@@ -213,19 +213,19 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               <div className="flex flex-col items-center pt-3 pb-3 relative">
                 <MyLocationRoundedIcon
                   sx={{
-                    color: "#94a3b8",
+                    color: "brand.text.muted",
                     fontSize: 16,
                     zIndex: 10,
-                    bgcolor: "#1a1a1a",
+                    bgcolor: "brand.slate",
                   }}
                 />
                 <div className="w-[1px] flex-grow bg-slate-200 my-1" />
                 <PlaceRoundedIcon
                   sx={{
-                    color: "#4dabf5",
+                    color: "brand.blue",
                     fontSize: 18,
                     zIndex: 10,
-                    bgcolor: "#1a1a1a",
+                    bgcolor: "brand.slate",
                   }}
                 />
               </div>
@@ -272,13 +272,13 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 mt: 2,
                 py: 1,
                 borderRadius: "16px",
-                backgroundColor: "#2563eb", // Primary action color
-                color: "white",
+                backgroundColor: "brand.hover", // Primary action color
+                color: "brand.text.main",
                 textTransform: "none",
                 fontWeight: "bold",
-                "&:hover": { backgroundColor: "#1d4ed8" },
+                "&:hover": { backgroundColor: "brand.blue" },
                 "&.Mui-disabled": {
-                  backgroundColor: "#334155",
+                  backgroundColor: "brand.border",
                   color: "rgba(255,255,255,0.3)",
                 },
               }}

@@ -4,7 +4,8 @@ import L from "leaflet";
 import { renderToStaticMarkup } from "react-dom/server";
 import FlagIcon from "@mui/icons-material/Flag";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import { MarkerColors, TripMarkersStrings } from "../config/constants";
+import { TripMarkersStrings } from "../config/constants";
+import { BRAND_COLORS } from "../theme/theme";
 
 const createTripIcon = (Component: React.ElementType, color: string) => {
   const iconHTML = renderToStaticMarkup(
@@ -34,7 +35,7 @@ export const TripMarkers: React.FC<TripMarkersProps> = ({ path }) => {
       {/* Start Marker */}
       <Marker
         position={startPoint}
-        icon={createTripIcon(LocationOnIcon, MarkerColors.Start)}
+        icon={createTripIcon(LocationOnIcon, BRAND_COLORS.startMarker)}
       >
         <Popup>{TripMarkersStrings.PopupStartPoint}</Popup>
       </Marker>
@@ -42,7 +43,7 @@ export const TripMarkers: React.FC<TripMarkersProps> = ({ path }) => {
       {/* End Marker */}
       <Marker
         position={endPoint}
-        icon={createTripIcon(FlagIcon, MarkerColors.End)}
+        icon={createTripIcon(FlagIcon, BRAND_COLORS.endMarker)}
       >
         <Popup>{TripMarkersStrings.PopupEndPoint}</Popup>
       </Marker>

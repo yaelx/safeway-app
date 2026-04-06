@@ -8,8 +8,9 @@ export const Footer = () => {
       component="footer"
       sx={{
         py: 3,
-        bgcolor: "#080808",
-        borderTop: "1px solid #1a1a1a",
+        bgcolor: "brand.black",
+        borderTop: "1px solid",
+        borderColor: "brand.slate",
       }}
     >
       <Container maxWidth="lg">
@@ -25,7 +26,7 @@ export const Footer = () => {
           {/* Copyright Info */}
           <Typography
             variant="caption"
-            sx={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}
+            sx={{ color: "brand.text.muted", fontWeight: 500 }}
           >
             {FooterStrings.Copyright}
           </Typography>
@@ -38,12 +39,12 @@ export const Footer = () => {
                 component={RouterLink}
                 to={`/${text.toLowerCase()}`}
                 sx={{
-                  color: "rgba(255,255,255,0.6)",
+                  color: "brand.text.muted",
                   textDecoration: "none",
                   fontSize: "0.75rem",
                   letterSpacing: "0.5px",
                   textTransform: "uppercase",
-                  "&:hover": { color: "#4dabf5" },
+                  "&:hover": { color: "brand.blue" },
                 }}
               >
                 {text}

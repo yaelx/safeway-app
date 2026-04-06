@@ -38,7 +38,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
         // This is the fix: Map is fixed height, others grow naturally
         height: isMapView ? "100vh" : "auto",
         minHeight: "100vh",
-        bgcolor: "#080808",
+        bgcolor: "brand.black",
         overflow: isMapView ? "hidden" : "visible",
       }}
     >
@@ -49,11 +49,12 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           position: "fixed",
           top: 20,
           right: 20,
-          zIndex: 2000,
-          bgcolor: "#1a1a1a",
-          border: "1px solid #333",
-          color: "#4dabf5",
-          "&:hover": { bgcolor: "#222" },
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: "brand.slate",
+          border: "1px solid",
+          borderColor: "brand.border",
+          color: "brand.blue",
+          "&:hover": { bgcolor: "brand.border" },
           boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
         }}
       >
@@ -68,9 +69,10 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
         PaperProps={{
           sx: {
             width: 280,
-            bgcolor: "#101010",
-            color: "white",
-            borderLeft: "1px solid #333",
+            bgcolor: "brand.dark",
+            color: "brand.text.main",
+            borderLeft: "1px solid",
+            borderColor: "brand.border",
           },
         }}
       >
@@ -85,7 +87,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           <Typography variant="h6" fontWeight="bold" color="primary">
             {MainLayoutStrings.AppName}
           </Typography>
-          <IconButton onClick={() => setIsOpen(false)} sx={{ color: "white" }}>
+          <IconButton onClick={() => setIsOpen(false)} sx={{ color: "brand.text.main" }}>
             <CloseIcon />
           </IconButton>
         </Box>
@@ -96,7 +98,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 component={Link}
                 to={item.to}
                 onClick={() => setIsOpen(false)}
-                sx={{ borderRadius: "12px", "&:hover": { bgcolor: "#1a1a1a" } }}
+                sx={{ borderRadius: "12px", "&:hover": { bgcolor: "brand.slate" } }}
               >
                 <ListItemText
                   primary={item.text}

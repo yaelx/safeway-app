@@ -5,18 +5,18 @@ export const TermsPage = () => {
   return (
     <Box
       sx={{
-        bgcolor: "#101010",
+        bgcolor: "brand.dark",
         minHeight: "100%",
         py: 8,
         overflowY: "visible",
       }}
     >
-      <Container maxWidth="md" sx={{ color: "#E0E0E0" }}>
+      <Container maxWidth="md" sx={{ color: "brand.text.muted" }}>
         <Typography
           variant="h3"
           fontWeight="bold"
           gutterBottom
-          sx={{ color: "white" }}
+          sx={{ color: "brand.text.main" }}
         >
           {TermsPageStrings.Title}
         </Typography>
@@ -26,7 +26,7 @@ export const TermsPage = () => {
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <section>
-            <Typography variant="h5" sx={{ color: "#4dabf5", mb: 2 }}>
+            <Typography variant="h5" sx={{ color: "brand.blue", mb: 2 }}>
               {TermsPageStrings.Section1Heading}
             </Typography>
             <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
@@ -37,10 +37,11 @@ export const TermsPage = () => {
           <Paper
             elevation={0}
             sx={{
-              bgcolor: "rgba(211, 47, 47, 0.05)",
+              bgcolor: "brand.black",
               p: 4,
               borderRadius: "12px",
-              border: "1px solid #d32f2f",
+              border: "1px solid",
+              borderColor: "brand.error",
             }}
           >
             <Typography
@@ -53,7 +54,7 @@ export const TermsPage = () => {
             </Typography>
             <Typography
               variant="body1"
-              sx={{ color: "#ffcdd2", fontWeight: 500, lineHeight: 1.7 }}
+              sx={{ color: "brand.error", fontWeight: 500, lineHeight: 1.7 }}
             >
               <strong>{TermsPageStrings.Section2Bold}</strong>
               {TermsPageStrings.Section2Body.replace(
@@ -64,7 +65,7 @@ export const TermsPage = () => {
           </Paper>
 
           <section>
-            <Typography variant="h5" sx={{ color: "#4dabf5", mb: 2 }}>
+            <Typography variant="h5" sx={{ color: "brand.blue", mb: 2 }}>
               {TermsPageStrings.Section3Heading}
             </Typography>
             <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
@@ -73,7 +74,7 @@ export const TermsPage = () => {
           </section>
 
           <section>
-            <Typography variant="h5" sx={{ color: "#4dabf5", mb: 2 }}>
+            <Typography variant="h5" sx={{ color: "brand.blue", mb: 2 }}>
               {TermsPageStrings.Section4Heading}
             </Typography>
             <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
