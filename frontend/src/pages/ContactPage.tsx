@@ -1,7 +1,17 @@
-import { Box, Typography, Button, TextField, Container } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Container,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import SendIcon from "@mui/icons-material/Send";
 import { ContactPageStrings } from "../config/constants";
+import { useContactMessage } from "../hooks/useContactMessage";
+import { useState, ChangeEvent, FormEvent } from "react";
 
 // Common style for all text fields to ensure visibility
 const textFieldStyle = {
@@ -17,19 +27,59 @@ const textFieldStyle = {
   "& .MuiInputLabel-root.Mui-focused": { color: "brand.blue" },
   mb: 2,
 };
-
 export const ContactPage = () => {
+  const { sendMessage, loading, error, success, resetStatus } =
+    useContactMessage();
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "SafeWay Inquiry", // Default subject
+    message: "",
+  });
+
+  // Handle input changes and reset the status (clears old errors/success messages)
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    resetStatus();
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const isSent = await sendMessage(form);
+
+    if (isSent) {
+      // Clear form on success
+      setForm({ name: "", email: "", subject: "SafeWay Inquiry", message: "" });
+    }
+  };
+
   return (
     <Box sx={{ bgcolor: "brand.dark", minHeight: "100%", py: 8 }}>
       <Container maxWidth="sm" sx={{ color: "brand.text.main" }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
           {ContactPageStrings.Title}
         </Typography>
-        <Typography variant="body1" sx={{ mb: 4, opacity: 0.8 }}>
+        <Typography variant="body1" sx={{ mb: 4, color: "brand.text.muted" }}>
           {ContactPageStrings.Subtitle}
         </Typography>
 
-        {/* LinkedIn Box (Keep your existing dark styling) */}
+        {/* Status Messages */}
+        {success && (
+          <Alert severity="success" sx={{ mb: 3, borderRadius: "8px" }}>
+            Your message has been sent successfully!
+          </Alert>
+        )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: "8px" }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* LinkedIn Box */}
         <Box
           sx={{
             bgcolor: "brand.slate",
@@ -46,8 +96,14 @@ export const ContactPage = () => {
           <Button
             variant="contained"
             startIcon={<LinkedInIcon />}
+            target="_blank"
+            rel="noopener noreferrer"
             href={ContactPageStrings.LinkedInUrl}
-            sx={{ textTransform: "none", bgcolor: "brand.hover" }}
+            sx={{
+              textTransform: "none",
+              bgcolor: "brand.blue", // Changed to primary brand blue for consistency
+              "&:hover": { bgcolor: "brand.hover" },
+            }}
           >
             {ContactPageStrings.BtnLinkedIn}
           </Button>
@@ -57,44 +113,74 @@ export const ContactPage = () => {
           {ContactPageStrings.SendMessageHeading}
         </Typography>
 
-        <Box component="form" sx={{ display: "flex", flexDirection: "column" }}>
+        {/* Form Section */}
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ display: "flex", flexDirection: "column" }}
+        >
           <TextField
+            name="name"
             label={ContactPageStrings.FieldLabelName}
             variant="filled"
             fullWidth
+            required
+            value={form.name}
+            onChange={handleChange}
             placeholder={ContactPageStrings.FieldPlaceholderName}
             sx={textFieldStyle}
           />
           <TextField
+            name="email"
+            type="email"
             label={ContactPageStrings.FieldLabelEmail}
             variant="filled"
             fullWidth
+            required
+            value={form.email}
+            onChange={handleChange}
             placeholder={ContactPageStrings.FieldPlaceholderEmail}
             sx={textFieldStyle}
           />
           <TextField
+            name="message"
             label={ContactPageStrings.FieldLabelMessage}
             variant="filled"
             fullWidth
+            required
             multiline
             rows={4}
+            value={form.message}
+            onChange={handleChange}
             placeholder={ContactPageStrings.FieldPlaceholderMessage}
             sx={textFieldStyle}
           />
+
           <Button
+            type="submit"
             variant="contained"
-            endIcon={<SendIcon />}
+            disabled={loading}
+            endIcon={!loading && <SendIcon />}
             sx={{
               width: "fit-content",
               mt: 2,
-              bgcolor: "brand.hover",
+              bgcolor: "brand.blue",
               borderRadius: "12px",
               px: 4,
               py: 1.5,
               fontWeight: "bold",
+              "&:hover": { bgcolor: "brand.hover" },
+              "&.Mui-disabled": {
+                bgcolor: "brand.border",
+                color: "brand.text.muted",
+              },
             }}
           >
-            {ContactPageStrings.BtnSendMessage}
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: "brand.text.main" }} />
+            ) : (
+              ContactPageStrings.BtnSendMessage
+            )}
           </Button>
         </Box>
       </Container>

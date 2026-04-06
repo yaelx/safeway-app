@@ -28,7 +28,7 @@ export const RouteResultsSheet = ({ routes }: { routes: RouteData[] }) => {
     <>
       {/* Floating Summary Bar (Alternative trigger) */}
       {!open && routes.length > 0 && (
-        <div className="fixed bottom-10 left-4 right-4 z-menu p-4">
+        <div className="fixed bottom-10 left-4 right-4 z-1000 p-4">
           <button
             onClick={() => setOpen(true)}
             className="w-full bg-brand-slate text-text-main rounded-xl py-3 text-center shadow-xl active:scale-95 transition"
