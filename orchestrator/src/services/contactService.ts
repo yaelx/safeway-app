@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import xss from "xss";
-import { svgLogo } from "../config/constants";
+import sharp from "sharp";
+import { svgLogo } from "../config/logo_str";
 
 export class ContactService {
   private transporter;
@@ -42,7 +43,10 @@ export class ContactService {
       subject: xss(data.subject),
     };
 
-    const logoBuffer = Buffer.from(svgLogo).toString("base64");
+    const logoBuffer = await sharp(Buffer.from(svgLogo.trim()))
+      .resize(400) // Set a width of 400px for high-density (Retina) displays
+      .png()
+      .toBuffer();
 
     try {
       // EMAIL A: Send the Alert to YOUR inbox
@@ -53,18 +57,19 @@ export class ContactService {
         subject: `New SafeWay Inquiry: ${cleanMessage.subject}`,
         attachments: [
           {
-            filename: "logo.svg",
+            filename: "logo.png",
             content: logoBuffer,
-            encoding: "base64",
             cid: "safeway_logo",
-            contentType: "image/svg+xml",
+            contentType: "image/png",
           },
         ],
         html: `
-          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #3b82f6;">
-          <div style="background-color: #ffffff; padding: 30px; text-align: center; border-bottom: 2px solid #e2e8f0;">
-          <img src="cid:safeway_logo" width="180" alt="SafeWay Israel" style="display: block; margin: 0 auto;" />
-          </div>
+      <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px;
+      background-image: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%);">
+      <div style="background-color: #ffffff; padding: 30px; text-align: center; border-bottom: 2px solid #e2e8f0;">
+      <img src="cid:safeway_logo" width="180" alt="SafeWay Israel" />
+      </div>
+      <div style="background-color: #ffffff; padding: 30px; color: #1e293b;">
             <h2 style="color: #3b82f6;">New Message Received</h2>
             <p><strong>From:</strong> ${cleanMessage.name} (${cleanMessage.email})</p>
             <p><strong>Subject:</strong> ${cleanMessage.subject}</p>
@@ -81,20 +86,22 @@ export class ContactService {
         to: cleanMessage.email, // Send back to the user
         attachments: [
           {
-            filename: "logo.svg",
+            filename: "logo.png",
             content: logoBuffer,
-            encoding: "base64",
             cid: "safeway_logo",
-            contentType: "image/svg+xml",
+            contentType: "image/png",
           },
         ],
         subject: "We've received your message - SafeWay Israel",
         html: `
-    <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
+<div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px;
+              background-image: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%);">
+    
     <div style="background-color: #ffffff; padding: 30px; text-align: center; border-bottom: 2px solid #e2e8f0;">
-        <img src="cid:safeway_logo" width="180" alt="SafeWay Israel" style="display: block; margin: 0 auto;" />
-      </div>
-      <h2 style="color: #10b981;">SafeWay Israel</h2>
+      <img src="cid:safeway_logo" width="180" alt="SafeWay Israel" />
+    </div>
+
+    <div style="background-color: #ffffff; padding: 30px; color: #1e293b;">
       <p>Hi ${cleanMessage.name},</p>
       <p>Thank you for reaching out to us. We have received your message regarding "<strong>${cleanMessage.subject}</strong>" and our team will get back to you as soon as possible.</p>
       <p>Stay safe,</p>

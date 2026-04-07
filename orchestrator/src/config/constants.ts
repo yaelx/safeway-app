@@ -42,20 +42,3 @@ export const API_ENDPOINTS = {
   SAFE_ROUTE: "/api/get-safe-route",
   CONTACT: "/api/contact",
 };
-
-export const svgLogo = `
-<svg width="400" height="210" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#2b6cb0" />
-      <stop offset="100%" stop-color="#1a365d" />
-    </linearGradient>
-  </defs>
-  <path d="M140 100 V40 H160 V55 H185 V40 H215 V55 H240 V40 H260 V100 H140Z" fill="url(#blueGradient)" />
-  <path d="M175 110 Q200 110 200 80 L185 85 L205 60 L225 85 L210 80 Q210 120 175 120 Z" fill="#ff8c00" />
-  <text x="55" y="160" font-family="Arial, sans-serif" font-weight="900" font-size="48" fill="url(#blueGradient)">S</text>
-  <path d="M112 125 L128 155 H96 Z M112 162 L96 132 H128 Z" fill="none" stroke="url(#blueGradient)" stroke-width="5" />
-  <text x="138" y="160" font-family="Arial, sans-serif" font-weight="900" font-size="48" fill="url(#blueGradient)">FEWAY</text>
-  <text x="150" y="195" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="url(#blueGradient)" letter-spacing="5">ISRAEL</text>
-</svg>
-`;

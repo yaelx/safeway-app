@@ -9,13 +9,11 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Typography,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { Footer } from "../components/Footer";
 import { MainLayoutStrings } from "../config/constants";
-import { SafeWayLogo } from "../components/SafeWayLogo";
 
 export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -72,10 +70,13 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
         PaperProps={{
           sx: {
             width: 280,
-            bgcolor: "brand.dark",
+            bgcolor: "#2B6CB0",
+            backgroundImage:
+              "linear-gradient(135deg,rgba(43, 108, 176, 1) 26%, rgba(26, 54, 93, 1) 100%);",
             color: "brand.text.main",
             borderLeft: "1px solid",
-            borderColor: "brand.border",
+            borderColor: "rgba(255,255,255,0.1)",
+            boxShadow: "-10px 0 30px rgba(0,0,0,0.5)",
           },
         }}
       >
@@ -105,7 +106,11 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
           </IconButton>
 
           <Box sx={{ mt: 1 }}>
-            <SafeWayLogo sx={{ width: 180, height: "auto" }} />
+            <img
+              src="/safeway_logo.svg"
+              alt="SafeWay Israel"
+              style={{ width: "180px", height: "auto" }}
+            />
           </Box>
 
           {/* <Typography
