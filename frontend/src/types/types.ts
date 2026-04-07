@@ -49,3 +49,11 @@ export interface OSMLocation {
   place_id: number;
   place_rank: number;
 }
+
+export interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  honeypot?: string;
+}

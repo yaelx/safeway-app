@@ -8,11 +8,12 @@ import { useLocationState } from "../context/LocationContext";
 import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
-import { RouteColorsArray, TileLayerUrl } from "../config/constants";
+import { TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
 import { NavigationPanel } from "./NavigationPanel";
 import { useRoutingContext } from "../context/RoutingContext";
 import { RouteData } from "../types/types";
+import { BRAND_COLORS } from "../theme/theme";
 
 const DefaultIcon = L.icon({
   // Use the direct paths from the node_modules via CDN or public folder
@@ -145,16 +146,17 @@ const ShelterMap: React.FC = () => {
   }, [routeData, selectedRoute]);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-slate-200">
-      <div className="absolute top-0 left-0 z-[2000] p-4 pointer-events-none w-full max-w-sm">
+    <div className="relative h-screen w-full overflow-hidden bg-brand-black">
+      {/* TripSearch Overlay */}
+      <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
         <TripSearch onPlanTrip={planTrip} loading={loading} />
       </div>
-
       <div className="absolute inset-0 z-0">
         <MapContainer
           center={[32.0853, 34.7818]}
           zoom={14}
           style={{ height: "100%", width: "100%" }}
+          className="bg-brand-dark"
           zoomControl={false}
         >
           <TileLayer url={TileLayerUrl} />
@@ -169,16 +171,23 @@ const ShelterMap: React.FC = () => {
           <MapController points={decodedPaths[0]} />
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           {routeData &&
-            routeData.map((r: RouteData, i: number) => (
-              <SafeRoute
-                key={i}
-                routeData={r}
-                path={decodedPaths[i]}
-                routeColor={RouteColorsArray[i] || "#64748b"}
-                isSelected={selectedRoute?.index === r.index}
-                setSelectedRoute={setSelectedRoute}
-              />
-            ))}
+            routeData.map((r: RouteData, i: number) => {
+              const routeColors = [
+                BRAND_COLORS.safest,
+                BRAND_COLORS.fastest,
+                BRAND_COLORS.alt,
+              ];
+              return (
+                <SafeRoute
+                  key={i}
+                  routeData={r}
+                  path={decodedPaths[i]}
+                  routeColor={routeColors[i] || BRAND_COLORS.alt}
+                  isSelected={selectedRoute?.index === r.index}
+                  setSelectedRoute={setSelectedRoute}
+                />
+              );
+            })}
           <ShelterDiscovery
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}

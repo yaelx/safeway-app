@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocationState } from "../context/LocationContext";
 import { useAddressSearch } from "../hooks/useAddressSearch";
 import { useRecentSearches } from "../hooks/useRecentSearches";
-import { BUTTON_TEXT } from "../config/constants";
+import { BUTTON_TEXT, TripSearchStrings } from "../config/constants";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import AltRouteIcon from "@mui/icons-material/AltRoute";
@@ -36,7 +36,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   const { recentSearches, saveRecent } = useRecentSearches();
   const [expanded, setIsExpanded] = useState(false);
   const [activeField, setActiveField] = useState<"start" | "end" | null>(null);
-  const [loadingMessage, setLoadingMessage] = useState("Analyzing route...");
+  const [loadingMessage, setLoadingMessage] = useState(
+    TripSearchStrings.LoadingAnalyzing,
+  );
   const { routeData } = useRoutingContext();
 
   const handleSharedLocate = () => {
@@ -67,14 +69,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   };
 
   useEffect(() => {
-    if (startLocation?.address === "Current Location") {
-      fromSearch.selectAddress("Current Location");
+    if (startLocation?.address === TripSearchStrings.CurrentLocation) {
+      fromSearch.selectAddress(TripSearchStrings.CurrentLocation);
     }
   }, [startLocation]);
 
   useEffect(() => {
-    if (endLocation?.address === "Current Location") {
-      toSearch.selectAddress("Current Location");
+    if (endLocation?.address === TripSearchStrings.CurrentLocation) {
+      toSearch.selectAddress(TripSearchStrings.CurrentLocation);
     }
   }, [endLocation]);
 
@@ -83,11 +85,11 @@ export const TripSearch: React.FC<TripSearchProps> = ({
 
     if (loading) {
       // Reset to initial message when loading starts
-      setLoadingMessage("Analyzing route...");
+      setLoadingMessage(TripSearchStrings.LoadingAnalyzing);
 
       // Change message after 8 seconds (typical for cold starts or complex OSRM)
       timer = setTimeout(() => {
-        setLoadingMessage("Still working... Calculating the safest path.");
+        setLoadingMessage(TripSearchStrings.LoadingStillWorking);
       }, 8000);
     }
 
@@ -119,7 +121,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
             </div>
             <span className="text-xs font-bold tracking-wide uppercase">
-              {loadingMessage}
+              {loadingMessage}x
             </span>
           </motion.div>
         )}
@@ -127,37 +129,37 @@ export const TripSearch: React.FC<TripSearchProps> = ({
         {!expanded ? (
           /* The Floating "Pill" */
           <motion.div
-            key="pill"
+            key="collapsed"
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
             onClick={() => setIsExpanded(true)}
-            className="bg-white/95 backdrop-blur-sm border border-slate-200 shadow-lg rounded-full px-5 py-3.5 flex items-center justify-between cursor-pointer active:scale-95 transition-transform"
+            className="bg-brand-slate backdrop-blur-sm border shadow-2xl rounded-full p-4 flex items-center justify-between cursor-pointer border-brand-border hover:border-brand-border transition-colors pointer-events-auto"
           >
             <div className="flex items-center gap-3">
               {/* Dynamic Icon based on results */}
               {routeData ? (
-                <AltRouteIcon sx={{ color: "#2563eb", fontSize: 24 }} />
+                <AltRouteIcon sx={{ color: "brand.text.muted", fontSize: 24 }} />
               ) : (
-                <Search sx={{ color: "#94a3b8", fontSize: 20 }} />
+                <Search sx={{ color: "brand.text.muted", fontSize: 20 }} />
               )}
 
               <div className="flex flex-col">
-                <span className="text-slate-900 text-sm font-bold leading-none">
+                <span className="text-slate-400 text-sm font-medium text-[15px]">
                   {routeData
-                    ? `${routeData.length} Routes Found`
-                    : "Plan safe route..."}
+                    ? `${routeData.length} ${TripSearchStrings.PillRoutesFound}`
+                    : TripSearchStrings.PillPlanRoute}
                 </span>
                 {routeData && (
-                  <span className="text-slate-500 text-[10px] font-medium mt-1">
-                    Tap lines on map to compare
+                  <span className="text-slate-400 text-[15px] font-medium mt-1">
+                    {TripSearchStrings.PillTapToCompare}
                   </span>
                 )}
               </div>
             </div>
             <Navigation
               sx={{
-                color: "#2563eb",
+                color: "brand.hover",
                 fontSize: 18,
                 transform: "rotate(45deg)",
               }}
@@ -177,7 +179,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 : { opacity: 1 }
             }
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white shadow-2xl rounded-[28px] p-5 border border-slate-50"
+            className="bg-brand-slate shadow-2xl rounded-[28px] p-5 border border-brand-border"
           >
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
@@ -186,15 +188,15 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               <div className="flex items-center gap-2.5">
                 <Navigation
                   sx={{
-                    color: "#2563eb",
+                    color: "brand.blue",
                     fontSize: 20,
                     transform: "rotate(45deg)",
                   }}
                 />
-                <span className="font-bold text-[#1e293b] text-lg tracking-tight">
+                <span className="font-bold text-white text-lg tracking-tight">
                   {" "}
                   {/* text-xl to text-lg */}
-                  Route Planner
+                  {TripSearchStrings.HeaderRoutePlanner}
                 </span>
               </div>
               <button
@@ -211,19 +213,19 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               <div className="flex flex-col items-center pt-3 pb-3 relative">
                 <MyLocationRoundedIcon
                   sx={{
-                    color: "#1e293b",
+                    color: "brand.text.muted",
                     fontSize: 16,
                     zIndex: 10,
-                    bgcolor: "white",
+                    bgcolor: "brand.slate",
                   }}
                 />
                 <div className="w-[1px] flex-grow bg-slate-200 my-1" />
                 <PlaceRoundedIcon
                   sx={{
-                    color: "#2563eb",
+                    color: "brand.blue",
                     fontSize: 18,
                     zIndex: 10,
-                    bgcolor: "white",
+                    bgcolor: "brand.slate",
                   }}
                 />
               </div>
@@ -231,7 +233,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
               {/* Right Column: The Input Fields */}
               <div className="flex-1 space-y-2">
                 <SearchInputWrapper
-                  placeholder="From..."
+                  placeholder={TripSearchStrings.PlaceholderFrom}
                   query={fromSearch.query}
                   setQuery={fromSearch.setQuery}
                   recentResults={recentSearches}
@@ -243,7 +245,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 />
 
                 <SearchInputWrapper
-                  placeholder="Where to?"
+                  placeholder={TripSearchStrings.PlaceholderWhereTo}
                   query={toSearch.query}
                   setQuery={toSearch.setQuery}
                   recentResults={recentSearches}
@@ -257,7 +259,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             <Button
               fullWidth
               variant="contained"
-              className="w-full bg-[#0f172a] text-white font-bold py-4 rounded-2xl mt-6 shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 text-base"
+              // className="w-full bg-[#0f172a] text-white font-bold py-4 rounded-2xl mt-6 shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 text-base"
               disabled={loading || !startLocation || !endLocation}
               loading={loading}
               loadingPosition="start"
@@ -270,18 +272,15 @@ export const TripSearch: React.FC<TripSearchProps> = ({
                 mt: 2,
                 py: 1,
                 borderRadius: "16px",
-                backgroundColor: "#0f172a",
+                backgroundColor: "brand.hover", // Primary action color
+                color: "brand.text.main",
                 textTransform: "none",
                 fontWeight: "bold",
-                fontSize: "1rem",
-                boxShadow: "0 10px 15px -3px rgba(15, 23, 42, 0.2)",
-                transition: "all 0.2s ease",
+                "&:hover": { backgroundColor: "brand.blue" },
                 "&.Mui-disabled": {
-                  backgroundColor: "#1e293b",
-                  opacity: 0.7,
-                  color: "white",
+                  backgroundColor: "brand.border",
+                  color: "rgba(255,255,255,0.3)",
                 },
-                "&:hover": { backgroundColor: "#1e293b" },
               }}
             >
               {loading

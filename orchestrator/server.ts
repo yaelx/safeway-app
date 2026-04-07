@@ -13,6 +13,7 @@ import {
   API_ENDPOINTS,
 } from "./src/config/constants";
 import { apiLimiter, strictLimiter } from "./src/middleware/rateLimiter";
+import contactRoutes from "./src/routes/contactRoutes";
 
 dotenv.config();
 
@@ -75,6 +76,7 @@ app.use(API_ENDPOINTS.SAFE_ROUTE, strictLimiter);
 app.use(express.json());
 app.use(API_ENDPOINTS.SHELTERS, shelterRoutes);
 app.use(API_ENDPOINTS.SAFE_ROUTE, routingRoutes);
+app.use(API_ENDPOINTS.CONTACT, contactRoutes);
 
 // ─── Python Health Check ──────────────────────────────────────────────────────
 const checkPythonConnection = async () => {

@@ -30,3 +30,4 @@ data/
 orchestrator/src/data/*
 !orchestrator/src/data/.gitkeep
 safeway-navigation-666b056dc5b0.json
+orchestrator/assets/safeway_logo.svg

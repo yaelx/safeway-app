@@ -5,6 +5,7 @@ import FlagIcon from "@mui/icons-material/FlagRounded";
 import L from "leaflet";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Location } from "../types/types";
+import { BRAND_COLORS } from "../theme/theme";
 
 const createTripIcon = (Component: React.ElementType, color: string) => {
   const iconHTML = renderToStaticMarkup(
@@ -42,8 +43,8 @@ export const LocationMarker: React.FC<TripMarkersProps> = ({
       position={L.latLng(markerLocation.coords.lat, markerLocation.coords.lng)}
       icon={
         type === "start"
-          ? createTripIcon(PlaceIcon, "#3b82f6")
-          : createTripIcon(FlagIcon, "#ef4444")
+          ? createTripIcon(PlaceIcon, BRAND_COLORS.startMarker)
+          : createTripIcon(FlagIcon, BRAND_COLORS.endMarker)
       } // Blue-500
     >
       <Popup>{markerLocation.address}</Popup>

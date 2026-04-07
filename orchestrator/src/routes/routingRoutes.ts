@@ -3,7 +3,6 @@ import { RoutingController } from "../controllers/routingController";
 import { RoutingService } from "../services/routingService";
 import { prisma } from "../config/db";
 import { authProvider } from "../infrastructure/auth/authProvider";
-import { IRoutingRequest, IRoutingResponse } from "../types/types";
 import { validate } from "../middleware/validate";
 import { routeSchema } from "../schemas/routeSchema";
 
