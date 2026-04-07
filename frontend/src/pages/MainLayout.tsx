@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation, Link } from "@tanstack/react-router";
 import {
   Box,
+  Divider,
   Drawer,
   IconButton,
   List,
@@ -14,6 +15,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { Footer } from "../components/Footer";
 import { MainLayoutStrings } from "../config/constants";
+import { SafeWayLogo } from "../components/SafeWayLogo";
 
 export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -42,24 +44,25 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
         overflow: isMapView ? "hidden" : "visible",
       }}
     >
-      {/* Burger Button - Floating in top right */}
-      <IconButton
-        onClick={() => setIsOpen(true)}
-        sx={{
-          position: "fixed",
-          top: 20,
-          right: 20,
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          bgcolor: "brand.slate",
-          border: "1px solid",
-          borderColor: "brand.border",
-          color: "brand.blue",
-          "&:hover": { bgcolor: "brand.border" },
-          boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
-        }}
-      >
-        <MenuIcon />
-      </IconButton>
+      {!isOpen && (
+        <IconButton
+          onClick={() => setIsOpen(true)}
+          sx={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+            bgcolor: "brand.slate",
+            border: "1px solid",
+            borderColor: "brand.border",
+            color: "brand.blue",
+            "&:hover": { bgcolor: "brand.border" },
+            boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
 
       {/* Side Drawer Menu */}
       <Drawer
@@ -78,19 +81,45 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
       >
         <Box
           sx={{
-            p: 3,
+            p: 2,
             display: "flex",
-            justifyContent: "space-between",
+            flexDirection: "column",
             alignItems: "center",
+            bgcolor: "#FFFFFF",
+            gap: 1,
+            position: "relative",
+            borderBottom: "1px solid",
+            borderColor: "#e2e8f0",
           }}
         >
-          <Typography variant="h6" fontWeight="bold" color="primary">
-            {MainLayoutStrings.AppName}
-          </Typography>
-          <IconButton onClick={() => setIsOpen(false)} sx={{ color: "brand.text.main" }}>
+          <IconButton
+            onClick={() => setIsOpen(false)}
+            sx={{
+              color: "brand.dark",
+              position: "absolute",
+              top: 10,
+              right: 10,
+            }}
+          >
             <CloseIcon />
           </IconButton>
+
+          <Box sx={{ mt: 1 }}>
+            <SafeWayLogo sx={{ width: 180, height: "auto" }} />
+          </Box>
+
+          {/* <Typography
+            variant="h6"
+            fontWeight="bold"
+            color="primary"
+            sx={{ letterSpacing: 2, pl: 0.5 }}
+          >
+            {MainLayoutStrings.AppName}
+          </Typography> */}
         </Box>
+
+        <Divider sx={{ mx: 2, borderColor: "brand.border", opacity: 0.5 }} />
+
         <List sx={{ px: 2 }}>
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
@@ -98,7 +127,10 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
                 component={Link}
                 to={item.to}
                 onClick={() => setIsOpen(false)}
-                sx={{ borderRadius: "12px", "&:hover": { bgcolor: "brand.slate" } }}
+                sx={{
+                  borderRadius: "12px",
+                  "&:hover": { bgcolor: "brand.slate" },
+                }}
               >
                 <ListItemText
                   primary={item.text}
