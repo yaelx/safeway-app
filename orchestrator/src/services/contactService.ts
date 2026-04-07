@@ -36,7 +36,7 @@ export class ContactService {
       return { success: true }; // "Fake" success
     }
 
-    const cleanMessage = {
+    const clean = {
       name: xss(data.name),
       email: xss(data.email),
       message: xss(data.message),
@@ -53,8 +53,8 @@ export class ContactService {
       await this.transporter.sendMail({
         from: `"SafeWay System" <${process.env.EMAIL_USER}>`,
         to: process.env.EMAIL_USER, // Your personal email or the project email
-        replyTo: cleanMessage.email, // Allows you to hit 'Reply' directly to the user
-        subject: `New SafeWay Inquiry: ${cleanMessage.subject}`,
+        replyTo: clean.email, // Allows you to hit 'Reply' directly to the user
+        subject: `New SafeWay Inquiry: ${clean.subject}`,
         attachments: [
           {
             filename: "logo.png",
@@ -64,26 +64,30 @@ export class ContactService {
           },
         ],
         html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px;
-      background-image: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%);">
-      <div style="background-color: #ffffff; padding: 30px; text-align: center; border-bottom: 2px solid #e2e8f0;">
-      <img src="cid:safeway_logo" width="180" alt="SafeWay Israel" />
-      </div>
-      <div style="background-color: #ffffff; padding: 30px; color: #1e293b;">
-            <h2 style="color: #3b82f6;">New Message Received</h2>
-            <p><strong>From:</strong> ${cleanMessage.name} (${cleanMessage.email})</p>
-            <p><strong>Subject:</strong> ${cleanMessage.subject}</p>
-            <hr />
-            <p><strong>Message:</strong></p>
-            <p style="white-space: pre-wrap;">${cleanMessage.message}</p>
-          </div>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6;">
+            <div style="padding: 40px 20px; border-bottom: 1px solid #f1f5f9;">
+                <h2 style="color: #3b82f6;">New Message Received</h2>
+                <p><strong>From:</strong> ${clean.name} (${clean.email})</p>
+                <p><strong>Subject:</strong> ${clean.subject}</p>
+                <hr />
+                <p><strong>Message:</strong></p>
+                <p style="white-space: pre-wrap;">${clean.message}</p>
+
+                <div style="padding: 30px 20px; text-align: center; background-color: #fafafa;">
+                    <img src="cid:safeway_logo" width="120" alt="SafeWay Israel Logo" style="opacity: 0.9;" />
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">
+                        This is an automated response to your inquiry. Please do not reply directly to this email.
+                    </p>
+                </div>
+            </div>
+        </div>
         `,
       });
 
       // Send the "Thank You" receipt to the USER
       await this.transporter.sendMail({
         from: `"SafeWay Israel" <${process.env.EMAIL_USER}>`,
-        to: cleanMessage.email, // Send back to the user
+        to: clean.email, // Send back to the user
         attachments: [
           {
             filename: "logo.png",
@@ -94,26 +98,33 @@ export class ContactService {
         ],
         subject: "We've received your message - SafeWay Israel",
         html: `
-<div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px;
-              background-image: linear-gradient(135deg, #2b6cb0 0%, #1a365d 100%);">
-    
-    <div style="background-color: #ffffff; padding: 30px; text-align: center; border-bottom: 2px solid #e2e8f0;">
-      <img src="cid:safeway_logo" width="180" alt="SafeWay Israel" />
-    </div>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6;">
 
-    <div style="background-color: #ffffff; padding: 30px; color: #1e293b;">
-      <p>Hi ${cleanMessage.name},</p>
-      <p>Thank you for reaching out to us. We have received your message regarding "<strong>${cleanMessage.subject}</strong>" and our team will get back to you as soon as possible.</p>
-      <p>Stay safe,</p>
-      <p><strong>The SafeWay Team</strong></p>
-      <footer style="font-size: 12px; color: #94a3b8; margin-top: 20px;">
-        This is an automated response. Please do not reply directly to this email.
-      </footer>
-    </div>
-  `,
+            <div style="padding: 40px 20px; border-bottom: 1px solid #f1f5f9;">
+                <h2 style="color: #1a365d; margin-top: 0; font-size: 24px;">Hi ${clean.name},</h2>
+
+                <p style="font-size: 16px;">
+                    Thank you for reaching out to us. We have received your message regarding
+                    <strong style="color: #2b6cb0;">"${clean.subject}"</strong> and our team will get back to you as soon as possible.
+                </p>
+
+                <p style="font-size: 16px; margin-bottom: 30px;">
+                    Stay safe,<br>
+                    <strong>The SafeWay Team</strong>
+                </p>
+            </div>
+
+            <div style="padding: 30px 20px; text-align: center; background-color: #fafafa;">
+                <img src="cid:safeway_logo" width="120" alt="SafeWay Israel Logo" style="opacity: 0.9;" />
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 15px; margin-left: 5px;">
+                    This is an automated response to your inquiry. Please do not reply directly to this email.
+                </p>
+            </div>
+        </div>
+        `,
       });
       console.log(
-        `[ContactService] Email sent successfully from: ${cleanMessage.email}`,
+        `[ContactService] Email sent successfully from: ${clean.email}`,
       );
       return { success: true, message: "Email sent successfully." };
     } catch (error) {
