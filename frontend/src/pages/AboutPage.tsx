@@ -1,14 +1,46 @@
-import { Container, Typography, Box, Paper, Grid } from "@mui/material";
+import { Container, Typography, Box, Paper, Grid, Stack } from "@mui/material";
 import { AboutPageStrings } from "../config/constants";
 
 export const AboutPage = () => {
   return (
     /* We use 'background.default' from your new global theme */
+
+    /* We use 'background.default' from your new global theme */
     <Box sx={{ bgcolor: "brand.black", minHeight: "100vh", py: 8 }}>
       <Container maxWidth="md">
-        <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ color: "brand.text.main" }}>
-          {AboutPageStrings.Title}
-        </Typography>
+        <Stack
+          direction="row"
+          spacing={5}
+          alignItems="center"
+          justifyContent="flex-start"
+          sx={{ mb: 6 }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              p: 1,
+              bgcolor: "white",
+              borderRadius: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <img
+              src="/safeway_logo.svg"
+              alt="SafeWay Israel"
+              style={{ width: "150px", height: "auto" }}
+            />
+          </Paper>
+
+          <Typography
+            variant="h3"
+            fontWeight="bold"
+            sx={{ color: "brand.text.main", m: 0 }}
+          >
+            {AboutPageStrings.Title}
+          </Typography>
+        </Stack>
 
         <Typography
           variant="h6"
