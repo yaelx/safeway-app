@@ -1,4 +1,5 @@
 # SafeWay Israel: Shelter-Aware Routing Engine
+<img width="352" height="192" alt="image" src="https://github.com/user-attachments/assets/d634de2c-0a5c-4802-a087-42846be1dd40" />
 
 **SafeWay** is a high-integrity navigation platform designed for high-tension environments. Unlike traditional GPS services that optimize solely for speed, SafeWay calculates transit paths based on **Shelter Density** and **Safe-Zone Proximity**, ensuring users are never more than a few seconds away from a protected space.
 
