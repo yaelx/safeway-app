@@ -112,15 +112,6 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({
               style={{ width: "180px", height: "auto" }}
             />
           </Box>
-
-          {/* <Typography
-            variant="h6"
-            fontWeight="bold"
-            color="primary"
-            sx={{ letterSpacing: 2, pl: 0.5 }}
-          >
-            {MainLayoutStrings.AppName}
-          </Typography> */}
         </Box>
 
         <Divider sx={{ mx: 2, borderColor: "brand.border", opacity: 0.5 }} />

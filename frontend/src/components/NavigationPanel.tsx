@@ -3,6 +3,7 @@ import { openInGoogleMaps, openInWaze } from "../utils/navigation";
 import { RoutePoint } from "../types/types";
 import { useRoutingContext } from "../context/RoutingContext";
 import { NavigationPanelStrings } from "../config/constants";
+import { Paper } from "@mui/material";
 
 export const NavigationPanel: React.FC = () => {
   const { routeData, selectedRoute } = useRoutingContext();
@@ -41,16 +42,16 @@ export const NavigationPanel: React.FC = () => {
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 leading-tight">
+            <h3 className="text-lg font-bold text-text-main leading-tight">
               {routeMode} {NavigationPanelStrings.RouteLabel}
             </h3>
             {/* Improved Visibility for Duration & Distance */}
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="bg-brand-border text-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
+              <span className="bg-brand-border text-text-main text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
                 {Math.round(selectedRoute.duration / 60)}{" "}
                 {NavigationPanelStrings.MinsUnit}
               </span>
-              <span className="text-slate-500 text-[10px] font-medium">
+              <span className="text-text-muted text-[10px] font-medium">
                 • {(selectedRoute.distance / 1000).toFixed(1)} km
               </span>
             </div>
@@ -78,7 +79,23 @@ export const NavigationPanel: React.FC = () => {
         >
           {/* Shelter Summary */}
           <div className="bg-brand-dark rounded-xl p-3 mb-4 flex items-center gap-3 border border-brand-blue/20">
-            <span className="text-2xl leading-none">🏠</span>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 0.5,
+                bgcolor: "white",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <img
+                src="/safeway_logo.svg"
+                alt="SafeWay Israel"
+                style={{ width: "60px", height: "auto" }}
+              />
+            </Paper>
+
             <div className="text-[13px] text-blue-100 leading-tight">
               <span className="font-bold">
                 {uniqueShelters} {NavigationPanelStrings.ShelterSummaryLabel}
@@ -97,7 +114,7 @@ export const NavigationPanel: React.FC = () => {
             </button>
             <button
               onClick={() => openInWaze(selectedRoute.geometry)}
-              className="w-full bg-brand-slate border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm"
+              className="w-full bg-brand-hover text-white font-bold py-4 rounded-2xl shadow-md hover:opacity-90"
             >
               {NavigationPanelStrings.BtnWaze}
             </button>
