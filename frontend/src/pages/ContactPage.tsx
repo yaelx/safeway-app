@@ -11,7 +11,8 @@ import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import SendIcon from "@mui/icons-material/Send";
 import { ContactPageStrings } from "../config/constants";
 import { useContactMessage } from "../hooks/useContactMessage";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 // Common style for all text fields to ensure visibility
 const textFieldStyle = {
@@ -30,6 +31,7 @@ const textFieldStyle = {
 export const ContactPage = () => {
   const { sendMessage, loading, error, success, resetStatus } =
     useContactMessage();
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: "",
@@ -38,6 +40,16 @@ export const ContactPage = () => {
     message: "",
     honeypot: "",
   });
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        navigate({ to: "/" });
+      }, 2500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
 
   // Handle input changes and reset the status (clears old errors/success messages)
   const handleChange = (
@@ -67,39 +79,19 @@ export const ContactPage = () => {
   return (
     <Box sx={{ bgcolor: "brand.dark", minHeight: "100%", py: 8 }}>
       <Container maxWidth="sm" sx={{ color: "brand.text.main" }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          {ContactPageStrings.Title}
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 4, color: "brand.text.muted" }}>
-          {ContactPageStrings.Subtitle}
-        </Typography>
-
-        {/* Status Messages */}
-        {success && (
-          <Alert severity="success" sx={{ mb: 3, borderRadius: "8px" }}>
-            Your message has been sent successfully!
-          </Alert>
-        )}
-        {error && (
-          <Alert severity="error" sx={{ mb: 3, borderRadius: "8px" }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* LinkedIn Box */}
         <Box
           sx={{
-            bgcolor: "brand.slate",
-            p: 3,
-            borderRadius: 2,
-            mb: 6,
-            border: "1px solid",
-            borderColor: "brand.border",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
           }}
         >
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            {ContactPageStrings.PreferredContactHeading}
+          <Typography variant="h4" fontWeight="bold">
+            {ContactPageStrings.Title}
           </Typography>
+
+          {/* Moved the button here to be adjacent to the title */}
           <Button
             variant="contained"
             startIcon={<LinkedInIcon />}
@@ -108,13 +100,29 @@ export const ContactPage = () => {
             href={ContactPageStrings.LinkedInUrl}
             sx={{
               textTransform: "none",
-              bgcolor: "brand.blue", // Changed to primary brand blue for consistency
+              bgcolor: "brand.blue",
               "&:hover": { bgcolor: "brand.hover" },
             }}
           >
             {ContactPageStrings.BtnLinkedIn}
           </Button>
         </Box>
+
+        <Typography variant="body1" sx={{ mb: 6, color: "brand.text.muted" }}>
+          {ContactPageStrings.Subtitle}
+        </Typography>
+
+        {/* Status Messages */}
+        {success && (
+          <Alert severity="success" sx={{ mb: 3, borderRadius: "8px" }}>
+            Your message has been sent successfully! Redirecting you to the map.
+          </Alert>
+        )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3, borderRadius: "8px" }}>
+            {error}
+          </Alert>
+        )}
 
         <Typography variant="h6" gutterBottom sx={{ color: "brand.blue" }}>
           {ContactPageStrings.SendMessageHeading}

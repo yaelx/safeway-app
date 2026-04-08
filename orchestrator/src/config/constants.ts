@@ -34,7 +34,7 @@ export const INTERNAL_SERVICES = {
 };
 
 export const PRODUCTION_URL = "https://safeway-app.vercel.app";
-export const LOCAL_URL = "http://localhost:3000";
+export const LOCAL_URL = "http://localhost:5173";
 
 export const API_ENDPOINTS = {
   SHELTERS: "/api/shelters",
