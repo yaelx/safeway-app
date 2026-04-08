@@ -1,14 +1,16 @@
 # main.py
+from typing import List
 import subprocess
 import time
 import os
-import requests
 import numpy as np
 import logging
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from solver import SafetyRequest, calculate_safety_for_geometry
+from solver import calculate_safety_for_geometry, analyze_route_segments
+from types.models import SafetyRequest
+
 
 # Set up logging to show in the terminal
 logging.basicConfig(level=logging.INFO)
@@ -64,21 +66,46 @@ async def evaluate_route(req: SafetyRequest):
     return {"safetyScore": result["score"], "safetyReport": result["report"]}
 
 
-@app.post("/evaluate_alternatives")
-async def evaluate_alternatives(req: SafetyRequest):
+# @app.post("/evaluate_alternatives")
+# async def evaluate_alternatives(req: SafetyRequest):
     
-    all_results = []
-    for idx, route_geom in enumerate(req.routes):
-        res = calculate_safety_for_geometry(route_geom, req.shelterData)
-        all_results.append({
-            "index": idx,
-            "safetyScore": res["score"],
-            "safetyReport": res["report"],
-            "geometry": route_geom
+#     all_results = []
+#     for idx, route_geom in enumerate(req.routes):
+#         res = calculate_safety_for_geometry(route_geom, req.shelterData)
+#         all_results.append({
+#             "index": idx,
+#             "safetyScore": res["score"],
+#             "safetyReport": res["report"],
+#             "geometry": route_geom
+#         })
+    
+#     all_results.sort(key=lambda x: x["safetyScore"], reverse=True)
+#     return all_results
+
+@app.post("/evaluate_alternatives")
+async def evaluate_alternatives(req: List[SafetyRequest]):
+    """
+    Compare multiple routes (e.g., from the sidebar).
+    Returns an array where each item is the full analysis of one candidate route.
+    """
+    all_route_comparisons = []
+    
+    for idx, route_req in enumerate(req):
+        # We run the full segmented logic for each alternative
+        analysis = analyze_route_segments(route_req)
+        
+        all_route_comparisons.append({
+            "routeIndex": idx,
+            "safetyScore": analysis["score"],
+            # We still include segments so the frontend can color-code 
+            # the alternative lines on the map if hovered.
+            "segments": [s.model_dump() for s in analysis["segments"]]
         })
     
-    all_results.sort(key=lambda x: x["safetyScore"], reverse=True)
-    return all_results
+    # Sort them so the safest route is suggested first
+    all_route_comparisons.sort(key=lambda x: x["safetyScore"], reverse=True)
+    
+    return all_route_comparisons
 
 
 if __name__ == "__main__":

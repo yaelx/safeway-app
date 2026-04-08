@@ -2,8 +2,9 @@
 import numpy as np
 import os
 import logging
-from pydantic import BaseModel
+import polyline
 from typing import List, Dict, Any
+from types.models import SafetyRequest, RouteStep, SegmentAnalysis, Shelter, RoutePoint
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -21,27 +22,6 @@ else:
 SAFE_THRESHOLD_METERS = 500.0  
 EARTH_RADIUS_KM = 6371.0
 SAFE_DISTANCE_KM = SAFE_THRESHOLD_METERS / 1000.0
-
-
-class Shelter(BaseModel):
-    id: int
-    lng: float 
-    lat: float
-    name: str = "Unknown Shelter"
-    address: str = ""
-    isOfficial: bool = False
-    type: str = ""
-    model_config = {"extra": "allow"}
-
-class SafetyRequest(BaseModel):
-    routes: List[List[List[float]]]  # list of [lat, lng]
-    shelterData: List[Shelter]   
-
-class RoutePoint(BaseModel):
-    coords: List[float]
-    distance: float
-    isSafe: bool
-    shelter: Shelter
     
 # Set up logging to show in the terminal
 logging.basicConfig(level=logging.INFO)
@@ -101,3 +81,72 @@ def calculate_safety_for_geometry(coords: List[List[float]], shelters: List[Shel
         })
     return {"score": round(score, 2), "report": report}
 
+def analyze_route_segments(req: SafetyRequest):
+    """
+    Calculates safety for ONE route by breaking it into 
+    context-aware segments (Highway vs Residential).
+    """
+    segments = []
+    weighted_score_sum = 0
+    total_duration = 0
+    shelter_arr = np.array([[s.lat, s.lng] for s in req.shelterData])
+
+    for leg in req.legs:
+        for i, step in enumerate(leg.steps):
+            total_duration += step.duration
+            
+            # --- HIGHWAY RELATIVE SCORING ---
+            if step.ref and any(r in step.ref for r in ["2", "4", "6", "22", "70", "75"]):
+                # Highway score: Penalty grows after 60s of exposure
+                h_score = max(0, min(100, 100 - (step.duration - 60) * 0.8))
+                
+                # Iran-Profile Escape Logic
+                escape = None
+                if i + 1 < len(leg.steps):
+                    next_s = leg.steps[i+1]
+                    escape = {
+                        "lat": next_s.intersections[0].location[1],
+                        "lng": next_s.intersections[0].location[0],
+                        "name": f"Exit to {next_s.name}"
+                    }
+
+                seg = SegmentAnalysis(
+                    type="highway",
+                    status="exposed" if h_score < 50 else "caution",
+                    segmentScore=round(h_score, 2),
+                    text=f"Road {step.ref}: {int(step.duration)}s exposure.",
+                    duration=step.duration,
+                    escapePoint=escape
+                )
+
+            # --- RESIDENTIAL RELATIVE SCORING ---
+            else:
+                coords = polyline.decode(step.geometry)
+                if not coords: continue
+                
+                step_pts = np.array(coords)
+                # Sample every 3rd point to keep speed high
+                dist_matrix = vectorized_haversine(step_pts[::3], shelter_arr)
+                
+                # Residential score: % of path within 500m of a shelter
+                safe_ratio = np.mean(np.min(dist_matrix, axis=1) < SAFE_DISTANCE_KM)
+                r_score = safe_ratio * 100
+                
+                # Fetch only a few nearby shelters to keep response light
+                nearby_idx = np.where(np.min(dist_matrix, axis=0) < SAFE_DISTANCE_KM)[0]
+                nearby_shelters = [req.shelterData[idx] for idx in nearby_idx[:3]]
+
+                seg = SegmentAnalysis(
+                    type="residential",
+                    status="safe" if r_score > 70 else "exposed",
+                    segmentScore=round(r_score, 2),
+                    text=f"{step.name}: {len(nearby_shelters)} shelters nearby.",
+                    duration=step.duration,
+                    shelters=nearby_shelters
+                )
+
+            segments.append(seg)
+            weighted_score_sum += (seg.segmentScore * step.duration)
+
+    final_route_score = weighted_score_sum / total_duration if total_duration > 0 else 0
+    return {"score": round(final_route_score, 2), "segments": segments}
