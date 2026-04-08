@@ -5,18 +5,24 @@ import * as fs from "fs";
 import * as path from "path";
 import handlebars from "handlebars";
 import { svgLogo } from "../config/logo_str";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export class ContactService {
   private transporter;
 
   constructor() {
-    // 1. Create the transporter
-    // For Gmail, you'll need an "App Password" (not your regular password)
+    console.log(
+      "\nContactService: \n",
+      process.env.EMAIL_USER,
+      process.env.EMAIL_PASS,
+    );
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // your email: e.g., yael@gmail.com
-        pass: process.env.EMAIL_PASS, // your 16-character App Password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
   }
