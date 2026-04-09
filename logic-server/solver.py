@@ -4,7 +4,7 @@ import os
 import logging
 import polyline
 from typing import List, Dict, Any
-from types.models import SafetyRequest, RouteStep, SegmentAnalysis, Shelter, RoutePoint
+from schemas.models import SafetyRequest, RouteStep, SegmentAnalysis, Shelter, RoutePoint
 from pathlib import Path
 from dotenv import load_dotenv
 

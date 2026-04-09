@@ -18,13 +18,24 @@ export type OSMRoute = {
   geometry: string;
   distance: number;
   duration: number;
-  weight: number;
-  weight_name: string;
-  legs: {
-    steps: any[];
-    weight: number;
-    summary: string;
-    duration: number;
-    distance: number;
-  }[];
+  legs: OSMLeg[]; // Updated from any
 };
+
+export interface OSMLeg {
+  steps: OSMStep[];
+  distance: number;
+  duration: number;
+}
+
+export interface OSMStep {
+  name: string;
+  ref?: string;
+  distance: number;
+  duration: number;
+  geometry: string;
+  intersections: {
+    location: [number, number]; // [lng, lat]
+    entry: boolean[];
+    bearings: number[];
+  }[];
+}

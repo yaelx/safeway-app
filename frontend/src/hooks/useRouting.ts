@@ -1,11 +1,11 @@
 import { useState } from "react";
 import polyline from "@mapbox/polyline";
 import { API_ENDPOINTS } from "../config/constants";
-import { RouteData } from "../types/types";
+import { RouteData, SegmentAnalysis } from "../types/types";
 
 export const useRouting = () => {
   const [routeData, setRouteData] = useState<RouteData[] | null>(null);
-  const [decodedPaths, setDecodedPaths] = useState<[number, number][][]>([]);
+  // const [decodedPaths, setDecodedPaths] = useState<[number, number][][]>([]);
   const [loading, setLoading] = useState(false);
 
   const planTrip = async (start: string, end: string) => {
@@ -17,10 +17,20 @@ export const useRouting = () => {
       const data = await response.json();
 
       if (data.routes?.length) {
-        setRouteData(data.routes);
-        setDecodedPaths(
-          data.routes.map((r: RouteData) => polyline.decode(r.geometry)),
-        );
+        // We ensure each segment is decoded immediately when data arrives
+        const processedRoutes = data.routes.map((route: RouteData) => ({
+          ...route,
+          decodedSegments: route.segments.map((seg: SegmentAnalysis) => ({
+            coords: polyline.decode(seg.geometry),
+            status: seg.status,
+            type: seg.type,
+          })),
+        }));
+        setRouteData(processedRoutes);
+
+        // setDecodedPaths(
+        //   data.routes.map((r: RouteData) => polyline.decode(r.geometry)),
+        // );
       }
     } catch (err) {
       console.error("Safety Analysis Failed:", err);
@@ -29,5 +39,5 @@ export const useRouting = () => {
     }
   };
 
-  return { routeData, decodedPaths, loading, planTrip };
+  return { routeData, loading, planTrip };
 };

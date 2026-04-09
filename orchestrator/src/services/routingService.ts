@@ -45,7 +45,7 @@ export class RoutingService {
 
     // 3. Cache Miss -> Call OSM
     try {
-      const routeUrl = `${API_PATHS.OSRM_ROUTE}${start};${end}?alternatives=true&overview=full&geometries=polyline`;
+      const routeUrl = `${API_PATHS.OSRM_ROUTE}${start};${end}?alternatives=true&overview=full&geometries=polyline&steps=true&annotations=true`;
       const routeRes = await axios.get(routeUrl);
       routeData = routeRes.data;
       console.log("OSRM routes response length:", routeData.routes.length);
@@ -58,12 +58,12 @@ export class RoutingService {
       throw new Error("Failed to fetch routes from navigation service.");
     }
 
-    // A. Decode ALL candidate routes instead of just index [0]
+    // A. Decode for bounds calculation (needed to find shelters in the area)
     const allRoutePoints = routeData.routes.map(
       (r: OSMRoute) => polyline.decode(r.geometry) as [number, number][],
     );
 
-    // B. Calculate bounds covering ALL paths
+    // B. Calculate bounds (Same as before, used for the Prisma query)
     const allLats = allRoutePoints.flat().map((p: any) => p[0]);
     const allLngs = allRoutePoints.flat().map((p: any) => p[1]);
     const padding = 0.01;
@@ -101,25 +101,30 @@ export class RoutingService {
 
     const authHeader = await this.authenticator.getAccessToken();
 
+    // D. NEW LOGIC: Prepare the payload for Python
+    // PREPARE PAYLOAD: Map OSRM routes to the new SafetyRequest format
+    const payloads = routeData.routes.map((r: OSMRoute) => ({
+      legs: r.legs, // Contains steps, ref, and intersections
+      shelterData: allShelters,
+    }));
+
     // D. Call the updated Bulk Client
     const scoredRoutes: ScoredRoute[] =
-      await logicServerClient.evaluateAlternatives(
-        allRoutePoints,
-        allShelters,
-        authHeader,
-      );
+      await logicServerClient.evaluateAlternatives(payloads, authHeader);
 
     // E. Merge OSRM metadata (distance/duration) with Python safety data
     // Python returns these sorted by safetyScore
     const top3Routes: RouteData[] = scoredRoutes
       .slice(0, 3)
-      .map((scored: ScoredRoute) => {
+      .map((scored: any) => {
         const originalOSRM: OSMRoute = routeData.routes[scored.index];
         return {
           index: scored.index,
           geometry: originalOSRM.geometry as string, // use original OSM route data since we want string geometry
           safetyScore: scored.safetyScore,
           safetyReport: scored.safetyReport,
+          // Now including segments from Python for the Frontend to color-code
+          segments: scored.segments,
           distance: originalOSRM.distance,
           duration: originalOSRM.duration,
         };

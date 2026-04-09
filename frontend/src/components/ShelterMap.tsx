@@ -127,14 +127,8 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  const {
-    routeData,
-    decodedPaths,
-    selectedRoute,
-    setSelectedRoute,
-    loading,
-    planTrip,
-  } = useRoutingContext();
+  const { routeData, selectedRoute, setSelectedRoute, loading, planTrip } =
+    useRoutingContext();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
@@ -168,26 +162,32 @@ const ShelterMap: React.FC = () => {
                 : coordinates
             }
           />
-          <MapController points={decodedPaths[0]} />
+          {/* <MapController points={decodedPaths[0]} /> */}
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           {routeData &&
-            routeData.map((r: RouteData, i: number) => {
-              const routeColors = [
-                BRAND_COLORS.safest,
-                BRAND_COLORS.fastest,
-                BRAND_COLORS.alt,
-              ];
-              return (
-                <SafeRoute
-                  key={i}
-                  routeData={r}
-                  path={decodedPaths[i]}
-                  routeColor={routeColors[i] || BRAND_COLORS.alt}
-                  isSelected={selectedRoute?.index === r.index}
-                  setSelectedRoute={setSelectedRoute}
-                />
-              );
-            })}
+            [...routeData]
+              .sort((a, b) => {
+                // If 'b' is selected, move it to the end of the array (drawn last = drawn on top)
+                if (selectedRoute?.index === b.index) return -1;
+                return 1;
+              })
+              .map((r: RouteData, i: number) => {
+                // const routeColors = [
+                //   BRAND_COLORS.safest,
+                //   BRAND_COLORS.fastest,
+                //   BRAND_COLORS.alt,
+                // ];
+                return (
+                  <SafeRoute
+                    key={i}
+                    routeData={r}
+                    //path={decodedPaths[i]}
+                    //routeColor={routeColors[i] || BRAND_COLORS.alt}
+                    isSelected={selectedRoute?.index === r.index}
+                    setSelectedRoute={setSelectedRoute}
+                  />
+                );
+              })}
           <ShelterDiscovery
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}

@@ -1,20 +1,19 @@
 # main.py
 from typing import List
 import subprocess
-import time
 import os
-import numpy as np
 import logging
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from solver import calculate_safety_for_geometry, analyze_route_segments
-from types.models import SafetyRequest
+from schemas.models import SafetyRequest
 
 
 # Set up logging to show in the terminal
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+OSRM_READY = False
 
 app = FastAPI()
 # Setup Middleware ONCE
@@ -29,23 +28,27 @@ app.add_middleware(
 # --- START OSRM SUBPROCESS ---
 # This launches the C++ engine using the data "baked" in the Dockerfile
 # the path here should match the path in the Dockerfile
-try:
-    print("DEBUG: Starting OSRM Engine...")
-    osrm_process = subprocess.Popen([
-        "/usr/local/bin/osrm-routed", 
-        "--algorithm", "mld", 
-        "/app/data/israel-and-palestine-latest.osrm"
-    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    print("DEBUG: OSRM process initiated.")
-except Exception as e:
-    print(f"ERROR: Failed to start OSRM: {e}")
+def start_osrm():
+    global OSRM_READY
+    try:
+        print("DEBUG: Starting OSRM Engine...")
+        osrm_process = subprocess.Popen([
+            "/usr/local/bin/osrm-routed", 
+            "--algorithm", "mld", 
+            "/app/data/israel-and-palestine-latest.osrm"
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        print("DEBUG: OSRM process initiated.")
 
-# Give it time, but don't block the whole app if it takes longer
-time.sleep(5)
+        OSRM_READY = True
+    except Exception as e:
+        print(f"ERROR: Failed to start OSRM: {e}")
+
+
+start_osrm()
 
 @app.get("/health")
 async def health():
-    return {"status": "online", "engine": "OSRM MLD Active"}
+    return {"status": "online", "engine": "OSRM MLD Active", "osrm_ready": OSRM_READY}
 
 
 

@@ -25,12 +25,35 @@ export interface RoutePoint {
   shelter: RouteShelter;
 }
 
+export interface SegmentAnalysis {
+  type: "residential" | "highway";
+  status: "safe" | "exposed" | "caution";
+  text: string;
+  segmentScore: number;
+  duration: number;
+  geometry: string; // The polyline string for JUST this segment
+  shelters: RouteShelter[];
+  escapePoint?: {
+    lat: number;
+    lng: number;
+    name: string;
+  };
+}
+
+export interface DecodedSegment {
+  coords: [number, number][];
+  status: "safe" | "exposed" | "caution";
+  type: string;
+}
+
 export interface RouteData {
   index: number;
-  geometry: string;
+  geometry: string; // Full route polyline
   distance: number;
   duration: number;
   safetyScore: number;
+  segments: SegmentAnalysis[];
+  decodedSegments?: DecodedSegment[];
   safetyReport: RoutePoint[];
 }
 

@@ -1,26 +1,26 @@
 import axios from "axios";
 import { INTERNAL_SERVICES } from "../config/constants";
 import { RouteShelter } from "../types/types";
-
+import { OSMLeg } from "../types/osmType";
 const { BASE_URL, ENDPOINTS, HEADER_KEY } = INTERNAL_SERVICES.PYTHON_SOLVER;
 
 export const logicServerClient = {
+  /**
+   * Refactored to handle complex route objects (legs/steps)
+   * instead of just raw coordinate arrays.
+   */
+
   evaluateAlternatives: async (
-    routes: number[][][],
-    shelterData: RouteShelter[],
+    payloads: { legs: OSMLeg[]; shelterData: RouteShelter[] }[],
     authHeader: string,
   ) => {
     const url = `${BASE_URL}${ENDPOINTS.EVALUATE}`; // Ensure this points to /evaluate_alternatives
 
     try {
-      const response = await axios.post(
-        url,
-        { routes, shelterData }, // Sending 'routes' as an array of arrays
-        {
-          headers: { Authorization: authHeader },
-          timeout: 15000, // Increased timeout for multiple route processing
-        },
-      );
+      const response = await axios.post(url, payloads, {
+        headers: { Authorization: authHeader },
+        timeout: 15000, // Increased timeout for multiple route processing
+      });
       return response.data;
     } catch (error: any) {
       // Catching the error here lets you provide a better message to the Orchestrator
