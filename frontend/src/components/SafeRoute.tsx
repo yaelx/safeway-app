@@ -48,9 +48,9 @@ export const SafeRoute = ({
           pathOptions={{
             color: getSegmentColor(segment.status, isSelected),
             // Thinner for background, thicker for the active choice
-            weight: isSelected ? 8 : 4,
+            weight: isSelected ? 8 : 6,
             // Muted for background
-            opacity: isSelected ? 1 : 0.4,
+            opacity: isSelected ? 1 : 0.8,
             lineJoin: "round",
             lineCap: "round",
             // This ensures the selected route stays on top of the gray ones
