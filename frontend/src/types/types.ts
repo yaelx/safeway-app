@@ -57,6 +57,11 @@ export interface RouteData {
   safetyReport: RoutePoint[];
 }
 
+export interface IRoutingResponse {
+  totalFound: number;
+  routes: RouteData[];
+}
+
 export interface OSMLocation {
   addresstype: string;
   boundingbox: number[];

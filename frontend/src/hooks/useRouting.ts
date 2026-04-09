@@ -1,7 +1,7 @@
 import { useState } from "react";
 import polyline from "@mapbox/polyline";
 import { API_ENDPOINTS } from "../config/constants";
-import { RouteData, SegmentAnalysis } from "../types/types";
+import { IRoutingResponse, RouteData, SegmentAnalysis } from "../types/types";
 
 export const useRouting = () => {
   const [routeData, setRouteData] = useState<RouteData[] | null>(null);
@@ -14,7 +14,7 @@ export const useRouting = () => {
       const response = await fetch(
         `${API_ENDPOINTS.SAFE_ROUTE}?start=${start}&end=${end}`,
       );
-      const data = await response.json();
+      const data: IRoutingResponse = await response.json();
 
       if (data.routes?.length) {
         // We ensure each segment is decoded immediately when data arrives

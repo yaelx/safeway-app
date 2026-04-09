@@ -11,6 +11,7 @@ import {
   RouteData,
   ScoredRoute,
   PythonRouteResponse,
+  PythonSolverResponse,
 } from "../types/types";
 import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
 import { OSMRoute } from "../types/osmType";
@@ -32,7 +33,7 @@ export class RoutingService {
   }
 
   async getSafeRoutes(start: string, end: string) {
-    let routeData: any;
+    let osrmRoutes: any;
     console.log("\nReceiced new getSafeRoutes request");
     // start is "34.123,32.456"
     const startCoords = this.parseCoords(start);
@@ -48,10 +49,10 @@ export class RoutingService {
     try {
       const routeUrl = `${API_PATHS.OSRM_ROUTE}${start};${end}?alternatives=true&overview=full&geometries=polyline&steps=true&annotations=true`;
       const routeRes = await axios.get(routeUrl);
-      routeData = routeRes.data;
-      console.log("OSRM routes response length:", routeData.routes.length);
+      osrmRoutes = routeRes.data;
+      console.log("OSRM routes response length:", osrmRoutes.routes.length);
 
-      if (!routeData.routes || routeData.routes.length === 0) {
+      if (!osrmRoutes.routes || osrmRoutes.routes.length === 0) {
         throw new Error("OSRM returned no routes for this path.");
       }
     } catch (error: any) {
@@ -60,7 +61,7 @@ export class RoutingService {
     }
 
     // A. Decode for bounds calculation (needed to find shelters in the area)
-    const allRoutePoints = routeData.routes.map(
+    const allRoutePoints = osrmRoutes.routes.map(
       (r: OSMRoute) => polyline.decode(r.geometry) as [number, number][],
     );
 
@@ -104,36 +105,40 @@ export class RoutingService {
 
     // D. NEW LOGIC: Prepare the payload for Python
     // PREPARE PAYLOAD: Map OSRM routes to the new SafetyRequest format
-    const payloads = routeData.routes.map((r: OSMRoute) => ({
-      legs: r.legs, // Contains steps, ref, and intersections
-      shelterData: allShelters,
-    }));
+    const payloads = osrmRoutes.routes
+      .filter((r: OSMRoute) => r.geometry !== null)
+      .map((r: OSMRoute) => ({
+        legs: r.legs, // Contains steps, ref, and intersections
+        shelterData: allShelters,
+      }));
 
     // D. Call the updated Bulk Client
-    const scoredRoutes: PythonRouteResponse[] =
+    const pythonRes: PythonSolverResponse =
       await logicServerClient.evaluateAlternatives(payloads, authHeader);
+    const { routes, totalFound } = pythonRes;
+
+    if (!routes || routes.length === 0) {
+      throw new Error("Python Logic Server returned no routes.");
+    }
 
     // E. Merge OSRM metadata (distance/duration) with Python safety data
     // Python returns these sorted by safetyScore
-    const top3Routes: RouteData[] = scoredRoutes
-      .slice(0, 3)
-      .map((scored: any) => {
-        const originalOSRM: OSMRoute = routeData.routes[scored.index];
-        return {
-          index: scored.index,
-          geometry: originalOSRM.geometry as string, // use original OSM route data since we want string geometry
-          safetyScore: scored.safetyScore,
-          safetyReport: scored.safetyReport,
-          // Now including segments from Python for the Frontend to color-code
-          segments: scored.segments,
-          distance: originalOSRM.distance,
-          duration: originalOSRM.duration,
-        };
-      });
+    const sortedRoutes: RouteData[] = routes.map((r: PythonRouteResponse) => {
+      const originalOSRM: OSMRoute = osrmRoutes.routes[r.index];
+
+      return {
+        index: r.index,
+        safetyScore: r.safetyScore,
+        geometry: originalOSRM.geometry as string,
+        segments: r.segments,
+        distance: originalOSRM.distance,
+        duration: originalOSRM.duration,
+      };
+    });
 
     const resp = {
-      routes: top3Routes, // Now returning an array of 3 routes
-      totalFound: top3Routes.length,
+      routes: sortedRoutes, // Now returning an array of 3 routes
+      totalFound: sortedRoutes.length,
     } as IRoutingResponse;
 
     this.cache
