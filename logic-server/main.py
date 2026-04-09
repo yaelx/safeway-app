@@ -5,6 +5,7 @@ import os
 import logging
 import uvicorn
 import hashlib
+import json
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from solver import calculate_safety_for_geometry, analyze_route_segments
@@ -87,9 +88,20 @@ async def evaluate_route(req: SafetyRequest):
 #     return all_results
 
 def generate_route_id(segments):
-    # Create a unique string based on the polylines of all segments
-    combined_path = "".join([s['polyline'] for s in segments])
-    return hashlib.md5(combined_path.encode()).hexdigest()[:12]
+    """
+    Generates a unique, stable ID based on the route's geometry.
+    segments: List of SegmentAnalysis objects
+    """
+    try:
+        # Extract geometry from each segment to create a unique fingerprint
+        # Since geometry might be a list or string, we convert to string
+        combined_path = "".join([str(s.geometry) for s in segments])
+        # Create a 12-character hex hash
+        return hashlib.md5(combined_path.encode()).hexdigest()[:12]
+    except Exception as e:
+        # Fallback to a random-ish string if hashing fails
+        return f"route_{int(segments[0].duration)}"
+
 
 @app.post("/evaluate_alternatives")
 async def evaluate_alternatives(req: List[SafetyRequest]):
