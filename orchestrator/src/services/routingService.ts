@@ -127,6 +127,7 @@ export class RoutingService {
       const originalOSRM: OSMRoute = osrmRoutes.routes[r.index];
 
       return {
+        id: r.id,
         index: r.index,
         safetyScore: r.safetyScore,
         geometry: originalOSRM.geometry as string,

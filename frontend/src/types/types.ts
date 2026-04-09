@@ -47,6 +47,7 @@ export interface DecodedSegment {
 }
 
 export interface RouteData {
+  id: string;
   index: number;
   geometry: string; // Full route polyline
   distance: number;

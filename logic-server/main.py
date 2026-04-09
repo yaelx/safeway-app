@@ -4,6 +4,7 @@ import subprocess
 import os
 import logging
 import uvicorn
+import hashlib
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from solver import calculate_safety_for_geometry, analyze_route_segments
@@ -85,6 +86,11 @@ async def evaluate_route(req: SafetyRequest):
 #     all_results.sort(key=lambda x: x["safetyScore"], reverse=True)
 #     return all_results
 
+def generate_route_id(segments):
+    # Create a unique string based on the polylines of all segments
+    combined_path = "".join([s['polyline'] for s in segments])
+    return hashlib.md5(combined_path.encode()).hexdigest()[:12]
+
 @app.post("/evaluate_alternatives")
 async def evaluate_alternatives(req: List[SafetyRequest]):
     """
@@ -96,9 +102,10 @@ async def evaluate_alternatives(req: List[SafetyRequest]):
     for idx, route_req in enumerate(req):
         # We run the full segmented logic for each alternative
         analysis = analyze_route_segments(route_req) # {SegmentAnalysis, score}
-        
+        route_id = generate_route_id(analysis["segments"])
         all_route_comparisons.append({
             "index": idx,
+            "id": route_id,
             "safetyScore": analysis["score"],
             # We still include segments so the frontend can color-code 
             # the alternative lines on the map if hovered.

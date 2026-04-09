@@ -4,8 +4,8 @@ import { SafetySidebarStrings } from "../config/constants";
 
 interface SafetySidebarProps {
   routes: RouteData[];
-  selectedRouteId: number;
-  onSelect: (id: number) => void;
+  selectedRouteId: string;
+  onSelect: (id: string) => void;
 }
 
 export const SafetySidebar = ({
@@ -17,10 +17,10 @@ export const SafetySidebar = ({
     <div className="flex flex-col gap-3">
       {routes.map((route) => (
         <button
-          key={route.index}
-          onClick={() => onSelect(route.index)}
+          key={route.id}
+          onClick={() => onSelect(route.id)}
           className={`w-full text-left p-4 rounded-xl transition-all border-2 ${
-            selectedRouteId === route.index
+            selectedRouteId === route.id
               ? "border-route-safest bg-route-safest/10"
               : "border-brand-border bg-brand-border/40"
           }`}
@@ -28,7 +28,9 @@ export const SafetySidebar = ({
           {/* Header: Type and Score */}
           <div className="flex justify-between items-start mb-2">
             <span className="bg-brand-border text-text-main px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-              {selectedRouteId === route.index ? SafetySidebarStrings.LabelSafestRoute : SafetySidebarStrings.LabelAlternative}
+              {selectedRouteId === route.id
+                ? SafetySidebarStrings.LabelSafestRoute
+                : SafetySidebarStrings.LabelAlternative}
             </span>
             <div className="flex items-center gap-1 text-route-safest font-bold">
               <span className="text-lg">{route.safetyScore}%</span>

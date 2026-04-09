@@ -9,16 +9,16 @@ import { BRAND_COLORS } from "../theme/theme";
 // Helper to map status to color
 const getSegmentColor = (status: string, isSelected: boolean) => {
   // If the route is NOT selected, show it in a neutral, muted gray
-  if (!isSelected) return "#94a3b8";
+  if (!isSelected) return BRAND_COLORS.alt;
 
   // If SELECTED, show the "Practical" safety colors
   switch (status) {
     case "safe":
-      return "#22c55e"; // Vivid Green
+      return BRAND_COLORS.safest; // Vivid Green
     case "caution":
-      return "#eab308"; // Vivid Yellow
+      return BRAND_COLORS.caution; // Vivid Yellow
     case "exposed":
-      return "#ef4444"; // Vivid Red
+      return BRAND_COLORS.exposed; // Vivid Red
     default:
       return BRAND_COLORS.fastest; // Brand Blue
   }
@@ -27,11 +27,11 @@ const getSegmentColor = (status: string, isSelected: boolean) => {
 export const SafeRoute = ({
   routeData,
   isSelected,
-  setSelectedRoute,
+  onSelectRoute,
 }: {
   routeData: RouteData;
   isSelected: boolean;
-  setSelectedRoute: (route: RouteData) => void;
+  onSelectRoute: (route: RouteData) => void;
 }) => {
   const { startLocation, endLocation } = useLocationState();
   // if (!routeData || !path.length) return null;
@@ -43,7 +43,7 @@ export const SafeRoute = ({
       {/* 1. Draw the Segments (The Multi-Color Line) */}
       {routeData.decodedSegments.map((segment, idx) => (
         <Polyline
-          key={`${routeData.index}-seg-${idx}`}
+          key={`${routeData.id}-seg-${idx}`}
           positions={segment.coords}
           pathOptions={{
             color: getSegmentColor(segment.status, isSelected),
@@ -59,7 +59,7 @@ export const SafeRoute = ({
           eventHandlers={{
             click: (e: any) => {
               L.DomEvent.stopPropagation(e);
-              setSelectedRoute(routeData);
+              onSelectRoute(routeData);
             },
           }}
         />

@@ -127,14 +127,15 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  const { routeData, selectedRoute, setSelectedRoute } = useRoutingContext();
+  const { routeData, selectedRoute, onSelectRoute, decodedPath } =
+    useRoutingContext();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
 
   useEffect(() => {
     if (routeData && routeData.length > 0 && !selectedRoute) {
-      setSelectedRoute(routeData[0]); // Auto-select the first (safest) route
+      onSelectRoute(routeData[0]); // Auto-select the first (safest) route
     }
   }, [routeData, selectedRoute]);
 
@@ -161,7 +162,7 @@ const ShelterMap: React.FC = () => {
                 : coordinates
             }
           />
-          {/* <MapController points={decodedPaths[0]} /> */}
+          <MapController points={decodedPath || []} />
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           {routeData &&
             [...routeData].map((r: RouteData, i: number) => (
@@ -169,7 +170,7 @@ const ShelterMap: React.FC = () => {
                 key={i}
                 routeData={r}
                 isSelected={selectedRoute?.index === r.index}
-                setSelectedRoute={setSelectedRoute}
+                onSelectRoute={onSelectRoute}
               />
             ))}
           <ShelterDiscovery

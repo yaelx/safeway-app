@@ -56,6 +56,7 @@ export type ScoredRoute<TGeometry = number[][]> = {
 };
 
 export type RouteData = {
+  id: string;
   index: number;
   safetyScore: number;
   geometry: string;
@@ -85,6 +86,7 @@ export interface SegmentAnalysis {
 }
 
 export type PythonRouteResponse = {
+  id: string;
   index: number;
   safetyScore: number;
   segments: SegmentAnalysis[];

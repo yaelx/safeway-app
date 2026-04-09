@@ -5,7 +5,6 @@ import { IRoutingResponse, RouteData, SegmentAnalysis } from "../types/types";
 
 export const useRouting = () => {
   const [routeData, setRouteData] = useState<RouteData[] | null>(null);
-  // const [decodedPaths, setDecodedPaths] = useState<[number, number][][]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,10 +27,6 @@ export const useRouting = () => {
           })),
         }));
         setRouteData(processedRoutes);
-
-        // setDecodedPaths(
-        //   data.routes.map((r: RouteData) => polyline.decode(r.geometry)),
-        // );
       } else {
         setError("No routes found.");
       }
