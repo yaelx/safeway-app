@@ -181,8 +181,6 @@ const ShelterMap: React.FC = () => {
                   <SafeRoute
                     key={i}
                     routeData={r}
-                    //path={decodedPaths[i]}
-                    //routeColor={routeColors[i] || BRAND_COLORS.alt}
                     isSelected={selectedRoute?.index === r.index}
                     setSelectedRoute={setSelectedRoute}
                   />

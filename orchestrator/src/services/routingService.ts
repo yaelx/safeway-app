@@ -10,6 +10,7 @@ import {
   RouteShelter,
   RouteData,
   ScoredRoute,
+  PythonRouteResponse,
 } from "../types/types";
 import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
 import { OSMRoute } from "../types/osmType";
@@ -109,7 +110,7 @@ export class RoutingService {
     }));
 
     // D. Call the updated Bulk Client
-    const scoredRoutes: ScoredRoute[] =
+    const scoredRoutes: PythonRouteResponse[] =
       await logicServerClient.evaluateAlternatives(payloads, authHeader);
 
     // E. Merge OSRM metadata (distance/duration) with Python safety data
@@ -132,7 +133,7 @@ export class RoutingService {
 
     const resp = {
       routes: top3Routes, // Now returning an array of 3 routes
-      totalFound: routeData.routes.length,
+      totalFound: top3Routes.length,
     } as IRoutingResponse;
 
     this.cache

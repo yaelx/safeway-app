@@ -95,10 +95,10 @@ async def evaluate_alternatives(req: List[SafetyRequest]):
     
     for idx, route_req in enumerate(req):
         # We run the full segmented logic for each alternative
-        analysis = analyze_route_segments(route_req)
+        analysis = analyze_route_segments(route_req) # {SegmentAnalysis, score}
         
         all_route_comparisons.append({
-            "routeIndex": idx,
+            "index": idx,
             "safetyScore": analysis["score"],
             # We still include segments so the frontend can color-code 
             # the alternative lines on the map if hovered.
@@ -108,7 +108,7 @@ async def evaluate_alternatives(req: List[SafetyRequest]):
     # Sort them so the safest route is suggested first
     all_route_comparisons.sort(key=lambda x: x["safetyScore"], reverse=True)
     
-    return all_route_comparisons
+    return {"routes": all_route_comparisons, "totalFound": len(all_route_comparisons)}
 
 
 if __name__ == "__main__":
