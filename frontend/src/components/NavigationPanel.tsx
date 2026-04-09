@@ -38,9 +38,9 @@ export const NavigationPanel: React.FC = () => {
 
   return (
     // Container docked strictly to the bottom
-    <div className="fixed bottom-0 left-0 right-0 z-[2000] animate-in slide-in-from-bottom duration-300">
+    <div className="fixed bottom-6 left-6 z-[2000] w-[360px] animate-in slide-in-from-bottom-5 duration-300">
       {/* Route Tabs Selector */}
-      <div className="flex px-4 gap-2 mb-[-1px] relative z-10">
+      <div className="flex gap-1.5 mb-[-1px] ml-2 relative z-10">
         {routeData.map((route, index) => {
           const isActive = selectedRoute.id === route.id;
           return (
@@ -60,7 +60,7 @@ export const NavigationPanel: React.FC = () => {
       </div>
 
       {/* Main Content Panel */}
-      <div className="bg-brand-slate border-t border-brand-border shadow-[0_-10px_25px_rgba(0,0,0,0.5)] p-4 pb-8 transition-all duration-300">
+      <div className="bg-brand-slate rounded-2xl rounded-tl-none border border-brand-border shadow-2xl p-4 transition-all duration-300">
         {/* Header / Click to Collapse */}
         <div
           className="flex justify-between items-center cursor-pointer"
@@ -69,8 +69,7 @@ export const NavigationPanel: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-text-main leading-tight">
-                {selectedRoute.safetyScore >= 90 ? "Safest" : "Alternative"}{" "}
-                Route
+                {routeMode} Route
               </h3>
               <span className="text-text-muted text-[10px] font-medium">
                 • {(selectedRoute.distance / 1000).toFixed(1)} km
@@ -85,9 +84,9 @@ export const NavigationPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="bg-route-safest/20 px-3 py-1.5 rounded-xl border border-route-safest/40">
-              <span className="text-route-safest text-[14px] font-black">
+          <div className="flex items-center gap-2 mt-1">
+            <div className="bg-route-safest/10 px-2 py-1 rounded-xl border border-route-safest/30">
+              <span className="text-route-safest text-[12px] font-black">
                 🛡️ {selectedRoute.safetyScore}%
               </span>
             </div>
@@ -104,7 +103,7 @@ export const NavigationPanel: React.FC = () => {
         {/* Expandable Details */}
         <div
           className={`overflow-hidden transition-all duration-300 ${
-            isExpanded ? "max-h-[500px] opacity-100 mt-4" : "max-h-0 opacity-0"
+            isExpanded ? "max-h-[400px] opacity-100 mt-4" : "max-h-0 opacity-0"
           }`}
         >
           <div className="bg-brand-dark rounded-xl p-3 mb-4 flex items-center gap-3 border border-brand-blue/10">
@@ -114,13 +113,13 @@ export const NavigationPanel: React.FC = () => {
             >
               <img src="/safeway_logo.svg" alt="logo" className="w-[50px]" />
             </Paper>
-            <div className="text-[12px] text-blue-100">
+            <div className="text-[11px] text-blue-100/80 leading-snug">
               <span className="font-bold">{uniqueShelters} Shelters</span> found
               along this path.
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-2">
             <button
               onClick={() => openInGoogleMaps(selectedRoute.geometry)}
               className="bg-brand-hover text-white font-bold py-3 rounded-xl text-sm"
