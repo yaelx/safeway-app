@@ -103,6 +103,6 @@ If you haven't set it up yet, you might want your `scripts` section to look like
   "start": "ts-node src/index.ts",
   "geocode": "ts-node src/scripts/location_resolver.ts"
 }
-
+```
 <img width="2758" height="1570" alt="image" src="https://github.com/user-attachments/assets/9458be44-fd26-4b5d-bf44-dd7e37d270bd" />
 
