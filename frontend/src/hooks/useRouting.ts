@@ -7,6 +7,7 @@ export const useRouting = () => {
   const [routeData, setRouteData] = useState<RouteData[] | null>(null);
   // const [decodedPaths, setDecodedPaths] = useState<[number, number][][]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const planTrip = async (start: string, end: string) => {
     setLoading(true);
@@ -16,7 +17,7 @@ export const useRouting = () => {
       );
       const data: IRoutingResponse = await response.json();
 
-      if (data.routes?.length) {
+      if (data.routes && data.routes.length) {
         // We ensure each segment is decoded immediately when data arrives
         const processedRoutes = data.routes.map((route: RouteData) => ({
           ...route,
@@ -31,13 +32,16 @@ export const useRouting = () => {
         // setDecodedPaths(
         //   data.routes.map((r: RouteData) => polyline.decode(r.geometry)),
         // );
+      } else {
+        setError("No routes found.");
       }
     } catch (err) {
       console.error("Safety Analysis Failed:", err);
+      setError("Safety Analysis Failed");
     } finally {
       setLoading(false);
     }
   };
 
-  return { routeData, loading, planTrip };
+  return { routeData, loading, planTrip, error };
 };

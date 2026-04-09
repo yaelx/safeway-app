@@ -127,8 +127,7 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  const { routeData, selectedRoute, setSelectedRoute, loading, planTrip } =
-    useRoutingContext();
+  const { routeData, selectedRoute, setSelectedRoute } = useRoutingContext();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
@@ -143,7 +142,7 @@ const ShelterMap: React.FC = () => {
     <div className="relative h-screen w-full overflow-hidden bg-brand-black">
       {/* TripSearch Overlay */}
       <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
-        <TripSearch onPlanTrip={planTrip} loading={loading} />
+        <TripSearch />
       </div>
       <div className="absolute inset-0 z-0">
         <MapContainer
@@ -165,27 +164,14 @@ const ShelterMap: React.FC = () => {
           {/* <MapController points={decodedPaths[0]} /> */}
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           {routeData &&
-            [...routeData]
-              .sort((a, b) => {
-                // If 'b' is selected, move it to the end of the array (drawn last = drawn on top)
-                if (selectedRoute?.index === b.index) return -1;
-                return 1;
-              })
-              .map((r: RouteData, i: number) => {
-                // const routeColors = [
-                //   BRAND_COLORS.safest,
-                //   BRAND_COLORS.fastest,
-                //   BRAND_COLORS.alt,
-                // ];
-                return (
-                  <SafeRoute
-                    key={i}
-                    routeData={r}
-                    isSelected={selectedRoute?.index === r.index}
-                    setSelectedRoute={setSelectedRoute}
-                  />
-                );
-              })}
+            [...routeData].map((r: RouteData, i: number) => (
+              <SafeRoute
+                key={i}
+                routeData={r}
+                isSelected={selectedRoute?.index === r.index}
+                setSelectedRoute={setSelectedRoute}
+              />
+            ))}
           <ShelterDiscovery
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}

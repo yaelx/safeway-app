@@ -13,15 +13,9 @@ import { SearchInputWrapper } from "./SearchInputWrapper";
 import { Location } from "../types/types";
 import { useRoutingContext } from "../context/RoutingContext";
 
-interface TripSearchProps {
-  onPlanTrip: (start: string, end: string) => void;
-  loading: boolean;
-}
+interface TripSearchProps {}
 
-export const TripSearch: React.FC<TripSearchProps> = ({
-  onPlanTrip,
-  loading,
-}) => {
+export const TripSearch: React.FC<TripSearchProps> = ({}) => {
   const {
     handleLocateMe,
     startLocation,
@@ -29,6 +23,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
     endLocation,
     setEndLocation,
   } = useLocationState();
+  const { routeData, loading, planTrip, error } = useRoutingContext();
 
   // Use the custom hook for both inputs
   const fromSearch = useAddressSearch();
@@ -39,7 +34,6 @@ export const TripSearch: React.FC<TripSearchProps> = ({
   const [loadingMessage, setLoadingMessage] = useState(
     TripSearchStrings.LoadingAnalyzing,
   );
-  const { routeData } = useRoutingContext();
 
   const handleSharedLocate = () => {
     if (activeField) {
@@ -60,7 +54,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({
 
   const handleStartPlan = () => {
     if (startLocation && endLocation) {
-      onPlanTrip(
+      planTrip(
         `${startLocation.coords.lng},${startLocation.coords.lat}`,
         `${endLocation.coords.lng},${endLocation.coords.lat}`,
       );
@@ -125,6 +119,18 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             </span>
           </motion.div>
         )}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="flex items-center justify-center gap-3 py-2 text-red-600 bg-red-50 rounded-xl mb-4"
+          >
+            <span className="text-xs font-bold tracking-wide uppercase">
+              {error}
+            </span>
+          </motion.div>
+        )}
 
         {!expanded ? (
           /* The Floating "Pill" */
@@ -139,7 +145,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({
             <div className="flex items-center gap-3">
               {/* Dynamic Icon based on results */}
               {routeData ? (
-                <AltRouteIcon sx={{ color: "brand.text.muted", fontSize: 24 }} />
+                <AltRouteIcon
+                  sx={{ color: "brand.text.muted", fontSize: 24 }}
+                />
               ) : (
                 <Search sx={{ color: "brand.text.muted", fontSize: 20 }} />
               )}
