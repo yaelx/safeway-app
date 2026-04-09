@@ -54,7 +54,6 @@ export interface RouteData {
   safetyScore: number;
   segments: SegmentAnalysis[];
   decodedSegments?: DecodedSegment[];
-  safetyReport: RoutePoint[];
 }
 
 export interface IRoutingResponse {

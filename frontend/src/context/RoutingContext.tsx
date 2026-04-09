@@ -9,6 +9,7 @@ interface RoutingContextType {
   planTrip: (start: any, end: any) => Promise<void>;
   selectedRoute: RouteData | null;
   setSelectedRoute: (route: RouteData) => void;
+  error: string | null;
 }
 
 const RoutingContext = createContext<RoutingContextType | undefined>(undefined);
@@ -16,7 +17,7 @@ const RoutingContext = createContext<RoutingContextType | undefined>(undefined);
 export const RoutingProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { routeData, loading, planTrip } = useRouting();
+  const { routeData, loading, planTrip, error } = useRouting();
   const [selectedRoute, setSelectedRoute] = useState<RouteData | null>(null);
 
   // Auto-select safest route when data arrives
@@ -34,6 +35,7 @@ export const RoutingProvider: React.FC<{ children: React.ReactNode }> = ({
         planTrip,
         selectedRoute,
         setSelectedRoute,
+        error,
       }}
     >
       {children}

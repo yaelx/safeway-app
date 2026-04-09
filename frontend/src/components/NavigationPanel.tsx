@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { openInGoogleMaps, openInWaze } from "../utils/navigation";
-import { RoutePoint } from "../types/types";
+import { RouteShelter, SegmentAnalysis } from "../types/types";
 import { useRoutingContext } from "../context/RoutingContext";
 import { NavigationPanelStrings } from "../config/constants";
 import { Paper } from "@mui/material";
@@ -11,10 +11,12 @@ export const NavigationPanel: React.FC = () => {
 
   // 1. Memoize the calculation based on the selectedRoute
   const uniqueShelters = useMemo(() => {
-    if (!selectedRoute?.safetyReport) return 0;
+    if (!selectedRoute?.segments) return 0;
 
     return new Set(
-      selectedRoute.safetyReport.map((report: RoutePoint) => report.shelter.id),
+      selectedRoute.segments.map((segment: SegmentAnalysis) =>
+        segment.shelters.map((shelter: RouteShelter) => shelter.id),
+      ),
     ).size;
   }, [selectedRoute]);
 
