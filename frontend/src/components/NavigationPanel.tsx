@@ -37,8 +37,8 @@ export const NavigationPanel: React.FC = () => {
       : NavigationPanelStrings.RouteModeAlternative;
 
   return (
-    // Container docked strictly to the bottom
-    <div className="fixed bottom-6 left-6 z-[2000] w-[360px] animate-in slide-in-from-bottom-5 duration-300">
+    // Container docked strictly to the bottom-left with increased width
+    <div className="fixed bottom-6 left-6 z-[2000] w-[400px] animate-in slide-in-from-bottom-5 duration-300">
       {/* Route Tabs Selector */}
       <div className="flex gap-1.5 mb-[-1px] ml-2 relative z-10">
         {routeData.map((route, index) => {
@@ -66,12 +66,13 @@ export const NavigationPanel: React.FC = () => {
           className="flex justify-between items-center cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <div className="flex-1">
+          {/* Text Container with margin-right to prevent overlap */}
+          <div className="flex-1 mr-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-text-main leading-tight">
                 {routeMode} Route
               </h3>
-              <span className="text-text-muted text-[10px] font-medium">
+              <span className="text-text-muted text-[10px] font-medium whitespace-nowrap">
                 • {(selectedRoute.distance / 1000).toFixed(1)} km
               </span>
             </div>
@@ -84,13 +85,13 @@ export const NavigationPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-1">
-            <div className="bg-route-safest/10 px-2 py-1 rounded-xl border border-route-safest/30">
+          <div className="flex items-center gap-2">
+            <div className="bg-route-safest/10 px-2 py-1 rounded-xl border border-route-safest/30 flex-shrink-0">
               <span className="text-route-safest text-[12px] font-black">
                 🛡️ {selectedRoute.safetyScore}%
               </span>
             </div>
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-border text-slate-500">
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-border text-slate-500 flex-shrink-0">
               <span
                 className={`transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`}
               >
@@ -122,15 +123,15 @@ export const NavigationPanel: React.FC = () => {
           <div className="flex flex-col gap-2">
             <button
               onClick={() => openInGoogleMaps(selectedRoute.geometry)}
-              className="bg-brand-hover text-white font-bold py-3 rounded-xl text-sm"
+              className="bg-brand-hover text-white font-bold py-3 rounded-xl text-sm transition-transform active:scale-95"
             >
-              Google Maps
+              {NavigationPanelStrings.BtnGoogleMaps}
             </button>
             <button
               onClick={() => openInWaze(selectedRoute.geometry)}
-              className="bg-brand-hover text-white font-bold py-3 rounded-xl text-sm"
+              className="bg-brand-hover text-white font-bold py-3 rounded-xl text-sm transition-transform active:scale-95"
             >
-              Waze
+              {NavigationPanelStrings.BtnWaze}
             </button>
           </div>
         </div>
