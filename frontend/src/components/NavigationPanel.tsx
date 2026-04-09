@@ -37,8 +37,7 @@ export const NavigationPanel: React.FC = () => {
       : NavigationPanelStrings.RouteModeAlternative;
 
   return (
-    // Container docked strictly to the bottom-left with increased width
-    <div className="fixed bottom-6 left-6 z-[2000] w-[400px] animate-in slide-in-from-bottom-5 duration-300">
+    <div className="fixed bottom-6 left-6 z-[2000] w-[440px] animate-in slide-in-from-bottom-5 duration-300">
       {/* Route Tabs Selector */}
       <div className="flex gap-1.5 mb-[-1px] ml-2 relative z-10">
         {routeData.map((route, index) => {
@@ -63,37 +62,38 @@ export const NavigationPanel: React.FC = () => {
       <div className="bg-brand-slate rounded-2xl rounded-tl-none border border-brand-border shadow-2xl p-4 transition-all duration-300">
         {/* Header / Click to Collapse */}
         <div
-          className="flex justify-between items-center cursor-pointer"
+          className="flex justify-between items-start cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          {/* Text Container with margin-right to prevent overlap */}
-          <div className="flex-1 mr-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-text-main leading-tight">
-                {routeMode} Route
-              </h3>
-              <span className="text-text-muted text-[10px] font-medium whitespace-nowrap">
-                • {(selectedRoute.distance / 1000).toFixed(1)} km
-              </span>
-            </div>
+          {/* Using whitespace-nowrap on the h3 and a min-width on the container 
+              to prevent the "column box" effect on long titles.
+          */}
+          <div className="flex-1 min-w-0 mr-4">
+            <h3 className="text-lg font-bold text-text-main leading-tight whitespace-nowrap">
+              {routeMode} Route
+            </h3>
 
-            <div className="flex items-center gap-2 mt-1">
-              <span className="bg-brand-border text-text-main text-[10px] font-bold px-2 py-0.5 rounded-md">
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="bg-brand-border text-text-main text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0">
                 {Math.round(selectedRoute.duration / 60)}{" "}
                 {NavigationPanelStrings.MinsUnit}
+              </span>
+              <span className="text-text-muted text-[11px] font-medium whitespace-nowrap">
+                • {(selectedRoute.distance / 1000).toFixed(1)} km
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="bg-route-safest/10 px-2 py-1 rounded-xl border border-route-safest/30 flex-shrink-0">
-              <span className="text-route-safest text-[12px] font-black">
+          {/* Right side icons/badge */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="bg-route-safest/10 px-2.5 py-1 rounded-xl border border-route-safest/30 flex-shrink-0">
+              <span className="text-route-safest text-[13px] font-black">
                 🛡️ {selectedRoute.safetyScore}%
               </span>
             </div>
             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-border text-slate-500 flex-shrink-0">
               <span
-                className={`transition-transform ${isExpanded ? "rotate-180" : "rotate-0"}`}
+                className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : "rotate-0"}`}
               >
                 ▼
               </span>
