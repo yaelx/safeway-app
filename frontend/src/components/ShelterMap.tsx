@@ -127,21 +127,15 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  const {
-    routeData,
-    decodedPaths,
-    selectedRoute,
-    setSelectedRoute,
-    loading,
-    planTrip,
-  } = useRoutingContext();
+  const { routeData, selectedRoute, onSelectRoute, decodedPath } =
+    useRoutingContext();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
 
   useEffect(() => {
     if (routeData && routeData.length > 0 && !selectedRoute) {
-      setSelectedRoute(routeData[0]); // Auto-select the first (safest) route
+      onSelectRoute(routeData[0]); // Auto-select the first (safest) route
     }
   }, [routeData, selectedRoute]);
 
@@ -149,7 +143,7 @@ const ShelterMap: React.FC = () => {
     <div className="relative h-screen w-full overflow-hidden bg-brand-black">
       {/* TripSearch Overlay */}
       <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
-        <TripSearch onPlanTrip={planTrip} loading={loading} />
+        <TripSearch />
       </div>
       <div className="absolute inset-0 z-0">
         <MapContainer
@@ -168,26 +162,17 @@ const ShelterMap: React.FC = () => {
                 : coordinates
             }
           />
-          <MapController points={decodedPaths[0]} />
+          <MapController points={decodedPath || []} />
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           {routeData &&
-            routeData.map((r: RouteData, i: number) => {
-              const routeColors = [
-                BRAND_COLORS.safest,
-                BRAND_COLORS.fastest,
-                BRAND_COLORS.alt,
-              ];
-              return (
-                <SafeRoute
-                  key={i}
-                  routeData={r}
-                  path={decodedPaths[i]}
-                  routeColor={routeColors[i] || BRAND_COLORS.alt}
-                  isSelected={selectedRoute?.index === r.index}
-                  setSelectedRoute={setSelectedRoute}
-                />
-              );
-            })}
+            [...routeData].map((r: RouteData, i: number) => (
+              <SafeRoute
+                key={i}
+                routeData={r}
+                isSelected={selectedRoute?.index === r.index}
+                onSelectRoute={onSelectRoute}
+              />
+            ))}
           <ShelterDiscovery
             onSheltersFetched={setGlobalShelters}
             hasSelection={!!startLocation || !!endLocation}

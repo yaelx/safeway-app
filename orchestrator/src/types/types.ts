@@ -55,15 +55,47 @@ export type ScoredRoute<TGeometry = number[][]> = {
   geometry: TGeometry;
 };
 
-export type RouteData = ScoredRoute<string> & {
+export type RouteData = {
+  id: string;
+  index: number;
+  safetyScore: number;
+  geometry: string;
   distance: number;
   duration: number;
+  segments: SegmentAnalysis[];
 };
 
 export interface IRoutingRequest {
   start: string; // "lng,lat"
   end: string; // "lng,lat"
 }
+
+export interface SegmentAnalysis {
+  type: "residential" | "highway";
+  status: "safe" | "exposed" | "caution";
+  text: string;
+  segmentScore: number;
+  duration: number;
+  geometry: string; // The polyline string for JUST this segment
+  shelters: RouteShelter[];
+  escapePoint?: {
+    lat: number;
+    lng: number;
+    name: string;
+  };
+}
+
+export type PythonRouteResponse = {
+  id: string;
+  index: number;
+  safetyScore: number;
+  segments: SegmentAnalysis[];
+};
+
+export type PythonSolverResponse = {
+  routes: PythonRouteResponse[];
+  totalFound: number;
+};
 
 export interface IRoutingResponse {
   totalFound: number;

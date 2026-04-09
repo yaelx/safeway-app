@@ -32,10 +32,10 @@ export class LocalAuthenticator implements IAuthenticator {
       // ALREADY returns { "Authorization": "Bearer eyJ..." }
       return headers.get("Authorization") || "";
     } catch (err) {
-      console.error(
-        "Local Auth Failed: Ensure GOOGLE_APPLICATION_CREDENTIALS is set.",
-      );
-      throw err;
+      const msg =
+        "Local Auth Failed: Ensure GOOGLE_APPLICATION_CREDENTIALS is set.";
+      console.error(msg);
+      throw new Error(msg);
     }
   }
 }

@@ -9,7 +9,7 @@ export const BRAND_COLORS = {
   hover: "#2563eb",
   safest: "#10b981", // Emerald
   fastest: "#3b82f6", // Blue
-  alt: "#f59e0b", // Amber
+  alt: "#94a3b8", // light grey
   error: "#ef4444",
   text: {
     main: "#ffffff", // hite
@@ -17,6 +17,8 @@ export const BRAND_COLORS = {
   },
   startMarker: "#3b82f6",
   endMarker: "#ef4444",
+  caution: "#eab308", // dark yellow
+  exposed: "#ef4444", // red
 };
 
 declare module "@mui/material/styles" {

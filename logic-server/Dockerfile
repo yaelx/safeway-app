@@ -5,8 +5,12 @@ FROM ghcr.io/project-osrm/osrm-backend AS osrm_engine
 FROM python:3.11-slim
 
 # --- Install OSRM Runtime Dependencies ---
+# main.py Stage 2 (Inside the python:3.11-slim block)
 RUN apt-get update && apt-get install -y \
-    libboost-all-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    libboost-thread-dev \
+    libboost-iostreams-dev \
     libtbb-dev \
     liblua5.3-0 \
     libstxxl1v5 \
@@ -30,6 +34,5 @@ COPY . .
 # Standardize the port for Cloud Run
 ENV PORT 8080
 EXPOSE 8080
-# 3. Start the server
-# Note: You'll need to update main.py to spawn OSRM or use an OSRM library
-CMD ["python", "main.py"]
+
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]

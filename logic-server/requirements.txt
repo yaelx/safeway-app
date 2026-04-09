@@ -4,5 +4,6 @@ uvicorn
 numpy
 requests
 python-dotenv
-psycopg2-binary
+polyline
+
 

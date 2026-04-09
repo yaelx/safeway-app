@@ -25,13 +25,41 @@ export interface RoutePoint {
   shelter: RouteShelter;
 }
 
+export interface SegmentAnalysis {
+  type: "residential" | "highway";
+  status: "safe" | "exposed" | "caution";
+  text: string;
+  segmentScore: number;
+  duration: number;
+  geometry: string; // The polyline string for JUST this segment
+  shelters: RouteShelter[];
+  escapePoint?: {
+    lat: number;
+    lng: number;
+    name: string;
+  };
+}
+
+export interface DecodedSegment {
+  coords: [number, number][];
+  status: "safe" | "exposed" | "caution";
+  type: string;
+}
+
 export interface RouteData {
+  id: string;
   index: number;
-  geometry: string;
+  geometry: string; // Full route polyline
   distance: number;
   duration: number;
   safetyScore: number;
-  safetyReport: RoutePoint[];
+  segments: SegmentAnalysis[];
+  decodedSegments?: DecodedSegment[];
+}
+
+export interface IRoutingResponse {
+  totalFound: number;
+  routes: RouteData[];
 }
 
 export interface OSMLocation {
