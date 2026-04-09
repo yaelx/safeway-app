@@ -50,3 +50,4 @@ class SegmentAnalysis(BaseModel):
     duration: float
     shelters: List[Shelter] = []
     escapePoint: Optional[Dict[str, Any]] = None
+    geometry: Optional[str] = None

@@ -116,7 +116,8 @@ def analyze_route_segments(req: SafetyRequest):
                     segmentScore=round(h_score, 2),
                     text=f"Road {step.ref}: {int(step.duration)}s exposure.",
                     duration=step.duration,
-                    escapePoint=escape
+                    escapePoint=escape,
+                    geometry=step.geometry
                 )
 
             # --- RESIDENTIAL RELATIVE SCORING ---
@@ -142,7 +143,8 @@ def analyze_route_segments(req: SafetyRequest):
                     segmentScore=round(r_score, 2),
                     text=f"{step.name}: {len(nearby_shelters)} shelters nearby.",
                     duration=step.duration,
-                    shelters=nearby_shelters
+                    shelters=nearby_shelters,
+                    geometry=step.geometry
                 )
 
             segments.append(seg)
