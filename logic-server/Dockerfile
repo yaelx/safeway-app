@@ -40,4 +40,4 @@ COPY . .
 ENV PORT 8080
 EXPOSE 8080
 
-CMD ["python", "worker.py"]
+CMD ["python", "-u", "worker.py"]

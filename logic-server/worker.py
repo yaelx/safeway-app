@@ -1,3 +1,4 @@
+from time import time
 from utils import generate_route_id
 import os
 import json
@@ -57,13 +58,24 @@ TASK_MAP = {
 
 # --- 3. KAFKA CORE ---
 def run_kafka_consumer():
+# Fetch variables
+    brokers = os.getenv('KAFKA_BROKERS')
+    username = os.getenv('KAFKA_USERNAME')
+    password = os.getenv('KAFKA_PASSWORD')
+    ca_cert = os.getenv('KAFKA_CA_CERT')
+
+    # SENIOR CHECK: Validate before creating the consumer
+    if not all([brokers, username, password]):
+        logger.error(f"CRITICAL: Missing Kafka Secrets! Brokers: {bool(brokers)}, User: {bool(username)}, Pass: {bool(password)}")
+        return # Stop execution here so we don't crash with the KafkaException
+
     conf = {
-        'bootstrap.servers': os.getenv('KAFKA_BROKERS'),
+        'bootstrap.servers': brokers,
         'security.protocol': 'SASL_SSL',
         'sasl.mechanism': 'SCRAM-SHA-256',
-        'sasl.username': os.getenv('KAFKA_USERNAME'),
-        'sasl.password': os.getenv('KAFKA_PASSWORD'),
-        'ssl.ca.pem': os.getenv('KAFKA_CA_CERT'),
+        'sasl.username': username,
+        'sasl.password': password,
+        'ssl.ca.pem': ca_cert,
         'group.id': 'python-logic-server-group',
         'auto.offset.reset': 'earliest'
     }
@@ -112,16 +124,33 @@ def run_kafka_consumer():
 
 # --- 4. OSRM ENGINE START ---
 def start_osrm():
+    global OSRM_READY
+    logger.info("Checking for OSRM map file...")
+    map_path = "/app/data/israel-and-palestine-latest.osrm"
+
+    if not os.path.exists(map_path):
+        logger.error(f"CRITICAL: Map file NOT FOUND at {map_path}")
+        return
+
     try:
-        logger.info("Starting OSRM Engine...")
-        subprocess.Popen([
-            "/usr/local/bin/osrm-routed", 
-            "--algorithm", "mld", 
-            "/app/data/israel-and-palestine-latest.osrm"
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # Keep logs clean
-        logger.info("OSRM process initiated.")
+        logger.info("DEBUG: Starting OSRM Engine...")
+        process = subprocess.Popen(
+            ["osrm-routed", "--algorithm", "mld", map_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        # Check if it died immediately
+        time.sleep(2) 
+        if process.poll() is not None:
+            stdout, stderr = process.communicate()
+            logger.error(f"OSRM CRASHED on startup. Stderr: {stderr}")
+        else:
+            logger.info("OSRM Engine is running in background.")
+            OSRM_READY = True
     except Exception as e:
-        logger.error(f"Failed to start OSRM: {e}")
+        logger.error(f"Failed to execute osrm-routed: {e}")
 
 # --- 5. EXECUTION ENTRYPOINT ---
 if __name__ == "__main__":
