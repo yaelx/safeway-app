@@ -1,4 +1,5 @@
 # main.py
+from utils import generate_route_id
 from typing import List
 import subprocess
 import os
@@ -71,38 +72,6 @@ async def evaluate_route(req: SafetyRequest):
     return {"safetyScore": result["score"], "safetyReport": result["report"]}
 
 
-# @app.post("/evaluate_alternatives")
-# async def evaluate_alternatives(req: SafetyRequest):
-    
-#     all_results = []
-#     for idx, route_geom in enumerate(req.routes):
-#         res = calculate_safety_for_geometry(route_geom, req.shelterData)
-#         all_results.append({
-#             "index": idx,
-#             "safetyScore": res["score"],
-#             "safetyReport": res["report"],
-#             "geometry": route_geom
-#         })
-    
-#     all_results.sort(key=lambda x: x["safetyScore"], reverse=True)
-#     return all_results
-
-def generate_route_id(segments):
-    """
-    Generates a unique, stable ID based on the route's geometry.
-    segments: List of SegmentAnalysis objects
-    """
-    try:
-        # Extract geometry from each segment to create a unique fingerprint
-        # Since geometry might be a list or string, we convert to string
-        combined_path = "".join([str(s.geometry) for s in segments])
-        # Create a 12-character hex hash
-        return hashlib.md5(combined_path.encode()).hexdigest()[:12]
-    except Exception as e:
-        # Fallback to a random-ish string if hashing fails
-        return f"route_{int(segments[0].duration)}"
-
-
 @app.post("/evaluate_alternatives")
 async def evaluate_alternatives(req: List[SafetyRequest]):
     """
@@ -119,8 +88,6 @@ async def evaluate_alternatives(req: List[SafetyRequest]):
             "index": idx,
             "id": route_id,
             "safetyScore": analysis["score"],
-            # We still include segments so the frontend can color-code 
-            # the alternative lines on the map if hovered.
             "segments": [s.model_dump() for s in analysis["segments"]]
         })
     
