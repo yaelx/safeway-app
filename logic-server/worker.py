@@ -1,4 +1,4 @@
-from time import time
+import time
 from utils import generate_route_id
 import os
 import json
@@ -106,6 +106,7 @@ def run_kafka_consumer():
 
                 try:
                     raw_data = json.loads(decoded_msg)
+                    print(f"DEBUG: Successfully fetched message: {raw_data}")
                 except json.JSONDecodeError:
                     logger.error(f"MALFORMED JSON: Received raw string: {decoded_msg}")
                     continue
@@ -145,39 +146,32 @@ def run_kafka_consumer():
 # --- 4. OSRM ENGINE START ---
 def start_osrm():
     global OSRM_READY
-    logger.info("Checking for OSRM map file...")
+    # This is the verified path in the Alpine OSRM image
+    executable = "/usr/local/bin/osrm-routed" 
     map_path = "/app/data/israel-and-palestine-latest.osrm"
 
-    logger.info(f"Checking directory structure...")
-    for root, dirs, files in os.walk("/app"):
-        logger.info(f"Path: {root}, Files: {files}")
-
-    check_file = map_path + ".names" 
-    if not os.path.exists(check_file):
-        logger.error(f"CRITICAL: OSRM Data missing! Could not find {check_file}")
-        # ... handle error ...
-    else:
-        logger.info(f"OSRM Data prefix verified at {map_path}")
+    osrm_args = [executable, "--algorithm", "mld", map_path]
 
     try:
-        logger.info("DEBUG: Starting OSRM Engine...")
+        logger.info(f"Alpine Strategy: Launching {executable}")
+        
         process = subprocess.Popen(
-            ["osrm-routed", "--algorithm", "mld", map_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
+            osrm_args,
+            stdout=None, 
+            stderr=None
         )
         
-        # Check if it died immediately
-        time.sleep(2) 
-        if process.poll() is not None:
-            stdout, stderr = process.communicate()
-            logger.error(f"OSRM CRASHED on startup. Stderr: {stderr}")
-        else:
-            logger.info("OSRM Engine is running in background.")
+        time.sleep(5) 
+        
+        if process.poll() is None:
+            logger.info("OSRM Engine is UP.")
             OSRM_READY = True
+        else:
+            logger.error(f"OSRM failed with code {process.poll()}")
+            
     except Exception as e:
-        logger.error(f"Failed to execute osrm-routed: {e}")
+        logger.error(f"Execution failed: {e}")
+
 
 # --- 5. EXECUTION ENTRYPOINT ---
 if __name__ == "__main__":

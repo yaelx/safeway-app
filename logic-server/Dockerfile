@@ -1,47 +1,34 @@
-# STAGE 1: Get the OSRM engine
-FROM ghcr.io/project-osrm/osrm-backend AS osrm_engine
+# 1. Start with the official OSRM image
+FROM ghcr.io/project-osrm/osrm-backend:latest
 
-# STAGE 2: Build your Python app
-FROM python:3.11-slim
+# 2. Fix the pyexpat error and install build tools
+RUN apk update && \
+    apk add --no-cache --upgrade expat && \
+    apk add --no-cache \
+    python3 \
+    py3-pip \
+    python3-dev \
+    build-base \
+    librdkafka-dev \
+    bash \
+    openssl-dev \
+    zlib-dev
+
 WORKDIR /app
 
-# --- Install OSRM Runtime Dependencies ---
-# main.py Stage 2 (Inside the python:3.11-slim block)
-RUN apt-get update && apt-get install -y \
-    libboost-system-dev \
-    libboost-filesystem-dev \
-    libboost-thread-dev \
-    libboost-iostreams-dev \
-    libtbb-dev \
-    liblua5.3-0 \
-    libstxxl1v5 \
-    expat \
-    gcc \
-    python3-dev \
-    librdkafka-dev \
-    libssl-dev \
-    zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
+# 3. Path setup for OSRM
+RUN ln -s /usr/local/bin/osrm-routed /usr/bin/osrm-routed || true
 
-
-
-# --- 2. COPY THE ENGINE AND LIBRARIES (CRITICAL) ---
-COPY --from=osrm_engine /usr/local/bin/osrm-routed /usr/local/bin/
-COPY --from=osrm_engine /usr/local/lib/libosrm* /usr/local/lib/
-# Tell the OS to look in /usr/local/lib for these files
-RUN ldconfig
-
-# Copy your baked Israel map data from your local folder
-COPY ./data /app/data
-
-# 2. Copy your Python logic
+# 4. Install requirements 
+# (Make sure requirements.txt has confluent-kafka==2.3.0)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir --upgrade setuptools wheel cython --break-system-packages && \
+    pip3 install --no-cache-dir -r requirements.txt --break-system-packages
+
+# 5. Copy code and data
 COPY . .
 
-
-# Standardize the port for Cloud Run
 ENV PORT 8080
 EXPOSE 8080
 
-CMD ["python", "-u", "worker.py"]
+CMD ["python3", "-u", "worker.py"]
