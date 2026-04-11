@@ -53,7 +53,7 @@ def handle_routing(payload):
 # The Task Map links Topics to Functions
 TASK_MAP = {
     "route-requests": handle_routing,
-    "admin-tasks": handle_admin
+    # "admin-tasks": handle_admin
 }
 
 # --- 3. KAFKA CORE ---
@@ -63,6 +63,8 @@ def run_kafka_consumer():
     username = os.getenv('KAFKA_USERNAME')
     password = os.getenv('KAFKA_PASSWORD')
     ca_cert = os.getenv('KAFKA_CA_CERT')
+    if ca_cert and "\\n" in ca_cert:
+        ca_cert = ca_cert.replace("\\n", "\n")
 
     # SENIOR CHECK: Validate before creating the consumer
     if not all([brokers, username, password]):
@@ -76,8 +78,11 @@ def run_kafka_consumer():
         'sasl.username': username,
         'sasl.password': password,
         'ssl.ca.pem': ca_cert,
-        'group.id': 'python-logic-server-group',
-        'auto.offset.reset': 'earliest'
+        'group.id': 'CONSUMER_GROUP_ID',
+        'auto.offset.reset': 'earliest',
+        'ssl.endpoint.identification.algorithm': 'none',
+        'api.version.request': True,
+        'enable.ssl.certificate.verification': True
     }
 
     consumer = Consumer(conf)
@@ -93,9 +98,24 @@ def run_kafka_consumer():
             
             topic = msg.topic()
             try:
-                raw_data = json.loads(msg.value().decode('utf-8'))
-                correlation_id = raw_data.get('correlationId')
+                decoded_msg = msg.value().decode('utf-8')
+                # 2. Skip empty messages (Tombstones)
+                if not decoded_msg or decoded_msg.strip() == "":
+                    logger.warning("Received empty message. Skipping.")
+                    continue
+
+                try:
+                    raw_data = json.loads(decoded_msg)
+                except json.JSONDecodeError:
+                    logger.error(f"MALFORMED JSON: Received raw string: {decoded_msg}")
+                    continue
+
                 payload = raw_data.get('payload')
+                correlation_id = raw_data.get('correlationId', 'unknown')
+
+                if payload is None:
+                    logger.warning(f"Message {correlation_id} has no payload. Skipping.")
+                    continue
 
                 logger.info(f"Incoming task on topic: {topic} | ID: {correlation_id}")
 
@@ -128,9 +148,16 @@ def start_osrm():
     logger.info("Checking for OSRM map file...")
     map_path = "/app/data/israel-and-palestine-latest.osrm"
 
-    if not os.path.exists(map_path):
-        logger.error(f"CRITICAL: Map file NOT FOUND at {map_path}")
-        return
+    logger.info(f"Checking directory structure...")
+    for root, dirs, files in os.walk("/app"):
+        logger.info(f"Path: {root}, Files: {files}")
+
+    check_file = map_path + ".names" 
+    if not os.path.exists(check_file):
+        logger.error(f"CRITICAL: OSRM Data missing! Could not find {check_file}")
+        # ... handle error ...
+    else:
+        logger.info(f"OSRM Data prefix verified at {map_path}")
 
     try:
         logger.info("DEBUG: Starting OSRM Engine...")
