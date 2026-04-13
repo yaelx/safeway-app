@@ -31,16 +31,28 @@ class RouteStep(BaseModel):
     duration: float
     geometry: str
     intersections: List[Intersection]
+    model_config = {"extra": "allow"}
 
 class OSRMLeg(BaseModel):
     steps: List[RouteStep]
     distance: float
     duration: float
+    model_config = {"extra": "allow"}
+
+class RouteData(BaseModel):
+    index: int
+    geometry: str
+    distance: float
+    duration: float
+    legs: List[OSRMLeg]
+    model_config = {"extra": "allow"}
 
 class SafetyRequest(BaseModel):
-    # This matches the new Node.js request structure
-    legs: List[OSRMLeg]
-    shelterData: List[Shelter]
+    requestId: str
+    routes: List[RouteData]
+    shelterData: List[dict]
+    timestamp: str
+    model_config = {"extra": "allow"}
 
 class SegmentAnalysis(BaseModel):
     type: str # "residential" | "highway"

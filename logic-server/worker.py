@@ -30,24 +30,32 @@ def handle_admin(payload):
     return {"admin_status": f"Processed {action} successfully"}
 
 # --- 2. TASK HANDLERS ---
-def handle_routing(payload):
-    """Business logic for route evaluation"""
-    requests = [SafetyRequest(**item) for item in payload]
+def handle_routing(payload: dict):
+    """
+    Business logic for route evaluation.
+    Expects payload_dict containing 'requestId', 'routes', and 'shelterData'.
+    """
+    request_obj = SafetyRequest(**payload)
     all_route_comparisons = []
     
-    for idx, route_req in enumerate(requests):
-        analysis = analyze_route_segments(route_req)
+    for route_item in request_obj.routes:
+        analysis = analyze_route_segments(route_item, request_obj.shelterData)
         route_id = generate_route_id(analysis["segments"])
         
         all_route_comparisons.append({
-            "index": idx,
+            "index": route_item.index,
             "id": route_id,
             "safetyScore": analysis["score"],
-            "segments": [s.model_dump() for s in analysis["segments"]]
+            "segments": [s.model_dump() for s in analysis["segments"]],
+            "geometry": route_item.geometry,
+            "distance": route_item.distance,
+            "duration": route_item.duration
         })
     
+    # 4. Sort by highest safety score
     all_route_comparisons.sort(key=lambda x: x["safetyScore"], reverse=True)
-    return {"routes": all_route_comparisons, "totalFound": len(all_route_comparisons)}
+
+    return {"requestId": request_obj.requestId, "routes": all_route_comparisons, "totalFound": len(all_route_comparisons), "timestamp": request_obj.timestamp, "status": "completed"}
 
 
 # The Task Map links Topics to Functions
@@ -111,8 +119,8 @@ def run_kafka_consumer():
                     logger.error(f"MALFORMED JSON: Received raw string: {decoded_msg}")
                     continue
 
-                payload = raw_data.get('payload')
-                correlation_id = raw_data.get('correlationId', 'unknown')
+                payload = raw_data.get('payload', raw_data)
+                correlation_id = raw_data.get('correlationId', payload.get('requestId', 'unknown'))
 
                 if payload is None:
                     logger.warning(f"Message {correlation_id} has no payload. Skipping.")
@@ -124,14 +132,8 @@ def run_kafka_consumer():
                 handler = TASK_MAP.get(topic)
                 if handler:
                     result_data = handler(payload)
-                    
-                    # Send result back to the results stream
-                    result_message = {
-                        "correlationId": correlation_id,
-                        "originTopic": topic, # Let Node know where this came from
-                        "data": result_data
-                    }
-                    producer.produce('route-results', value=json.dumps(result_message).encode('utf-8'))
+                    # Send the result_data directly so Node can destructure it easily
+                    producer.produce('route-results', value=json.dumps(result_data).encode('utf-8'))
                     producer.flush()
                 else:
                     logger.warning(f"No handler found for topic: {topic}")

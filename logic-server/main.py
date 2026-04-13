@@ -73,28 +73,32 @@ async def evaluate_route(req: SafetyRequest):
 
 
 @app.post("/evaluate_alternatives")
-async def evaluate_alternatives(req: List[SafetyRequest]):
+async def evaluate_alternatives(payload: dict):
     """
     Compare multiple routes (e.g., from the sidebar).
     Returns an array where each item is the full analysis of one candidate route.
     """
+    request_obj = SafetyRequest(**payload)
     all_route_comparisons = []
     
-    for idx, route_req in enumerate(req):
-        # We run the full segmented logic for each alternative
-        analysis = analyze_route_segments(route_req) # {SegmentAnalysis, score}
+    for route_item in request_obj.routes:
+        analysis = analyze_route_segments(route_item, request_obj.shelterData)
         route_id = generate_route_id(analysis["segments"])
+        
         all_route_comparisons.append({
-            "index": idx,
+            "index": route_item.index,
             "id": route_id,
             "safetyScore": analysis["score"],
-            "segments": [s.model_dump() for s in analysis["segments"]]
+            "segments": [s.model_dump() for s in analysis["segments"]],
+            "geometry": route_item.geometry,
+            "distance": route_item.distance,
+            "duration": route_item.duration
         })
     
-    # Sort them so the safest route is suggested first
+    # 4. Sort by highest safety score
     all_route_comparisons.sort(key=lambda x: x["safetyScore"], reverse=True)
-    
-    return {"routes": all_route_comparisons, "totalFound": len(all_route_comparisons)}
+
+    return {"requestId": request_obj.requestId, "routes": all_route_comparisons, "totalFound": len(all_route_comparisons), "timestamp": request_obj.timestamp, "status": "completed"}
 
 
 if __name__ == "__main__":

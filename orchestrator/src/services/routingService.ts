@@ -115,7 +115,6 @@ export class RoutingService {
       routes: osrmRoutes.routes.map((r: any, index: number) => ({
         index,
         legs: r.legs,
-        // Passing these through so Python can "echo" them back in the result
         geometry: r.geometry,
         distance: r.distance,
         duration: r.duration,
