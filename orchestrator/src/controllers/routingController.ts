@@ -1,14 +1,11 @@
 import { Request, Response } from "express";
 import { RoutingService } from "../services/routingService";
-import { IRoutingRequest, IRoutingResponse } from "../types/types";
+import { IRoutingRequest } from "../types/types";
 
 export class RoutingController {
   constructor(private routingService: RoutingService) {}
 
-  async getSafeRoute(
-    req: Request,
-    res: Response<IRoutingResponse | { error: string }>,
-  ) {
+  async getSafeRoute(req: Request, res: Response<any | { error: string }>) {
     const { start, end } = req.query as unknown as IRoutingRequest;
 
     if (!start || !end) {

@@ -7,6 +7,7 @@ import isRateLimit from "express-rate-limit";
 import shelterRoutes from "./src/routes/shelterRoutes";
 import routingRoutes from "./src/routes/routingRoutes";
 import { authProvider } from "./src/infrastructure/auth/authProvider";
+import kafkaService, { initMessaging } from "./src/infrastructure/messaging";
 import {
   LOCAL_URL,
   PRODUCTION_URL,
@@ -103,6 +104,23 @@ const checkPythonConnection = async () => {
     );
   }
 };
+
+process.on("SIGTERM", async () => {
+  await kafkaService.disconnect();
+  process.exit(0);
+});
+
+const initInfrastructure = async () => {
+  try {
+    await initMessaging(); // One call, clean and organized
+    // ... other inits (Prisma, etc.)
+  } catch (err) {
+    console.error("Critical Failure:", err);
+    process.exit(1);
+  }
+};
+
+initInfrastructure();
 
 export default app;
 

@@ -106,7 +106,7 @@ def run_kafka_consumer():
 
                 try:
                     raw_data = json.loads(decoded_msg)
-                    print(f"DEBUG: Successfully fetched message: {raw_data}")
+    
                 except json.JSONDecodeError:
                     logger.error(f"MALFORMED JSON: Received raw string: {decoded_msg}")
                     continue

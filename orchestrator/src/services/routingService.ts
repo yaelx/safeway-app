@@ -1,4 +1,5 @@
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import * as polyline from "@mapbox/polyline";
 import { PrismaClient } from "@prisma/client";
 import { fetchSheltersNearPath } from "./osmService";
@@ -15,6 +16,8 @@ import {
 } from "../types/types";
 import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
 import { OSMRoute } from "../types/osmType";
+import { IKafkaProducer } from "../infrastructure/messaging/types";
+import { IRealtimeService } from "../infrastructure/realtime/types";
 
 export class RoutingService {
   private cache = new RedisCache();
@@ -22,6 +25,8 @@ export class RoutingService {
   constructor(
     private prisma: PrismaClient,
     private authenticator: IAuthenticator,
+    private kafkaService: IKafkaProducer,
+    private realtime: IRealtimeService,
   ) {}
 
   private parseCoords(coordStr: string): [number, number] {
@@ -102,50 +107,83 @@ export class RoutingService {
     ];
 
     const authHeader = await this.authenticator.getAccessToken();
+    const requestId = uuidv4();
 
-    // D. NEW LOGIC: Prepare the payload for Python
-    // PREPARE PAYLOAD: Map OSRM routes to the new SafetyRequest format
-    const payloads = osrmRoutes.routes
-      .filter((r: OSMRoute) => r.geometry !== null)
-      .map((r: OSMRoute) => ({
-        legs: r.legs, // Contains steps, ref, and intersections
-        shelterData: allShelters,
-      }));
+    const kafkaPayload = {
+      requestId,
+      timestamp: new Date().toISOString(),
+      routes: osrmRoutes.routes.map((r: any, index: number) => ({
+        index,
+        legs: r.legs,
+        // Passing these through so Python can "echo" them back in the result
+        geometry: r.geometry,
+        distance: r.distance,
+        duration: r.duration,
+      })),
+      shelterData: allShelters,
+    };
 
-    // D. Call the updated Bulk Client
-    const pythonRes: PythonSolverResponse =
-      await logicServerClient.evaluateAlternatives(payloads, authHeader);
-    const { routes, totalFound } = pythonRes;
+    try {
+      // Fire and forget
+      await this.kafkaService.sendRouteRequest(kafkaPayload);
+      this.realtime.publishStatus(
+        requestId,
+        "processing",
+        "Safety Analysis Started",
+      );
 
-    if (!routes || routes.length === 0) {
-      throw new Error("Python Logic Server returned no routes.");
+      // Return immediate receipt to the Controller
+      return {
+        status: "processing",
+        requestId: requestId,
+        message: "Your routes are being analyzed for safety.",
+      };
+    } catch (error) {
+      console.error("Kafka Pipeline Error:", error);
+      throw new Error("Safety Engine is temporarily offline.");
     }
 
-    // E. Merge OSRM metadata (distance/duration) with Python safety data
-    // Python returns these sorted by safetyScore
-    const sortedRoutes: RouteData[] = routes.map((r: PythonRouteResponse) => {
-      const originalOSRM: OSMRoute = osrmRoutes.routes[r.index];
+    // const payloads = osrmRoutes.routes
+    //   .filter((r: OSMRoute) => r.geometry !== null)
+    //   .map((r: OSMRoute) => ({
+    //     legs: r.legs, // Contains steps, ref, and intersections
+    //     shelterData: allShelters,
+    //   }));
 
-      return {
-        id: r.id,
-        index: r.index,
-        safetyScore: r.safetyScore,
-        geometry: originalOSRM.geometry as string,
-        segments: r.segments,
-        distance: originalOSRM.distance,
-        duration: originalOSRM.duration,
-      };
-    });
+    // // D. Call the updated Bulk Client
+    // const pythonRes: PythonSolverResponse =
+    //   await logicServerClient.evaluateAlternatives(payloads, authHeader);
+    // const { routes, totalFound } = pythonRes;
 
-    const resp = {
-      routes: sortedRoutes, // Now returning an array of 3 routes
-      totalFound: sortedRoutes.length,
-    } as IRoutingResponse;
+    // if (!routes || routes.length === 0) {
+    //   throw new Error("Python Logic Server returned no routes.");
+    // }
 
-    this.cache
-      .setRoute(startCoords, endCoords, resp)
-      .catch((err) => console.error("Redis Set Error:", err));
+    // // E. Merge OSRM metadata (distance/duration) with Python safety data
+    // // Python returns these sorted by safetyScore
+    // const sortedRoutes: RouteData[] = routes.map((r: PythonRouteResponse) => {
+    //   const originalOSRM: OSMRoute = osrmRoutes.routes[r.index];
 
-    return resp;
+    //   return {
+    //     id: r.id,
+    //     index: r.index,
+    //     safetyScore: r.safetyScore,
+    //     geometry: originalOSRM.geometry as string,
+    //     segments: r.segments,
+    //     distance: originalOSRM.distance,
+    //     duration: originalOSRM.duration,
+    //   };
+    // });
+
+    // const resp = {
+    //   routes: sortedRoutes, // Now returning an array of 3 routes
+    //   totalFound: sortedRoutes.length,
+    // } as IRoutingResponse;
+
+    // this.cache
+    //   .setRoute(startCoords, endCoords, resp)
+    //   .catch((err) => console.error("Redis Set Error:", err));
+
+    // return resp;
   }
 }
