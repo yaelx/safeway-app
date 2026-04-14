@@ -1,13 +1,13 @@
 import * as Ably from "ably";
 
-const apiKey = import.meta.env.VITE_ABLY_KEY;
+const baseUrl = import.meta.env.VITE_API_URL;
 
-if (!apiKey) {
+if (!baseUrl) {
   console.error(
-    "❌ Ably API Key is missing! Check your .env file and restart Vite.",
+    "❌ API URL is missing! Check your .env file and restart Vite.",
   );
 }
 
 export const ably = new Ably.Realtime({
-  key: apiKey,
+  authUrl: `${baseUrl}/api/auth/ably-token`,
 });

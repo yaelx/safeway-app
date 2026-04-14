@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { RoutingController } from "../controllers/routingController";
 import { RoutingService } from "../services/routingService";
-import { routeProducer } from "../infrastructure/messaging";
+import { kafkaRouteProducer } from "../infrastructure/messaging";
 import { prisma } from "../config/db";
 import { authProvider } from "../infrastructure/auth/authProvider";
 import { validate } from "../middleware/validate";
@@ -12,7 +12,7 @@ const router = Router();
 const routingService = new RoutingService(
   prisma,
   authProvider,
-  routeProducer,
+  kafkaRouteProducer,
   ablyService,
 );
 const routingController = new RoutingController(routingService);

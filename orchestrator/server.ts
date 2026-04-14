@@ -7,7 +7,10 @@ import isRateLimit from "express-rate-limit";
 import shelterRoutes from "./src/routes/shelterRoutes";
 import routingRoutes from "./src/routes/routingRoutes";
 import { authProvider } from "./src/infrastructure/auth/authProvider";
-import kafkaService, { initMessaging } from "./src/infrastructure/messaging";
+import {
+  initMessaging,
+  kafkaRouteProducer,
+} from "./src/infrastructure/messaging";
 import {
   LOCAL_URL,
   PRODUCTION_URL,
@@ -15,6 +18,7 @@ import {
 } from "./src/config/constants";
 import { apiLimiter, strictLimiter } from "./src/middleware/rateLimiter";
 import contactRoutes from "./src/routes/contactRoutes";
+import ablyRoutes from "./src/routes/authRoutes";
 
 dotenv.config();
 
@@ -78,6 +82,7 @@ app.use(express.json());
 app.use(API_ENDPOINTS.SHELTERS, shelterRoutes);
 app.use(API_ENDPOINTS.SAFE_ROUTE, routingRoutes);
 app.use(API_ENDPOINTS.CONTACT, contactRoutes);
+app.use(API_ENDPOINTS.AUTH, ablyRoutes);
 
 // ─── Python Health Check ──────────────────────────────────────────────────────
 const checkPythonConnection = async () => {
@@ -106,7 +111,7 @@ const checkPythonConnection = async () => {
 };
 
 process.on("SIGTERM", async () => {
-  await kafkaService.disconnect();
+  await kafkaRouteProducer.disconnect();
   process.exit(0);
 });
 

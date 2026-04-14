@@ -5,12 +5,12 @@ import { ablyService } from "../realtime/AblyService";
 
 const GROUP_ID = "safeway-results-group";
 
-export const routeProducer = new KafkaProducer(kafkaClient, {
+export const kafkaRouteProducer = new KafkaProducer(kafkaClient, {
   requestTopic: KAFKA_TOPICS.REQUESTS,
   resultTopic: KAFKA_TOPICS.RESULTS,
 });
 
-export const routeResultConsumer = new ResultConsumer(
+export const kafkaRouteConsumer = new ResultConsumer(
   kafkaClient,
   ablyService,
   KAFKA_TOPICS.RESULTS,
@@ -19,7 +19,7 @@ export const routeResultConsumer = new ResultConsumer(
 
 export const initMessaging = async () => {
   console.log("⏳ Initializing Messaging Infrastructure...");
-  await routeProducer.connect();
-  await routeResultConsumer.start();
+  await kafkaRouteProducer.connect();
+  await kafkaRouteConsumer.start();
   console.log("✅ Messaging Infrastructure Online");
 };
