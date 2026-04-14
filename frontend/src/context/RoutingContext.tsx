@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useRouting } from "../hooks/useRouting";
+//import { useRouting } from "../hooks/useRouting";
 import { RouteData } from "../types/types";
 import polyline from "@mapbox/polyline";
+import { useRouting } from "../hooks/useRouteStatus";
 
 interface RoutingContextType {
   routeData: RouteData[] | null;
@@ -11,6 +12,7 @@ interface RoutingContextType {
   onSelectRoute: (route: RouteData) => void;
   error: string | null;
   decodedPath: [number, number][] | null;
+  statusMessage: string;
 }
 
 const RoutingContext = createContext<RoutingContextType | undefined>(undefined);
@@ -18,7 +20,7 @@ const RoutingContext = createContext<RoutingContextType | undefined>(undefined);
 export const RoutingProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { routeData, loading, planTrip, error } = useRouting();
+  const { routeData, loading, planTrip, error, statusMessage } = useRouting();
   const [decodedPath, setDecodedPath] = useState<[number, number][]>([]);
   const [selectedRoute, setSelectedRoute] = useState<RouteData | null>(null);
 
@@ -45,6 +47,7 @@ export const RoutingProvider: React.FC<{ children: React.ReactNode }> = ({
         onSelectRoute,
         decodedPath,
         error,
+        statusMessage,
       }}
     >
       {children}
