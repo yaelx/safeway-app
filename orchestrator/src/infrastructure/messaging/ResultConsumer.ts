@@ -13,7 +13,12 @@ export class ResultConsumer implements IKafkaConsumer {
   ) {
     // groupID ensures that if you run multiple instances of Node,
     // each message is processed only once.
-    this.consumer = this.kafka.consumer({ groupId });
+    this.consumer = this.kafka.consumer({
+      groupId: groupId,
+      sessionTimeout: 30000,
+      rebalanceTimeout: 60000,
+      heartbeatInterval: 3000,
+    });
   }
 
   public async start(): Promise<void> {

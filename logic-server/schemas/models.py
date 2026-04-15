@@ -50,7 +50,7 @@ class RouteData(BaseModel):
 class SafetyRequest(BaseModel):
     requestId: str
     routes: List[RouteData]
-    shelterData: List[dict]
+    shelterData: List[Shelter]
     timestamp: str
     model_config = {"extra": "allow"}
 
