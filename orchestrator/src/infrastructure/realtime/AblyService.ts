@@ -1,5 +1,8 @@
 import * as Ably from "ably";
 import { IRealtimeService } from "./types";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export class AblyService implements IRealtimeService {
   private rest: Ably.Rest;
