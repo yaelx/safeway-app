@@ -8,7 +8,7 @@ import { useLocationState } from "../context/LocationContext";
 import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
-import { TileLayerUrl } from "../config/constants";
+import { API_ENDPOINTS, TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
 import { NavigationPanel } from "./NavigationPanel";
 import { useRoutingContext } from "../context/RoutingContext";
@@ -75,7 +75,7 @@ const ShelterDiscovery = ({
       };
 
       try {
-        const res = await fetch(`/api/shelters/in-bounds`, {
+        const res = await fetch(API_ENDPOINTS.SHELTERS_IN_BOUNDS, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

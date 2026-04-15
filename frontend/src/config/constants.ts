@@ -1,6 +1,9 @@
 export const API_ENDPOINTS = {
   SHELTERS_IN_BOUNDS: "/api/shelters/in-bounds",
   SAFE_ROUTE: "/api/get-safe-route",
+  GET_ABLY_TOKEN: "/api/auth/ably-token",
+  CONTACT_FORM: "/api/contact",
+  GOV_MAP: "https://www.govmap.gov.il/govmap/api/govmap.api.js?token=",
 };
 
 export const MAP_CONFIG = {

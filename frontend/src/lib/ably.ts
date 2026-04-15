@@ -1,4 +1,5 @@
 import * as Ably from "ably";
+import { API_ENDPOINTS } from "../config/constants";
 
 const baseUrl = import.meta.env.VITE_API_URL;
 
@@ -9,5 +10,5 @@ if (!baseUrl) {
 }
 
 export const ably = new Ably.Realtime({
-  authUrl: `${baseUrl}/api/auth/ably-token`,
+  authUrl: `${API_ENDPOINTS.GET_ABLY_TOKEN}`,
 });
