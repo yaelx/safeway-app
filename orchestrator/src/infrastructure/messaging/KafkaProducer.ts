@@ -1,4 +1,4 @@
-import { Kafka, Producer, CompressionTypes, SASLOptions } from "kafkajs";
+import { Kafka, Producer, CompressionTypes, Partitioners } from "kafkajs";
 import { IKafkaProducer } from "./types";
 
 interface KafkaTopics {
@@ -14,7 +14,9 @@ export class KafkaProducer implements IKafkaProducer {
     private kafka: Kafka,
     private topics: KafkaTopics,
   ) {
-    this.producer = this.kafka.producer();
+    this.producer = this.kafka.producer({
+      createPartitioner: Partitioners.LegacyPartitioner,
+    });
   }
 
   public async connect(): Promise<void> {

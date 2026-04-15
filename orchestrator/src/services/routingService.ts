@@ -1,19 +1,10 @@
 import axios from "axios";
-// const { v4: uuidv4 } = require("uuid");
 import * as polyline from "@mapbox/polyline";
 import { PrismaClient } from "@prisma/client";
 import { fetchSheltersNearPath } from "./osmService";
 import { API_PATHS } from "../config/constants";
-import { logicServerClient } from "./logicServerClient";
 import { RedisCache } from "../infrastructure/cache/RedisCache";
-import {
-  IRoutingResponse,
-  RouteShelter,
-  RouteData,
-  ScoredRoute,
-  PythonRouteResponse,
-  PythonSolverResponse,
-} from "../types/types";
+import { IRoutingResponse, RouteShelter } from "../types/types";
 import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
 import { OSMRoute } from "../types/osmType";
 import { IKafkaProducer } from "../infrastructure/messaging/types";
