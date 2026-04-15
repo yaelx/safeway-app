@@ -9,5 +9,10 @@
       "source": "/((?!api/).*)",
       "destination": "/frontend/dist/$1"
     }
-  ]
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 60
+    }
+  }
 }

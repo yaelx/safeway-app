@@ -35,7 +35,12 @@ def handle_routing(payload: dict):
     Business logic for route evaluation.
     Expects payload_dict containing 'requestId', 'routes', and 'shelterData'.
     """
-    request_obj = SafetyRequest(**payload)
+    try:
+        request_obj = SafetyRequest.model_validate(payload)
+    except Exception as e:
+        logger.error(f"Validation Error: {e}")
+        return {"status": "error", "message": str(e)}
+        
     all_route_comparisons = []
     
     for route_item in request_obj.routes:

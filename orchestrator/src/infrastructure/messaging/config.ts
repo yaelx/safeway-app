@@ -24,10 +24,11 @@ export const kafkaClient = isKafkaConfigured
         rejectUnauthorized: false, // This tells Node to accept the self-signed cert
       },
       sasl,
-      connectionTimeout: 10000, // Important for serverless/Vercel
+      connectionTimeout: 15000, // Important for serverless/Vercel
+      requestTimeout: 30000,
       retry: {
-        initialRetryTime: 300,
-        retries: 5, // Reduced from 10 to prevent hanging Lambda functions
+        initialRetryTime: 1000,
+        retries: 3,
       },
     })
   : null;
