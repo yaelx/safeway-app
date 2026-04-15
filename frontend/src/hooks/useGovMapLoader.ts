@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_ENDPOINTS } from "../config/constants";
 
 export const useGovMapLoader = (token: string) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -12,7 +13,7 @@ export const useGovMapLoader = (token: string) => {
     }
 
     const script = document.createElement("script");
-    script.src = `https://www.govmap.gov.il/govmap/api/govmap.api.js?token=${token}`;
+    script.src = `${API_ENDPOINTS.GOV_MAP}${token}`;
     script.async = true;
     script.defer = true;
 

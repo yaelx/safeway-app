@@ -15,12 +15,13 @@ const prisma = new PrismaClient({ adapter });
 export const normalizeShelter = (city: string) => {
   return function normalizer(s: RawShelter): NormalizedShelter {
     return {
-      name: s.name || "לא ידוע",
-      address: s.address ?? null,
+      name: s.name || "shelter",
+      address: s.address ?? "",
       lat: parseFloat(Number(s.lat).toFixed(6)),
       lng: parseFloat(Number(s.lng).toFixed(6)),
       type: s.type || "OTHER",
       city: city,
+      isOfficial: true,
     };
   };
 };

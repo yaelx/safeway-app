@@ -1,6 +1,11 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 export const API_ENDPOINTS = {
-  SHELTERS_IN_BOUNDS: "/api/shelters/in-bounds",
-  SAFE_ROUTE: "/api/get-safe-route",
+  SHELTERS_IN_BOUNDS: `${API_BASE_URL}/api/shelters/in-bounds`,
+  SAFE_ROUTE: `${API_BASE_URL}/api/get-safe-route`,
+  GET_ABLY_TOKEN: `${API_BASE_URL}/api/auth/ably-token`,
+  CONTACT_FORM: `${API_BASE_URL}/api/contact`,
+  GOV_MAP: "https://www.govmap.gov.il/govmap/api/govmap.api.js?token=",
 };
 
 export const MAP_CONFIG = {

@@ -9,5 +9,11 @@
       "source": "/((?!api/).*)",
       "destination": "/frontend/dist/$1"
     }
-  ]
+  ],
+  "functions": {
+    "api/**/*.ts": { "runtime": "none" }
+  },
+  "installCommand": "cd frontend && npm install",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist"
 }

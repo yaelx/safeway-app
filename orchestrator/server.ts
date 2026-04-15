@@ -8,12 +8,18 @@ import shelterRoutes from "./src/routes/shelterRoutes";
 import routingRoutes from "./src/routes/routingRoutes";
 import { authProvider } from "./src/infrastructure/auth/authProvider";
 import {
+  initMessaging,
+  kafkaRouteProducer,
+} from "./src/infrastructure/messaging";
+import {
   LOCAL_URL,
   PRODUCTION_URL,
   API_ENDPOINTS,
 } from "./src/config/constants";
 import { apiLimiter, strictLimiter } from "./src/middleware/rateLimiter";
 import contactRoutes from "./src/routes/contactRoutes";
+import ablyRoutes from "./src/routes/authRoutes";
+import { prisma } from "./src/config/db";
 
 dotenv.config();
 
@@ -21,7 +27,11 @@ const app = express();
 // Sets secure HTTP headers (hides Express, prevents clickjacking
 app.use(helmet());
 // "Digital ID" Check
-const allowedOrigins = [PRODUCTION_URL, LOCAL_URL];
+const allowedOrigins = [
+  PRODUCTION_URL,
+  LOCAL_URL,
+  "https://safeway-app-git-feature-safeway-e2e-integration-yaelxs-projects.vercel.app",
+];
 app.use(
   cors({
     origin: (
@@ -58,7 +68,7 @@ app.use(
         false,
       );
     },
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],
     credentials: true,
   }),
 );
@@ -68,6 +78,10 @@ app.set("trust proxy", 1);
 // 1. General API Protection (Applied to everything starting with /api)
 // This acts as a "Catch-all" for your database-heavy endpoints
 app.use("/api", apiLimiter);
+
+app.get("/", (req, res) => {
+  res.json({ status: "Orchestrator is running", region: "me-west1" });
+});
 // 2. Strict Protection (Specifically for the OSRM/Python logic)
 // Since API_ENDPOINTS.SAFE_ROUTE is "/api/get-safe-route",
 // this limiter will stack on top of the general apiLimiter.
@@ -77,6 +91,7 @@ app.use(express.json());
 app.use(API_ENDPOINTS.SHELTERS, shelterRoutes);
 app.use(API_ENDPOINTS.SAFE_ROUTE, routingRoutes);
 app.use(API_ENDPOINTS.CONTACT, contactRoutes);
+app.use(API_ENDPOINTS.AUTH, ablyRoutes);
 
 // ─── Python Health Check ──────────────────────────────────────────────────────
 const checkPythonConnection = async () => {
@@ -104,15 +119,37 @@ const checkPythonConnection = async () => {
   }
 };
 
+process.on("SIGTERM", async () => {
+  if (kafkaRouteProducer) await kafkaRouteProducer.disconnect();
+  process.exit(0);
+});
+
+const initInfrastructure = async () => {
+  try {
+    await initMessaging(); // One call, clean and organized
+    await prisma
+      .$connect()
+      .then(() => console.log("✅ Prisma connected to DB"))
+      .catch((e) => console.error("❌ Prisma connection failed", e));
+  } catch (err) {
+    console.error("Critical Failure:", err);
+    process.exit(1);
+  }
+};
+
+initInfrastructure();
+
 export default app;
 
-// ─── Local Dev Server ─────────────────────────────────────────────────────────
-if (process.env.NODE_ENV !== "production") {
-  const PORT: number = parseInt(process.env.PORT || "4000", 10);
-  const HOST: string = process.env.HOST || "0.0.0.0";
+// ─── Server Startup ───────────────────────────────────────────────────────────
+// Cloud Run injects PORT=8080. Locally defaults to 4000.
+// app.listen must run unconditionally so Cloud Run's health check succeeds.
+const PORT: number = parseInt(process.env.PORT || "8080", 10);
+const HOST: string = process.env.HOST || "0.0.0.0";
 
-  app.listen(PORT, HOST, () => {
-    console.log(`🚀 Orchestrator running on http://${HOST}:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Orchestrator running on http://${HOST}:${PORT}`);
+  if (process.env.NODE_ENV !== "production") {
     checkPythonConnection();
-  });
-}
+  }
+});

@@ -1,9 +1,14 @@
+# Web & Framework
 fastapi
 pydantic
 uvicorn
+
+# Logic & Math
 numpy
-requests
-python-dotenv
 polyline
 
+# Kafka (Crucial Additions)
+confluent-kafka==2.3.0
 
+# Environment & Utils
+python-dotenv

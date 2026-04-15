@@ -8,7 +8,7 @@ import { useLocationState } from "../context/LocationContext";
 import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
-import { TileLayerUrl } from "../config/constants";
+import { API_ENDPOINTS, TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
 import { NavigationPanel } from "./NavigationPanel";
 import { useRoutingContext } from "../context/RoutingContext";
@@ -75,7 +75,7 @@ const ShelterDiscovery = ({
       };
 
       try {
-        const res = await fetch(`/api/shelters/in-bounds`, {
+        const res = await fetch(API_ENDPOINTS.SHELTERS_IN_BOUNDS, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -127,8 +127,14 @@ const MapController = ({ points }: { points: [number, number][] }) => {
 };
 
 const ShelterMap: React.FC = () => {
-  const { routeData, selectedRoute, onSelectRoute, decodedPath } =
-    useRoutingContext();
+  const {
+    routeData,
+    selectedRoute,
+    onSelectRoute,
+    decodedPath,
+    loading,
+    statusMessage,
+  } = useRoutingContext();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const { startLocation, endLocation } = useLocationState();
@@ -145,6 +151,16 @@ const ShelterMap: React.FC = () => {
       <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
         <TripSearch />
       </div>
+
+      {loading && (
+        <div className="absolute top-40 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 bg-white/90 backdrop-blur px-6 py-4 rounded-full shadow-lg border border-blue-100">
+          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent animate-spin rounded-full" />
+          <span className="text-sm font-medium text-slate-700">
+            {statusMessage}
+          </span>
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0">
         <MapContainer
           center={[32.0853, 34.7818]}

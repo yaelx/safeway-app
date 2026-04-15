@@ -1,4 +1,5 @@
 # solver.py
+from schemas.models import RouteData
 import numpy as np
 import os
 import logging
@@ -81,7 +82,7 @@ def calculate_safety_for_geometry(coords: List[List[float]], shelters: List[Shel
         })
     return {"score": round(score, 2), "report": report}
 
-def analyze_route_segments(req: SafetyRequest):
+def analyze_route_segments(route_data: RouteData, shelters: List[Shelter]):
     """
     Calculates safety for ONE route by breaking it into 
     context-aware segments (Highway vs Residential).
@@ -89,9 +90,12 @@ def analyze_route_segments(req: SafetyRequest):
     segments = []
     weighted_score_sum = 0
     total_duration = 0
-    shelter_arr = np.array([[s.lat, s.lng] for s in req.shelterData])
 
-    for leg in req.legs:
+    # If no shelters exist, we skip the matrix math entirely
+    has_shelters = len(shelters) > 0
+    shelter_arr = np.array([[s.lat, s.lng] for s in shelters]) if has_shelters else None
+
+    for leg in route_data.legs:
         for i, step in enumerate(leg.steps):
             total_duration += step.duration
             
@@ -122,26 +126,34 @@ def analyze_route_segments(req: SafetyRequest):
 
             # --- RESIDENTIAL RELATIVE SCORING ---
             else:
-                coords = polyline.decode(step.geometry)
-                if not coords: continue
+
+                if not has_shelters:
+                    # Fail-safe: In a residential area, if there 0 shelters, the safe_ratio is 0
+                    r_score = 0
+                    nearby_shelters = []
+                    text = f"{step.name}: No shelters found in region."
+                else:
+                    coords = polyline.decode(step.geometry)
+                    if not coords: continue
+                    
+                    step_pts = np.array(coords)
+                    # Sample every 3rd point to keep speed high
+                    dist_matrix = vectorized_haversine(step_pts[::3], shelter_arr)
+                    
+                    # Residential score: % of path within 500m of a shelter
+                    safe_ratio = np.mean(np.min(dist_matrix, axis=1) < SAFE_DISTANCE_KM)
+                    r_score = safe_ratio * 100
                 
-                step_pts = np.array(coords)
-                # Sample every 3rd point to keep speed high
-                dist_matrix = vectorized_haversine(step_pts[::3], shelter_arr)
-                
-                # Residential score: % of path within 500m of a shelter
-                safe_ratio = np.mean(np.min(dist_matrix, axis=1) < SAFE_DISTANCE_KM)
-                r_score = safe_ratio * 100
-                
-                # Fetch only a few nearby shelters to keep response light
-                nearby_idx = np.where(np.min(dist_matrix, axis=0) < SAFE_DISTANCE_KM)[0]
-                nearby_shelters = [req.shelterData[idx] for idx in nearby_idx[:3]]
+                    # Fetch only a few nearby shelters to keep response light
+                    nearby_idx = np.where(np.min(dist_matrix, axis=0) < SAFE_DISTANCE_KM)[0]
+                    nearby_shelters = [shelters[idx] for idx in nearby_idx[:3]]
+                    text = f"{step.name}: {len(nearby_shelters)} shelters nearby."
 
                 seg = SegmentAnalysis(
                     type="residential",
                     status="safe" if r_score > 70 else "exposed",
                     segmentScore=round(r_score, 2),
-                    text=f"{step.name}: {len(nearby_shelters)} shelters nearby.",
+                    text=text,
                     duration=step.duration,
                     shelters=nearby_shelters,
                     geometry=step.geometry

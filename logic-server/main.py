@@ -1,4 +1,5 @@
 # main.py
+from utils import generate_route_id
 from typing import List
 import subprocess
 import os
@@ -71,63 +72,33 @@ async def evaluate_route(req: SafetyRequest):
     return {"safetyScore": result["score"], "safetyReport": result["report"]}
 
 
-# @app.post("/evaluate_alternatives")
-# async def evaluate_alternatives(req: SafetyRequest):
-    
-#     all_results = []
-#     for idx, route_geom in enumerate(req.routes):
-#         res = calculate_safety_for_geometry(route_geom, req.shelterData)
-#         all_results.append({
-#             "index": idx,
-#             "safetyScore": res["score"],
-#             "safetyReport": res["report"],
-#             "geometry": route_geom
-#         })
-    
-#     all_results.sort(key=lambda x: x["safetyScore"], reverse=True)
-#     return all_results
-
-def generate_route_id(segments):
-    """
-    Generates a unique, stable ID based on the route's geometry.
-    segments: List of SegmentAnalysis objects
-    """
-    try:
-        # Extract geometry from each segment to create a unique fingerprint
-        # Since geometry might be a list or string, we convert to string
-        combined_path = "".join([str(s.geometry) for s in segments])
-        # Create a 12-character hex hash
-        return hashlib.md5(combined_path.encode()).hexdigest()[:12]
-    except Exception as e:
-        # Fallback to a random-ish string if hashing fails
-        return f"route_{int(segments[0].duration)}"
-
-
 @app.post("/evaluate_alternatives")
-async def evaluate_alternatives(req: List[SafetyRequest]):
+async def evaluate_alternatives(payload: dict):
     """
     Compare multiple routes (e.g., from the sidebar).
     Returns an array where each item is the full analysis of one candidate route.
     """
+    request_obj = SafetyRequest(**payload)
     all_route_comparisons = []
     
-    for idx, route_req in enumerate(req):
-        # We run the full segmented logic for each alternative
-        analysis = analyze_route_segments(route_req) # {SegmentAnalysis, score}
+    for route_item in request_obj.routes:
+        analysis = analyze_route_segments(route_item, request_obj.shelterData)
         route_id = generate_route_id(analysis["segments"])
+        
         all_route_comparisons.append({
-            "index": idx,
+            "index": route_item.index,
             "id": route_id,
             "safetyScore": analysis["score"],
-            # We still include segments so the frontend can color-code 
-            # the alternative lines on the map if hovered.
-            "segments": [s.model_dump() for s in analysis["segments"]]
+            "segments": [s.model_dump() for s in analysis["segments"]],
+            "geometry": route_item.geometry,
+            "distance": route_item.distance,
+            "duration": route_item.duration
         })
     
-    # Sort them so the safest route is suggested first
+    # 4. Sort by highest safety score
     all_route_comparisons.sort(key=lambda x: x["safetyScore"], reverse=True)
-    
-    return {"routes": all_route_comparisons, "totalFound": len(all_route_comparisons)}
+
+    return {"requestId": request_obj.requestId, "routes": all_route_comparisons, "totalFound": len(all_route_comparisons), "timestamp": request_obj.timestamp, "status": "completed"}
 
 
 if __name__ == "__main__":

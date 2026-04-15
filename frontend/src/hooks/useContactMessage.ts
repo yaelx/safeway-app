@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { ContactFormData } from "../types/types";
+import { API_ENDPOINTS } from "../config/constants";
 
 export const useContactMessage = () => {
   const [loading, setLoading] = useState(false);
@@ -7,7 +8,7 @@ export const useContactMessage = () => {
   const [success, setSuccess] = useState(false);
 
   const sendContactMessage = async (data: ContactFormData) => {
-    const response = await fetch("/api/contact", {
+    const response = await fetch(API_ENDPOINTS.CONTACT_FORM, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

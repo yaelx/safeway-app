@@ -41,4 +41,15 @@ export const API_ENDPOINTS = {
   SHELTERS_IN_BOUNDS: "/in-bounds",
   SAFE_ROUTE: "/api/get-safe-route",
   CONTACT: "/api/contact",
+  AUTH: "/api/auth",
 };
+
+export const SHELTER_SELECT_FIELDS = {
+  id: true,
+  lat: true,
+  lng: true,
+  name: true,
+  type: true,
+  isOfficial: true,
+  address: true,
+} as const;

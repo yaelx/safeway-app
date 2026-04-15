@@ -1,13 +1,20 @@
 import { Router, Request, Response } from "express";
 import { RoutingController } from "../controllers/routingController";
 import { RoutingService } from "../services/routingService";
+import { kafkaRouteProducer } from "../infrastructure/messaging";
 import { prisma } from "../config/db";
 import { authProvider } from "../infrastructure/auth/authProvider";
 import { validate } from "../middleware/validate";
 import { routeSchema } from "../schemas/routeSchema";
+import { ablyService } from "../infrastructure/realtime/AblyService";
 
 const router = Router();
-const routingService = new RoutingService(prisma, authProvider);
+const routingService = new RoutingService(
+  prisma,
+  authProvider,
+  kafkaRouteProducer!,
+  ablyService,
+);
 const routingController = new RoutingController(routingService);
 
 // The endpoint is now just "/" because it's prefixed in server.ts
