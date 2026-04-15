@@ -2,7 +2,7 @@ import axios from "axios";
 import * as polyline from "@mapbox/polyline";
 import { PrismaClient } from "@prisma/client";
 import { fetchSheltersNearPath } from "./osmService";
-import { API_PATHS } from "../config/constants";
+import { API_PATHS, SHELTER_SELECT_FIELDS } from "../config/constants";
 import { RedisCache } from "../infrastructure/cache/RedisCache";
 import { IRoutingResponse, RouteShelter } from "../types/types";
 import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
@@ -101,6 +101,7 @@ export class RoutingService {
             lte: Math.max(...allLngs) + padding,
           },
         },
+        select: SHELTER_SELECT_FIELDS,
       }),
     ]);
 

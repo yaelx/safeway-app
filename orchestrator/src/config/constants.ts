@@ -43,3 +43,13 @@ export const API_ENDPOINTS = {
   CONTACT: "/api/contact",
   AUTH: "/api/auth",
 };
+
+export const SHELTER_SELECT_FIELDS = {
+  id: true,
+  lat: true,
+  lng: true,
+  name: true,
+  type: true,
+  isOfficial: true,
+  address: true,
+} as const;

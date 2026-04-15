@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
-import { API_PATHS } from "../config/constants";
+import { API_PATHS, SHELTER_SELECT_FIELDS } from "../config/constants";
 import { RouteShelter, DBShelter } from "../types/types";
 import { RedisCache } from "../infrastructure/cache/RedisCache";
 
@@ -11,39 +11,12 @@ export class ShelterService {
     this.cache = new RedisCache();
   }
 
-  async getSheltersInBounds(
+  async fetchFromOSM(
     minLat: number,
     maxLat: number,
     minLng: number,
     maxLng: number,
   ) {
-    // 1. Fetch from your Prisma DB
-    const matchedLocal = await this.prisma.shelter.findMany({
-      where: {
-        lat: { gte: minLat, lte: maxLat },
-        lng: { gte: minLng, lte: maxLng },
-      },
-    });
-
-    // 2. Redis Cache Lookup for OSM Data
-    // We create a specific key for this bounding box
-    const cacheKey = `shelters:bbox:${minLat.toFixed(4)},${minLng.toFixed(4)}:${maxLat.toFixed(4)},${maxLng.toFixed(4)}`;
-
-    try {
-      // Note: Since your RedisCache.getRoute is specific to routes,
-      // you can use a generic get/set or add a getShelters method to it.
-      // For now, let's assume we use the underlying redis instance or add a method:
-      const cachedOSM = await this.cache.getRaw(cacheKey);
-
-      if (cachedOSM) {
-        console.log(`[Cache] HIT for Shelters: ${cacheKey}`);
-        return [...matchedLocal, ...cachedOSM];
-      }
-    } catch (err) {
-      console.warn("Redis lookup failed, falling back to OSM API");
-    }
-
-    // 3. Fetch from OSM if not cached
     try {
       const query = `[out:json][timeout:25];(node["amenity"="shelter"](${minLat},${minLng},${maxLat},${maxLng});way["amenity"="shelter"](${minLat},${minLng},${maxLat},${maxLng}););out center;`;
       const response = await axios.get(
@@ -63,16 +36,58 @@ export class ShelterService {
         }),
       );
 
-      // 4. Save to Redis
-      await this.cache.setRaw(cacheKey, osmShelters);
-      return [...matchedLocal, ...osmShelters];
+      return osmShelters;
     } catch (osmError) {
       console.warn(
         "⚠️ Overpass API timed out or failed. Returning only database shelters.",
       );
       // Return what we have from Prisma instead of throwing a 500
+      return [];
+    }
+  }
+
+  async getSheltersInBounds(
+    minLat: number,
+    maxLat: number,
+    minLng: number,
+    maxLng: number,
+    useLiveOsm: boolean = false,
+  ) {
+    // 1. Fetch from your Prisma DB
+    const matchedLocal = await this.prisma.shelter.findMany({
+      where: {
+        lat: { gte: minLat, lte: maxLat },
+        lng: { gte: minLng, lte: maxLng },
+      },
+      select: SHELTER_SELECT_FIELDS,
+    });
+
+    // If live data isn't requested, return local data immediately (~50ms)
+    if (!useLiveOsm) {
       return matchedLocal;
     }
+
+    // 2. Redis Cache Lookup for OSM Data
+    // We create a specific key for this bounding box
+    const cacheKey = `shelters:bbox:${minLat.toFixed(4)},${minLng.toFixed(4)}:${maxLat.toFixed(4)},${maxLng.toFixed(4)}`;
+
+    try {
+      const cachedShelters = await this.cache.getRaw(cacheKey);
+      if (cachedShelters) {
+        console.log(`[Cache] HIT for Shelters: ${cacheKey}`);
+        return cachedShelters;
+      }
+    } catch (err) {
+      console.warn(
+        "Redis lookup failed, falling back to OSM API search with DB",
+      );
+    }
+
+    // 3. Fetch from OSM if not cached
+    const osmShelters = await this.fetchFromOSM(minLat, minLng, maxLat, maxLng);
+    const mergedResults = [...matchedLocal, ...osmShelters];
+    await this.cache.setRaw(cacheKey, mergedResults, 3600); // Cache for 1 hour
+    return mergedResults;
   }
 
   async addShelter(data: {

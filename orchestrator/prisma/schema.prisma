@@ -1,7 +1,8 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
-  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"] 
+  // Ensures Prisma includes the correct engine binary to talk to the database from inside the GCcontainer.
 }
 
 datasource db {
@@ -21,6 +22,7 @@ model Shelter {
   updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@unique([lat, lng], name: "lat_lng") 
+  @@index([lat, lng])
   @@map("shelters")
 }
 
