@@ -29,7 +29,27 @@ export class RoutingService {
     return [lng, lat];
   }
 
-  async getSafeRoutes(start: string, end: string) {
+  /**
+   * Helper to fetch live OSM data only if explicitly requested.
+   * Isolating this logic keeps the main flow clean.
+   * If Overpass is down, it will fail gracefully and we will only use the safeway DB.
+   */
+  private async getExternalOsmShelters(
+    routePoints: [number, number][],
+    enabled: boolean,
+  ): Promise<RouteShelter[]> {
+    if (!enabled) return [];
+
+    try {
+      console.log("📡 Fetching live shelters from OSM Overpass...");
+      return await fetchSheltersNearPath(routePoints);
+    } catch (error) {
+      console.warn("⚠️ OSM Fetch failed, proceeding with local database only.");
+      return [];
+    }
+  }
+
+  async getSafeRoutes(start: string, end: string, useLiveOsm: boolean = false) {
     let osrmRoutes: any;
     console.log("\nReceiced new getSafeRoutes request");
     // start is "34.123,32.456"
@@ -62,14 +82,14 @@ export class RoutingService {
       (r: OSMRoute) => polyline.decode(r.geometry) as [number, number][],
     );
 
-    // B. Calculate bounds (Same as before, used for the Prisma query)
+    // B. Calculate bounds for Prisma query
     const allLats = allRoutePoints.flat().map((p: any) => p[0]);
     const allLngs = allRoutePoints.flat().map((p: any) => p[1]);
     const padding = 0.01;
 
     // C. Fetch shelters (using the wider bounds)
     const [osmShelters, dbShelters] = await Promise.all([
-      fetchSheltersNearPath(allRoutePoints[0]), // You can refine this to use a union of points
+      this.getExternalOsmShelters(allRoutePoints[0], useLiveOsm),
       this.prisma.shelter.findMany({
         where: {
           lat: {
