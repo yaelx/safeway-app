@@ -110,18 +110,25 @@ Initially, the Node.js orchestrator was deployed on Vercel. However, because Ver
    Using a "Default" service account in Google Cloud provided too many broad permissions, creating a security risk. Furthermore, managing sensitive credentials like Kafka passwords and Ably keys in plain environment variables was not      suitable for a production-grade application.
 
 * The Solution:
-    * Least Privilege: I created a dedicated Service Account with restricted access, granting only Secret Manager Secret Accessor and Logging Writer roles.
-    * Secret Manager: All sensitive credentials were moved to GCP Secret Manager.
+* Least Privilege: I created a dedicated Service Account with restricted access, granting only Secret Manager Secret Accessor and Logging Writer roles.
+* Secret Manager: All sensitive credentials were moved to GCP Secret Manager.
 
 * The Result:
-    * The application now follows industry-standard security protocols, ensuring that even if the service is compromised, the "blast radius" is limited to only the necessary resources.
+* The application now follows industry-standard security protocols, ensuring that even if the service is compromised, the "blast radius" is limited to only the necessary resources.
 
 3. Latency Optimization: Shifting from External API to Local Persistence
 * The Problem:
    During initial testing of the routing engine, I observed significant latency (up to 12 seconds) for a single request. Analysis of the server logs revealed a bottleneck in the geospatial data retrieval process:
 
 * Log Evidence:
-   <img width="1322" height="312" alt="image" src="https://github.com/user-attachments/assets/f8d613a6-d46a-40a0-830e-3f12d2e0dbdc" />
+   #### 🔍 Performance Profiling: Before vs. After Optimization
+
+To quantify the impact, I profiled the `get-safe-route` endpoint. The results show a dramatic 80% improvement in response time.
+
+| State | Node.js Server Logs (Google Cloud) | Response Time |
+| :--- | :--- | :--- |
+| **BEFORE**<br>(Live External Fetch) | <img src="https://github.com/user-attachments/assets/f8d613a6-d46a-40a0-830e-3f12d2e0dbdc" width="300px" alt="Logs before optimization: 10s timeout gap." /> | **~11.57 seconds**<br>(Sufferance from public API bottlenecks) |
+| **AFTER**<br>(Local Index + Conditional) | <img src="https://github.com/user-attachments/assets/4a265c49-f686-4326-ab9c-4d02530e333b" width="300px" alt="Logs after: Sub-3s response." /> | **~2.26 seconds**<br>(**80% faster**, 100% reliability) |
 
 * Diagnosis: The orchestrator was attempting to pull live shelter data from the public Overpass API for every request. This introduced a "double-jeopardy" scenario: we suffered from high latency (~10s) due to the external API's response time, and the system became unreliable when the public API rate-limited or timed out.
 
