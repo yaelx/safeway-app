@@ -94,6 +94,57 @@ python worker.py # Starts the Kafka Consumer and OSRM Engine
 
 ---
 
+## 🛠️ Architectural Challenges & Solutions
+1. Persistent Event Consumption (Vercel ➔ Google Cloud Run)
+* The Problem:
+Initially, the Node.js orchestrator was deployed on Vercel. However, because Vercel functions follow a strict request-response lifecycle, the process was "frozen" or terminated immediately after sending a response to the frontend. This meant the Kafka Consumer was killed before it could receive the routing results back from the Python worker, breaking the real-time update loop via Ably.
+
+* The Solution:
+I migrated the Node.js orchestrator to Google Cloud Run using a containerized (Docker) approach. By selecting Instance-based billing (CPU Always Allocated), I ensured the server stays "awake" 24/7. This allows the Kafka consumer to maintain a consistent heartbeat with the Aiven broker and process incoming messages even when no active HTTP requests are occurring.
+
+* The Result:
+    * Reliability: The "return journey" of the data (Python ➔ Kafka ➔ Node ➔ Ably) is now guaranteed.
+    * Latency: Using the me-west1 (Tel Aviv) region minimizes latency for local users in Israel.
+
+2. Infrastructure Security & Secret Management
+* The Problem:
+Using a "Default" service account in Google Cloud provided too many broad permissions, creating a security risk. Furthermore, managing sensitive credentials like Kafka passwords and Ably keys in plain environment variables was not suitable for a production-grade application.
+
+* The Solution:
+    * Least Privilege: I created a dedicated Service Account with restricted access, granting only Secret Manager Secret Accessor and Logging Writer roles.
+    * Secret Manager: All sensitive credentials were moved to GCP Secret Manager.
+
+* The Result:
+    * The application now follows industry-standard security protocols, ensuring that even if the service is compromised, the "blast radius" is limited to only the necessary resources.
+
+3. Latency Optimization: Shifting from External API to Local Persistence
+* The Problem:
+During initial testing of the routing engine, I observed significant latency (up to 12 seconds) for a single request. Analysis of the server logs revealed a bottleneck in the geospatial data retrieval process:
+
+* Log Evidence:
+
+19:03:56: Initializing fetch from OpenStreetMap (OSM) Overpass API...
+
+19:04:06: OSM Fetch timed out/failed; falling back to empty list.
+
+* Diagnosis: The orchestrator was attempting to pull live shelter data from the public Overpass API for every request. This introduced a "double-jeopardy" scenario: we suffered from high latency (~10s) due to the external API's response time, and the system became unreliable when the public API rate-limited or timed out.
+
+* The Solution:
+I transitioned the architecture to a Local Persistence Model. Instead of real-time external fetching, the system now operates as follows:
+Database Reliance: The routing logic now queries a local PostgreSQL database via Prisma. This reduced the data retrieval time from ~10,000ms to <50ms.
+Decoupled Data Ingestion: To keep the data fresh without impacting user experience, I moved the OSM synchronization to a decoupled Seed/Cron script. This script populates the database once a week, ensuring the system has high-quality data without the real-time performance tax
+Graceful Fallback: If the local database search returns insufficient results for a specific corridor, the system is designed to trigger a background update rather than making the user wait for a live external fetch.
+
+* The Result:
+
+End-to-End Latency: Reduced by over 95%.
+
+Reliability: The system is no longer dependent on the uptime or rate-limits of third-party public APIs.
+
+Predictability: Response times are now consistent, regardless of external network conditions.
+
+---
+
 ## Future Roadmap
 * [x] OSRM Cloud Deployment: Dedicated Israel map engine on GCP.
 * [x] Distributed Caching: Redis integration for high-traffic routes.

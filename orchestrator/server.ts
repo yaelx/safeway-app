@@ -19,6 +19,7 @@ import {
 import { apiLimiter, strictLimiter } from "./src/middleware/rateLimiter";
 import contactRoutes from "./src/routes/contactRoutes";
 import ablyRoutes from "./src/routes/authRoutes";
+import { prisma } from "./src/config/db";
 
 dotenv.config();
 
@@ -126,7 +127,10 @@ process.on("SIGTERM", async () => {
 const initInfrastructure = async () => {
   try {
     await initMessaging(); // One call, clean and organized
-    // ... other inits (Prisma, etc.)
+    await prisma
+      .$connect()
+      .then(() => console.log("✅ Prisma connected to DB"))
+      .catch((e) => console.error("❌ Prisma connection failed", e));
   } catch (err) {
     console.error("Critical Failure:", err);
     process.exit(1);
