@@ -134,14 +134,14 @@ To quantify the impact, I profiled the `get-safe-route` endpoint. The results sh
 
 * The Solution:
    I transitioned the architecture to a Local Persistence Model. Instead of real-time external fetching, the system now operates as follows:
-   Database Reliance: The routing logic now queries a local PostgreSQL database via Prisma. This reduced the data retrieval time from ~10,000ms to <50ms.
-   Decoupled Data Ingestion: To keep the data fresh without impacting user experience, I moved the OSM synchronization to a decoupled Seed/Cron script. This script populates the database once a week, ensuring the system has high           quality data without the real-time performance tax
-   Graceful Fallback: If the local database search returns insufficient results for a specific corridor, the system is designed to trigger a background update rather than making the user wait for a live external fetch.
+   * Database Reliance: The routing logic now queries a local PostgreSQL database via Prisma. This reduced the data retrieval time from ~10,000ms to <50ms.
+   * Decoupled Data Ingestion: To keep the data fresh without impacting user experience, I moved the OSM synchronization to a decoupled Seed/Cron script. This script populates the database once a week, ensuring the system has high           quality data without the real-time performance tax
+   * Graceful Fallback: If the local database search returns insufficient results for a specific corridor, the system is designed to trigger a background update rather than making the user wait for a live external fetch.
 
 * The Result:
-   End-to-End Latency: Reduced by over 95%.
-   Reliability: The system is no longer dependent on the uptime or rate-limits of third-party public APIs.
-   Predictability: Response times are now consistent, regardless of external network conditions.
+   * End-to-End Latency: Reduced by over 95%.
+   * Reliability: The system is no longer dependent on the uptime or rate-limits of third-party public APIs.
+   * Predictability: Response times are now consistent, regardless of external network conditions.
 
 ---
 
