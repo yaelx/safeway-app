@@ -142,7 +142,7 @@ initInfrastructure();
 export default app;
 
 // ─── Server Startup ───────────────────────────────────────────────────────────
-// Cloud Run injects PORT=8080. Locally defaults to 4000.
+// Cloud Run injects PORT=8080.
 // app.listen must run unconditionally so Cloud Run's health check succeeds.
 const PORT: number = parseInt(process.env.PORT || "8080", 10);
 const HOST: string = process.env.HOST || "0.0.0.0";
