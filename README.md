@@ -6,6 +6,39 @@
 
 ## System Architecture
 
+```mermaid
+graph TD
+    %% Node Styles
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef orchestrator fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+    classDef worker fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef messaging fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
+
+    User((User)) -->|Search| V[Vercel Frontend]:::frontend
+    V -->|API Request| N[Node.js Orchestrator]:::orchestrator
+
+    subgraph External_APIs [External Engines]
+        N -->|MLD Query| OSRM[OSRM Engine]
+    end
+
+    subgraph Event_Driven_Core [Event-Driven Pipeline]
+        N -->|1. Dispatch| K{Aiven Kafka}:::messaging
+        K -->|2. Consume| P[Python Safety Worker]:::worker
+        
+        subgraph Python_Logic [Compute Engine]
+            P --> P1[Polyline Decoding]
+            P1 --> P2[Spatial Analysis]
+            P2 --> P3[Safety Scoring]
+        end
+        
+        P3 -->|3. Publish| K
+    end
+
+    K -->|4. Push| N
+    N -->|5. Realtime| A[Ably WebSockets]:::messaging
+    A -->|6. Render| V
+ ```
+
 The project utilizes an **Asynchronous Event-Driven Architecture** to handle heavy geospatial calculations without blocking the user interface.
 
 The application has been refactored to handle complex routing calculations asynchronously. This ensures the frontend remains responsive even when performing heavy geospatial analysis (29+ shelter checks per route).
