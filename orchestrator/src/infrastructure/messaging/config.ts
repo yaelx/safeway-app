@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // 1. Safe extraction with fallback
-const brokerStr = process.env.KAFKA_BROKER;
+const brokerStr = process.env.KAFKA_BROKERS;
 const username = process.env.KAFKA_USERNAME;
 const password = process.env.KAFKA_PASSWORD;
 

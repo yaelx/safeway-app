@@ -26,7 +26,11 @@ const app = express();
 // Sets secure HTTP headers (hides Express, prevents clickjacking
 app.use(helmet());
 // "Digital ID" Check
-const allowedOrigins = [PRODUCTION_URL, LOCAL_URL];
+const allowedOrigins = [
+  PRODUCTION_URL,
+  LOCAL_URL,
+  "https://safeway-app-git-feature-safeway-e2e-integration-yaelxs-projects.vercel.app",
+];
 app.use(
   cors({
     origin: (
@@ -63,7 +67,7 @@ app.use(
         false,
       );
     },
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"],
     credentials: true,
   }),
 );
@@ -73,6 +77,10 @@ app.set("trust proxy", 1);
 // 1. General API Protection (Applied to everything starting with /api)
 // This acts as a "Catch-all" for your database-heavy endpoints
 app.use("/api", apiLimiter);
+
+app.get("/", (req, res) => {
+  res.json({ status: "Orchestrator is running", region: "me-west1" });
+});
 // 2. Strict Protection (Specifically for the OSRM/Python logic)
 // Since API_ENDPOINTS.SAFE_ROUTE is "/api/get-safe-route",
 // this limiter will stack on top of the general apiLimiter.
@@ -111,7 +119,7 @@ const checkPythonConnection = async () => {
 };
 
 process.on("SIGTERM", async () => {
-  await kafkaRouteProducer.disconnect();
+  if (kafkaRouteProducer) await kafkaRouteProducer.disconnect();
   process.exit(0);
 });
 
@@ -129,13 +137,15 @@ initInfrastructure();
 
 export default app;
 
-// ─── Local Dev Server ─────────────────────────────────────────────────────────
-if (process.env.NODE_ENV !== "production") {
-  const PORT: number = parseInt(process.env.PORT || "4000", 10);
-  const HOST: string = process.env.HOST || "0.0.0.0";
+// ─── Server Startup ───────────────────────────────────────────────────────────
+// Cloud Run injects PORT=8080. Locally defaults to 4000.
+// app.listen must run unconditionally so Cloud Run's health check succeeds.
+const PORT: number = parseInt(process.env.PORT || "8080", 10);
+const HOST: string = process.env.HOST || "0.0.0.0";
 
-  app.listen(PORT, HOST, () => {
-    console.log(`🚀 Orchestrator running on http://${HOST}:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Orchestrator running on http://${HOST}:${PORT}`);
+  if (process.env.NODE_ENV !== "production") {
     checkPythonConnection();
-  });
-}
+  }
+});

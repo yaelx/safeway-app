@@ -9,6 +9,7 @@ import { IAuthenticator } from "../infrastructure/auth/IAuthenticator";
 import { OSMRoute } from "../types/osmType";
 import { IKafkaProducer } from "../infrastructure/messaging/types";
 import { IRealtimeService } from "../infrastructure/realtime/types";
+const { v4: uuidv4 } = require("uuid");
 
 export class RoutingService {
   private cache = new RedisCache();
@@ -98,7 +99,7 @@ export class RoutingService {
     ];
 
     const authHeader = await this.authenticator.getAccessToken();
-    const requestId = "test-1234567890"; // uuidv4();
+    const requestId = uuidv4();
 
     const kafkaPayload = {
       requestId,
@@ -132,48 +133,5 @@ export class RoutingService {
       console.error("Kafka Pipeline Error:", error);
       throw new Error("Safety Engine is temporarily offline.");
     }
-
-    // const payloads = osrmRoutes.routes
-    //   .filter((r: OSMRoute) => r.geometry !== null)
-    //   .map((r: OSMRoute) => ({
-    //     legs: r.legs, // Contains steps, ref, and intersections
-    //     shelterData: allShelters,
-    //   }));
-
-    // // D. Call the updated Bulk Client
-    // const pythonRes: PythonSolverResponse =
-    //   await logicServerClient.evaluateAlternatives(payloads, authHeader);
-    // const { routes, totalFound } = pythonRes;
-
-    // if (!routes || routes.length === 0) {
-    //   throw new Error("Python Logic Server returned no routes.");
-    // }
-
-    // // E. Merge OSRM metadata (distance/duration) with Python safety data
-    // // Python returns these sorted by safetyScore
-    // const sortedRoutes: RouteData[] = routes.map((r: PythonRouteResponse) => {
-    //   const originalOSRM: OSMRoute = osrmRoutes.routes[r.index];
-
-    //   return {
-    //     id: r.id,
-    //     index: r.index,
-    //     safetyScore: r.safetyScore,
-    //     geometry: originalOSRM.geometry as string,
-    //     segments: r.segments,
-    //     distance: originalOSRM.distance,
-    //     duration: originalOSRM.duration,
-    //   };
-    // });
-
-    // const resp = {
-    //   routes: sortedRoutes, // Now returning an array of 3 routes
-    //   totalFound: sortedRoutes.length,
-    // } as IRoutingResponse;
-
-    // this.cache
-    //   .setRoute(startCoords, endCoords, resp)
-    //   .catch((err) => console.error("Redis Set Error:", err));
-
-    // return resp;
   }
 }

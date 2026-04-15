@@ -12,7 +12,7 @@ const router = Router();
 const routingService = new RoutingService(
   prisma,
   authProvider,
-  kafkaRouteProducer,
+  kafkaRouteProducer!,
   ablyService,
 );
 const routingController = new RoutingController(routingService);
