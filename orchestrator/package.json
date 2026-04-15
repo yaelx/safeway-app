@@ -1,7 +1,6 @@
 {
   "name": "orchestrator",
   "version": "1.0.0",
-  "type": "module",
   "description": "Node.js Express logic orchestrator",
   "main": "server.ts",
   "engines": {

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
+// const { v4: uuidv4 } = require("uuid");
 import * as polyline from "@mapbox/polyline";
 import { PrismaClient } from "@prisma/client";
 import { fetchSheltersNearPath } from "./osmService";
@@ -107,7 +107,7 @@ export class RoutingService {
     ];
 
     const authHeader = await this.authenticator.getAccessToken();
-    const requestId = uuidv4();
+    const requestId = "test-1234567890"; // uuidv4();
 
     const kafkaPayload = {
       requestId,
