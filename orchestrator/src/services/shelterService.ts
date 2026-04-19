@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { API_PATHS, SHELTER_SELECT_FIELDS } from "../config/constants";
 import { RouteShelter, DBShelter } from "../types/types";
+import { logger } from "../middleware/logger";
 import { RedisCache } from "../infrastructure/cache/RedisCache";
 
 export class ShelterService {
@@ -38,9 +39,7 @@ export class ShelterService {
 
       return osmShelters;
     } catch (osmError) {
-      console.warn(
-        "⚠️ Overpass API timed out or failed. Returning only database shelters.",
-      );
+      logger.warn({ event: 'OSM_TIMEOUT', err: osmError }, 'Overpass API timed out, returning only database shelters');
       // Return what we have from Prisma instead of throwing a 500
       return [];
     }
@@ -74,13 +73,11 @@ export class ShelterService {
     try {
       const cachedShelters = await this.cache.getRaw(cacheKey);
       if (cachedShelters) {
-        console.log(`[Cache] HIT for Shelters: ${cacheKey}`);
+        logger.info({ event: 'SHELTER_CACHE_HIT', cacheKey }, 'Retrieved shelters from Redis cache');
         return cachedShelters;
       }
     } catch (err) {
-      console.warn(
-        "Redis lookup failed, falling back to OSM API search with DB",
-      );
+      logger.warn({ event: 'SHELTER_CACHE_MISS', cacheKey, err }, 'Redis lookup failed, falling back to OSM and DB');
     }
 
     // 3. Fetch from OSM if not cached

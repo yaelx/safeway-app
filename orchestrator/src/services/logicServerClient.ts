@@ -1,5 +1,6 @@
 import axios from "axios";
 import { INTERNAL_SERVICES } from "../config/constants";
+import { logger } from "../middleware/logger";
 import { RouteShelter } from "../types/types";
 import { OSMLeg } from "../types/osmType";
 const { BASE_URL, ENDPOINTS, HEADER_KEY } = INTERNAL_SERVICES.PYTHON_SOLVER;
@@ -25,20 +26,20 @@ export const logicServerClient = {
     } catch (error: any) {
       // Catching the error here lets you provide a better message to the Orchestrator
       if (error.response) {
-        // The server responded with a status code outside the 2xx range
-        console.error(
-          "Python Server Error:",
-          error.response.status,
-          error.response.data,
+        logger.error(
+          { event: 'LOGIC_SERVER_HTTP_ERROR', status: error.response.status, responseData: error.response.data, url, err: error },
+          'Python Logic Server responded with an error status',
         );
       } else if (error.request) {
-        // The request was made but no response was received
-        console.error(
-          "No response from Python Server. Is it running at http://localhost:8000?",
+        logger.error(
+          { event: 'LOGIC_SERVER_NO_RESPONSE', url, err: error },
+          'No response received from Python Logic Server',
         );
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Request Setup Error:", error.message);
+        logger.error(
+          { event: 'LOGIC_SERVER_REQUEST_SETUP_ERROR', err: error },
+          'Failed to construct request to Python Logic Server',
+        );
       }
 
       // Re-throw so the RoutingService knows the safety check failed

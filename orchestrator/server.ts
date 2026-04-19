@@ -20,6 +20,7 @@ import { apiLimiter, strictLimiter } from "./src/middleware/rateLimiter";
 import contactRoutes from "./src/routes/contactRoutes";
 import ablyRoutes from "./src/routes/authRoutes";
 import { prisma } from "./src/config/db";
+import { asyncStorage, logger } from "./src/middleware/logger";
 
 dotenv.config();
 
@@ -58,9 +59,7 @@ app.use(
       }
 
       // 4. INFORMATIVE ERROR: Tell yourself exactly what went wrong
-      console.error(
-        `[CORS Blocked]: Origin "${origin}" is not in whitelist or allowed patterns.`,
-      );
+      logger.warn({ event: 'CORS_BLOCKED', origin }, 'Origin rejected by CORS policy');
 
       // We send a more descriptive error back to the logs
       return callback(
@@ -78,6 +77,14 @@ app.set("trust proxy", 1);
 // 1. General API Protection (Applied to everything starting with /api)
 // This acts as a "Catch-all" for your database-heavy endpoints
 app.use("/api", apiLimiter);
+app.use((req, res, next) => {
+  const requestId = req.headers["x-request-id"] || crypto.randomUUID();
+  const store = new Map();
+  store.set("requestId", requestId);
+
+  // Wrap the entire request execution in this storage context
+  asyncStorage.run(store, () => next());
+});
 
 app.get("/", (req, res) => {
   res.json({ status: "Orchestrator is running", region: "me-west1" });
@@ -105,16 +112,12 @@ const checkPythonConnection = async () => {
     });
 
     if (response.data.status === "online") {
-      console.log("✅ Python Logic Server is healthy and responding.");
+      logger.info({ event: 'PYTHON_HEALTH_OK', healthUrl }, 'Python Logic Server is healthy');
     }
   } catch (err: any) {
-    console.error(
-      "❌ Bridge Failed: Node cannot reach Python at: " + healthUrl,
-    );
-    console.error("   Reason: " + (err.response?.statusText || err.message));
-    console.log(
-      "GOOGLE SAYS:",
-      err.response?.data || "No response data available",
+    logger.error(
+      { event: 'PYTHON_HEALTH_FAIL', healthUrl, reason: err.response?.statusText || err.message, googleSays: err.response?.data ?? null, err },
+      'Node cannot reach Python Logic Server',
     );
   }
 };
@@ -129,10 +132,10 @@ const initInfrastructure = async () => {
     await initMessaging(); // One call, clean and organized
     await prisma
       .$connect()
-      .then(() => console.log("✅ Prisma connected to DB"))
-      .catch((e) => console.error("❌ Prisma connection failed", e));
+      .then(() => logger.info({ event: 'DB_CONNECTED' }, 'Prisma connected to database'))
+      .catch((err) => logger.error({ event: 'DB_CONNECT_FAIL', err }, 'Prisma connection failed'));
   } catch (err) {
-    console.error("Critical Failure:", err);
+    logger.error({ event: 'BOOT_CRITICAL_FAIL', err }, 'Critical infrastructure failure at startup');
     process.exit(1);
   }
 };
@@ -148,7 +151,7 @@ const PORT: number = parseInt(process.env.PORT || "8080", 10);
 const HOST: string = process.env.HOST || "0.0.0.0";
 
 app.listen(PORT, HOST, () => {
-  console.log(`🚀 Orchestrator running on http://${HOST}:${PORT}`);
+  logger.info({ event: 'SERVER_START', host: HOST, port: PORT }, 'Orchestrator is listening');
   if (process.env.NODE_ENV !== "production") {
     checkPythonConnection();
   }

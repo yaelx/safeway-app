@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { RoutingService } from "../services/routingService";
 import { IRoutingRequest } from "../types/types";
+import { logger } from "../middleware/logger";
 
 export class RoutingController {
   constructor(private routingService: RoutingService) {}
@@ -17,7 +18,7 @@ export class RoutingController {
 
       return res.status(200).json(result);
     } catch (error: any) {
-      console.error("Error evaluating route:", error);
+      logger.error({ event: 'ROUTE_EVAL_ERROR', start, end, err: error }, 'Failed to evaluate safe route');
       return res.status(500).json({ error: error.message });
     }
   }

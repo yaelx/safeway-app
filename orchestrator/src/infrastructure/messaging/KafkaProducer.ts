@@ -1,5 +1,6 @@
 import { Kafka, Producer, CompressionTypes, Partitioners } from "kafkajs";
 import { IKafkaProducer } from "./types";
+import { logger } from "../../middleware/logger";
 
 interface KafkaTopics {
   requestTopic: string;
@@ -24,9 +25,9 @@ export class KafkaProducer implements IKafkaProducer {
     try {
       await this.producer.connect();
       this.isConnected = true;
-      console.log("✅ Kafka Producer initialized and connected");
+      logger.info({ event: 'KAFKA_PRODUCER_CONNECTED' }, 'Kafka Producer initialized and connected');
     } catch (error) {
-      console.error("❌ Kafka Connection Error:", error);
+      logger.error({ event: 'KAFKA_PRODUCER_CONNECT_ERROR', err: error }, 'Kafka Producer failed to connect');
       throw error;
     }
   }
@@ -36,9 +37,9 @@ export class KafkaProducer implements IKafkaProducer {
     try {
       await this.producer.disconnect();
       this.isConnected = false;
-      console.log("🔌 Kafka Producer disconnected safely");
+      logger.info({ event: 'KAFKA_PRODUCER_DISCONNECTED' }, 'Kafka Producer disconnected gracefully');
     } catch (error) {
-      console.error("❌ Kafka Disconnect Error:", error);
+      logger.error({ event: 'KAFKA_PRODUCER_DISCONNECT_ERROR', err: error }, 'Kafka Producer failed to disconnect cleanly');
       throw error;
     }
   }

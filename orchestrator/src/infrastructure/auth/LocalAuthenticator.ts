@@ -1,5 +1,6 @@
 import { GoogleAuth } from "google-auth-library";
 import { IAuthenticator } from "./IAuthenticator";
+import { logger } from "../../middleware/logger";
 
 export class LocalAuthenticator implements IAuthenticator {
   private auth: GoogleAuth;
@@ -34,7 +35,7 @@ export class LocalAuthenticator implements IAuthenticator {
     } catch (err) {
       const msg =
         "Local Auth Failed: Ensure GOOGLE_APPLICATION_CREDENTIALS is set.";
-      console.error(msg);
+      logger.error({ event: 'IAM_TOKEN_FAIL', err }, msg);
       throw new Error(msg);
     }
   }

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { logger } from "../middleware/logger";
 import xss from "xss";
 import sharp from "sharp";
 import * as fs from "fs";
@@ -13,11 +14,7 @@ export class ContactService {
   private transporter;
 
   constructor() {
-    console.log(
-      "\nContactService: \n",
-      process.env.EMAIL_USER,
-      process.env.EMAIL_PASS,
-    );
+    logger.info({ event: 'SMTP_INIT', emailUserConfigured: !!process.env.EMAIL_USER }, 'ContactService initializing SMTP transport');
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -74,7 +71,7 @@ export class ContactService {
 
     // If this field is filled, it's 100% a bot because the field is hidden from humans.
     if (data.honeypot && data.honeypot.length > 0) {
-      console.log("[Security] Bot detected and ignored via Honeypot.");
+      logger.warn({ event: 'BOT_HONEYPOT_TRIGGERED' }, 'Bot request blocked via honeypot field');
       return { success: true }; // "Fake" success
     }
 
@@ -114,7 +111,7 @@ export class ContactService {
 
       return { success: true, message: "Emails sent." };
     } catch (error) {
-      console.error("[ContactService] Error:", error);
+      logger.error({ event: 'EMAIL_DISPATCH_FAIL', err: error }, 'Failed to send contact emails');
       throw new Error("Dispatch failed.");
     }
   }

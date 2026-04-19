@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import { logger } from "../../middleware/logger";
 
 export class RedisCache {
   private redis: Redis;
@@ -28,7 +29,7 @@ export class RedisCache {
     try {
       return await this.redis.get(key);
     } catch (error) {
-      console.error("[Cache] Redis Get Error:", error);
+      logger.error({ event: 'CACHE_GET_RAW_ERROR', err: error }, 'Redis getRaw failed');
       return null;
     }
   }
@@ -40,7 +41,7 @@ export class RedisCache {
     try {
       await this.redis.set(key, data, { ex: ttl });
     } catch (error) {
-      console.error("[Redis] Set Error:", error);
+      logger.error({ event: 'CACHE_SET_RAW_ERROR', err: error }, 'Redis setRaw failed');
     }
   }
 
@@ -62,12 +63,12 @@ export class RedisCache {
     try {
       const data = await this.redis.get(key);
       if (data) {
-        console.log(`[Cache] HIT for key: ${key}`);
+        logger.info({ event: 'CACHE_ROUTE_HIT', cacheKey: key }, 'Route retrieved from Redis cache');
         return data;
       }
       return null;
     } catch (error) {
-      console.error("[Cache] Redis Get Error:", error);
+      logger.error({ event: 'CACHE_GET_ROUTE_ERROR', cacheKey: key, err: error }, 'Redis getRoute failed');
       return null; // Fail gracefully: if cache is down, we just call the Python server
     }
   }
@@ -80,9 +81,9 @@ export class RedisCache {
     const key = this.generateKey(start, end);
     try {
       await this.redis.set(key, data, { ex: this.DEFAULT_TTL });
-      console.log(`[Cache] SET successful for key: ${key}`);
+      logger.info({ event: 'CACHE_ROUTE_SET', cacheKey: key }, 'Route written to Redis cache');
     } catch (error) {
-      console.error("[Cache] Redis Set Error:", error);
+      logger.error({ event: 'CACHE_SET_ROUTE_ERROR', cacheKey: key, err: error }, 'Redis setRoute failed');
     }
   }
 }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logger } from "../middleware/logger";
 import * as polyline from "@mapbox/polyline";
 import { PrismaClient } from "@prisma/client";
 import { fetchSheltersNearPath } from "./osmService";
@@ -41,17 +42,17 @@ export class RoutingService {
     if (!enabled) return [];
 
     try {
-      console.log("📡 Fetching live shelters from OSM Overpass...");
+      logger.info({ event: 'OSM_FETCH_START' }, 'Fetching live shelters from OSM Overpass');
       return await fetchSheltersNearPath(routePoints);
     } catch (error) {
-      console.warn("⚠️ OSM Fetch failed, proceeding with local database only.");
+      logger.warn({ event: 'OSM_FETCH_FAIL', err: error }, 'OSM fetch failed, falling back to local database');
       return [];
     }
   }
 
   async getSafeRoutes(start: string, end: string, useLiveOsm: boolean = false) {
     let osrmRoutes: any;
-    console.log("\nReceiced new getSafeRoutes request");
+    logger.info({ event: 'SAFE_ROUTE_REQUEST', start, end }, 'Received getSafeRoutes request');
     // start is "34.123,32.456"
     const startCoords = this.parseCoords(start);
     const endCoords = this.parseCoords(end);
@@ -67,13 +68,13 @@ export class RoutingService {
       const routeUrl = `${API_PATHS.OSRM_ROUTE}${start};${end}?alternatives=true&overview=full&geometries=polyline&steps=true&annotations=true`;
       const routeRes = await axios.get(routeUrl);
       osrmRoutes = routeRes.data;
-      console.log("OSRM routes response length:", osrmRoutes.routes.length);
+      logger.info({ event: 'OSRM_RESPONSE', routeCount: osrmRoutes.routes.length }, 'OSRM returned routes');
 
       if (!osrmRoutes.routes || osrmRoutes.routes.length === 0) {
         throw new Error("OSRM returned no routes for this path.");
       }
     } catch (error: any) {
-      console.error("OSRM API Error:", error.message);
+      logger.error({ event: 'OSRM_API_ERROR', err: error }, 'OSRM API request failed');
       throw new Error("Failed to fetch routes from navigation service.");
     }
 
@@ -151,7 +152,7 @@ export class RoutingService {
         message: "Your routes are being analyzed for safety.",
       };
     } catch (error) {
-      console.error("Kafka Pipeline Error:", error);
+      logger.error({ event: 'KAFKA_PUBLISH_FAIL', requestId, err: error }, 'Failed to enqueue route request to Kafka');
       throw new Error("Safety Engine is temporarily offline.");
     }
   }

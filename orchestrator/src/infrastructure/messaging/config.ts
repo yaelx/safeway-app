@@ -1,5 +1,7 @@
 import { Kafka, SASLOptions } from "kafkajs";
 import dotenv from "dotenv";
+import { logger } from "../../middleware/logger";
+
 
 dotenv.config();
 
@@ -34,8 +36,9 @@ export const kafkaClient = isKafkaConfigured
   : null;
 
 if (!kafkaClient) {
-  console.error(
-    "❌ Kafka configuration is incomplete. Messaging features will be disabled.",
+  logger.warn(
+    { event: 'KAFKA_CONFIG_MISSING', hasBroker: !!brokerStr, hasUsername: !!username, hasPassword: !!password },
+    'Kafka configuration is incomplete — messaging features will be disabled',
   );
 }
 
