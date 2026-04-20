@@ -6,18 +6,21 @@ import subprocess
 import functools
 import threading
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from confluent_kafka import Consumer, Producer
 from solver import analyze_route_segments
 from schemas.models import SafetyRequest
 from utils.logger import logger
 from utils.decorators import timer
+from utils.exception_handlers import RequestIdMiddleware, global_exception_handler
 
 # --- 1. SETUP ---
 OSRM_READY = False
 
 # --- 2. TINY FASTAPI FOR CLOUD RUN HEALTH CHECKS ---
 app = FastAPI()
+app.add_middleware(RequestIdMiddleware)
+app.add_exception_handler(Exception, global_exception_handler)
 
 
 @timer

@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from solver import calculate_safety_for_geometry, analyze_route_segments
 from schemas.models import SafetyRequest
 from utils.logger import logger
+from utils.exception_handlers import RequestIdMiddleware, global_exception_handler
 
 
 OSRM_READY = False
@@ -24,6 +25,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Attach request-ID middleware so every handler and the exception handler
+# can access request.state.request_id for log correlation.
+app.add_middleware(RequestIdMiddleware)
+
+# --- GLOBAL EXCEPTION HANDLER ---
+# Catches any exception that escapes a route handler.
+# Logs the full trace internally; returns a clean error to the client.
+app.add_exception_handler(Exception, global_exception_handler)
 
 # --- START OSRM SUBPROCESS ---
 # This launches the C++ engine using the data "baked" in the Dockerfile
