@@ -2,12 +2,13 @@
 from schemas.models import RouteData
 import numpy as np
 import os
-import logging
 import polyline
 from typing import List, Dict, Any
 from schemas.models import SafetyRequest, RouteStep, SegmentAnalysis, Shelter, RoutePoint
 from pathlib import Path
 from dotenv import load_dotenv
+from utils.logger import logger
+from utils.decorators import timer
 
 # 1. Try to load .env only if it exists (Local Development)
 env_path = Path(__file__).resolve().parent / '.env'
@@ -24,9 +25,6 @@ SAFE_THRESHOLD_METERS = 500.0
 EARTH_RADIUS_KM = 6371.0
 SAFE_DISTANCE_KM = SAFE_THRESHOLD_METERS / 1000.0
     
-# Set up logging to show in the terminal
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def vectorized_haversine(route_pts: np.ndarray, shelter_pts: np.ndarray) -> np.ndarray:
@@ -82,6 +80,7 @@ def calculate_safety_for_geometry(coords: List[List[float]], shelters: List[Shel
         })
     return {"score": round(score, 2), "report": report}
 
+@timer
 def analyze_route_segments(route_data: RouteData, shelters: List[Shelter]):
     """
     Calculates safety for ONE route by breaking it into 
