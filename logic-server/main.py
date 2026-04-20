@@ -1,11 +1,9 @@
 # main.py
-from utils import generate_route_id
+from utils.utils import generate_route_id
 from typing import List
 import subprocess
 import os
 import uvicorn
-import hashlib
-import json
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from solver import calculate_safety_for_geometry, analyze_route_segments

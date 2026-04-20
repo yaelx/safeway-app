@@ -1,7 +1,6 @@
 # solver.py
 from schemas.models import RouteData
 import numpy as np
-import os
 import polyline
 from typing import List, Dict, Any
 from schemas.models import SafetyRequest, RouteStep, SegmentAnalysis, Shelter, RoutePoint

@@ -1,18 +1,20 @@
 import time
-from utils import generate_route_id
+from utils.utils import generate_route_id
 import os
 import json
 import subprocess
-import functools
 import threading
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from confluent_kafka import Consumer, Producer
+from confluent_kafka.admin import AdminClient
 from solver import analyze_route_segments
 from schemas.models import SafetyRequest
 from utils.logger import logger
 from utils.decorators import timer
 from utils.exception_handlers import RequestIdMiddleware, global_exception_handler
+from utils.kafka_config import get_kafka_config
 
 # --- 1. SETUP ---
 OSRM_READY = False
@@ -27,6 +29,36 @@ app.add_exception_handler(Exception, global_exception_handler)
 @app.get("/health")
 async def health():
     return {"status": "online", "engine": "OSRM MLD Active", "osrm_ready": OSRM_READY}
+
+
+@app.get("/ready", include_in_schema=False)
+async def readiness_check():
+    """
+    Readiness probe consumed by Cloud Run / load balancers.
+    Returns 200 only when ALL dependencies are confirmed reachable.
+    Never included in the public OpenAPI schema.
+    """
+    # --- 1. OSRM check ---
+    if not OSRM_READY:
+        logger.warning('readiness_failed', component='osrm', reason='osrm_not_initialised')
+        return JSONResponse(
+            status_code=503,
+            content={'status': 'not_ready', 'component': 'osrm', 'detail': 'OSRM engine not initialised'},
+        )
+
+    # --- 2. Kafka lightweight check ---
+    # AdminClient.list_topics() sends a single metadata request ; no consumer group is created.
+    try:
+            conf = get_kafka_config()
+            # AdminClient needs basic config; we strip consumer-specific keys for safety
+            admin_conf = {k: v for k, v in conf.items() if k not in ['group.id', 'auto.offset.reset']}
+            admin_conf['socket.timeout.ms'] = 3000
+            
+            admin = AdminClient(admin_conf)
+            admin.list_topics(timeout=3)
+            return {"status": "ready"}
+    except Exception:
+        return JSONResponse(status_code=503, content={'status': 'not_ready', 'detail': 'Kafka unreachable'})
 
 
 def handle_admin(payload):
@@ -81,38 +113,8 @@ TASK_MAP = {
 # --- 3. KAFKA CORE ---
 @timer
 def run_kafka_consumer():
-# Fetch variables
-    brokers = os.getenv('KAFKA_BROKERS')
-    username = os.getenv('KAFKA_USERNAME')
-    password = os.getenv('KAFKA_PASSWORD')
-    ca_cert = os.getenv('KAFKA_CA_CERT')
-    if ca_cert and "\\n" in ca_cert:
-        ca_cert = ca_cert.replace("\\n", "\n")
-
-    # SENIOR CHECK: Validate before creating the consumer
-    if not all([brokers, username, password]):
-        logger.error(
-            'kafka_secrets_missing',
-            has_brokers=bool(brokers),
-            has_username=bool(username),
-            has_password=bool(password),
-        )
-        return
-
-    conf = {
-        'bootstrap.servers': brokers,
-        'security.protocol': 'SASL_SSL',
-        'sasl.mechanism': 'SCRAM-SHA-256',
-        'sasl.username': username,
-        'sasl.password': password,
-        'ssl.ca.pem': ca_cert,
-        'group.id': 'CONSUMER_GROUP_ID',
-        'auto.offset.reset': 'earliest',
-        'ssl.endpoint.identification.algorithm': 'none',
-        'api.version.request': True,
-        'enable.ssl.certificate.verification': True
-    }
-
+    conf = get_kafka_config()
+    conf.update({'group.id': 'CONSUMER_GROUP_ID', 'auto.offset.reset': 'earliest'})
     consumer = Consumer(conf)
     producer = Producer(conf)
     
