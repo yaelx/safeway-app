@@ -6,6 +6,7 @@ import subprocess
 import threading
 import uvicorn
 from fastapi import FastAPI, Request
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi.responses import JSONResponse
 from confluent_kafka import Consumer, Producer
 from confluent_kafka.admin import AdminClient
@@ -24,6 +25,13 @@ app = FastAPI()
 app.add_middleware(RequestIdMiddleware)
 app.add_exception_handler(Exception, global_exception_handler)
 
+instrumentator = Instrumentator(
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=[".*admin.*", "/health", "/ready", "/metrics"], # Don't monitor your probes
+)
+instrumentator.instrument(app).expose(app, endpoint="/metrics")
 
 @timer
 @app.get("/health")
