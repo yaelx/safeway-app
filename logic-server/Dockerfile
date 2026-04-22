@@ -1,10 +1,13 @@
 # 1. Start with the official OSRM image
-FROM ghcr.io/project-osrm/osrm-backend:latest
+# for the OSRM start-up info. v6.0.0 is a safe bet based on your logs.
+FROM ghcr.io/project-osrm/osrm-backend:v6.0.0
 
 # 2. Fix the pyexpat error and install build tools
+# 2. Fix the pyexpat error by installing expat explicitly and first
 RUN apk update && \
     apk add --no-cache --upgrade expat && \
     apk add --no-cache \
+    curl \
     python3 \
     py3-pip \
     python3-dev \
@@ -16,19 +19,24 @@ RUN apk update && \
 
 WORKDIR /app
 
-# 3. Path setup for OSRM
-RUN ln -s /usr/local/bin/osrm-routed /usr/bin/osrm-routed || true
+# 2. Use a Virtual Environment to avoid --break-system-packages
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# 4. Install requirements 
-# (Make sure requirements.txt has confluent-kafka==2.3.0)
+# 3. Install requirements
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir --upgrade setuptools wheel cython --break-system-packages && \
-    pip3 install --no-cache-dir -r requirements.txt --break-system-packages
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy code and data
+# 4. Ensure data directory exists
+RUN mkdir -p /app/data
+
+# 5. Copy code
 COPY . .
 
-ENV PORT 8080
+# 6. Runtime settings
+ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
-CMD ["python3", "-u", "worker.py"]
+CMD ["python3", "worker.py"]

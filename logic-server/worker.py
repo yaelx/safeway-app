@@ -1,3 +1,5 @@
+import socket
+import sys
 import time
 from utils.utils import generate_route_id
 import os
@@ -19,6 +21,9 @@ from utils.kafka_config import get_kafka_config
 
 # --- 1. SETUP ---
 OSRM_READY = False
+KAFKA_HEALTHY = True
+OSRM_PORT = int(os.environ.get("OSRM_PORT", 5000))
+OSRM_HOST = "127.0.0.1"
 
 # --- 2. TINY FASTAPI FOR CLOUD RUN HEALTH CHECKS ---
 app = FastAPI()
@@ -124,7 +129,8 @@ def run_kafka_consumer():
     conf = get_kafka_config()
     conf.update({'group.id': 'CONSUMER_GROUP_ID', 'auto.offset.reset': 'earliest'})
     consumer = Consumer(conf)
-    producer = Producer(conf)
+    producer_conf = {k: v for k, v in conf.items() if k not in ['group.id', 'auto.offset.reset']}
+    producer = Producer(producer_conf)
     
     # Listen to BOTH topics
     consumer.subscribe(list(TASK_MAP.keys()))
@@ -169,10 +175,11 @@ def run_kafka_consumer():
                     logger.warning('no_handler_for_topic', topic=topic)
 
             except Exception as e:
+                global KAFKA_HEALTHY
+                KAFKA_HEALTHY = False
                 logger.error('consumer_loop_error', exc_info=True)
     finally:
         consumer.close()
-
 
 
 # --- 4. OSRM ENGINE START ---
@@ -181,8 +188,8 @@ def start_osrm():
     # This is the verified path in the Alpine OSRM image
     executable = "/usr/local/bin/osrm-routed" 
     map_path = "/app/data/israel-and-palestine-latest.osrm"
-
     osrm_args = [executable, "--algorithm", "mld", map_path]
+    max_retries = 30
 
     try:
         logger.info('osrm_start', executable=executable)
@@ -192,17 +199,28 @@ def start_osrm():
             stdout=None, 
             stderr=None
         )
-        
-        time.sleep(5) 
-        
-        if process.poll() is None:
-            logger.info('osrm_ready')
-            OSRM_READY = True
-        else:
-            logger.error('osrm_failed', exit_code=process.poll())
+
+        for i in range(max_retries):
+            # Check if process crashed immediately
+            if process.poll() is not None:
+                logger.error('osrm_crashed', exit_code=process.poll())
+                sys.exit(1)
             
+            # Try to connect to the OSRM port (default 5000)
+            try:
+                with socket.create_connection((OSRM_HOST, OSRM_PORT), timeout=1):
+                    logger.info('osrm_ready', attempt=i)
+                    OSRM_READY = True
+                    return # Success!
+            except (ConnectionRefusedError, OSError):
+                time.sleep(1) # Wait 1 second before retrying
+        
+        logger.error('osrm_timeout_reached')
+        sys.exit(1)
+        
     except Exception as e:
-        logger.error('osrm_launch_error', exc_info=True)
+        logger.error('osrm_launch_exception', exc_info=True)
+        sys.exit(1)
 
 
 # --- 5. EXECUTION ENTRYPOINT ---

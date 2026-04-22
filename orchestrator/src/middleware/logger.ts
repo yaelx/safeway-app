@@ -6,9 +6,9 @@ export const asyncStorage = new AsyncLocalStorage<Map<string, string>>();
 
 export const logger = pino({
   mixin() {
-    // This automatically adds the requestId to EVERY log line
+    // Extracts the ID from the isolated scope (built for each request) to label logs.
     const store = asyncStorage.getStore();
-    return { requestId: store?.get("requestId") };
+    return { requestId: store?.get("requestId") || "NO_REQUEST_ID" };
   },
   base: { service: "safeway-orchestrator" },
 });
