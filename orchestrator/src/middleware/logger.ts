@@ -5,10 +5,20 @@ import { AsyncLocalStorage } from "async_hooks";
 export const asyncStorage = new AsyncLocalStorage<Map<string, string>>();
 
 export const logger = pino({
-  mixin() {
-    // Extracts the ID from the isolated scope (built for each request) to label logs.
-    const store = asyncStorage.getStore();
-    return { requestId: store?.get("requestId") || "NO_REQUEST_ID" };
+  // This ensures the level value (e.g., 'info') is converted to 'INFO'
+  formatters: {
+    level(label, number) {
+      return { severity: label.toUpperCase() };
+    },
   },
+
+  mixin(_context, level) {
+    const store = asyncStorage.getStore();
+    const requestId = store?.get("requestId") || "NO_REQUEST_ID";
+    return {
+      requestId,
+    };
+  },
+  messageKey: "message",
   base: { service: "safeway-orchestrator" },
 });

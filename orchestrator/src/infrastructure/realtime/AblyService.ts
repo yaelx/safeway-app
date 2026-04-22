@@ -11,7 +11,10 @@ export class AblyService implements IRealtimeService {
   constructor() {
     const apiKey = process.env.ABLY_API_KEY;
     if (!apiKey) {
-      logger.warn({ event: 'ABLY_KEY_MISSING' }, 'ABLY_API_KEY is not set — real-time updates will not work');
+      logger.warn(
+        { event: "ABLY_KEY_MISSING" },
+        "ABLY_API_KEY is not set — real-time updates will not work",
+      );
     }
     this.rest = new Ably.Rest({ key: apiKey });
   }
@@ -21,9 +24,15 @@ export class AblyService implements IRealtimeService {
       const channel = this.rest.channels.get(`route-status:${requestId}`);
       // The REST publish is a simple HTTP request
       await channel.publish(eventName, data);
-      logger.info({ event: 'ABLY_PUBLISH_OK', requestId, eventName }, 'Ably event published successfully');
+      logger.info(
+        { event: "ABLY_PUBLISH_OK", requestId, eventName },
+        `Ably published successfully event: ${eventName}`,
+      );
     } catch (error) {
-      logger.error({ event: 'ABLY_PUBLISH_ERROR', requestId, eventName, err: error }, 'Ably publish failed');
+      logger.error(
+        { event: "ABLY_PUBLISH_ERROR", requestId, eventName, err: error },
+        "Ably publish failed",
+      );
     }
   }
 
