@@ -178,6 +178,22 @@ To quantify the impact, I profiled the `get-safe-route` endpoint. The results sh
 
 ---
 
+## System Observability & Monitoring
+To ensure reliability and performance in an event-driven architecture, I implemented a robust, full-stack observability pipeline. This allows for real-time tracking of route requests, processing times, and system health across the Node.js orchestrator and Python workers.
+
+### The Telemetry Pipeline
+* Structured Logging: Both Node.js and Python services are instrumented with structured logging to capture granular execution data.
+* Log Aggregation: All service logs are ingested and stored in Google Cloud Logging for centralized analysis.
+* Data Pipeline: Logs are exported to BigQuery via logging sinks to enable advanced querying and trend analysis of routing data.
+* Visualization: A dedicated Grafana Dashboard connects to BigQuery, providing real-time visual monitoring of Kafka throughput, service-specific latency, and routing safety metrics.
+
+### Monitoring Capabilities
+* Message Flow: Full end-to-end tracing of messages as they traverse the Aiven Kafka brokers.
+* Latency Tracking: Real-time monitoring of response times for the Python-based OSRM engine, allowing for proactive scaling.
+* WebSocket Health: Monitoring connection status and latency for the Ably-based real-time delivery layer.
+
+---
+
 ## Future Roadmap
 * [x] OSRM Cloud Deployment: Dedicated Israel map engine on GCP.
 * [x] Distributed Caching: Redis integration for high-traffic routes.
