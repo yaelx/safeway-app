@@ -1,27 +1,77 @@
+import socket
+import sys
 import time
-from utils import generate_route_id
+from utils.utils import generate_route_id
 import os
 import json
-import logging
 import subprocess
 import threading
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from prometheus_fastapi_instrumentator import Instrumentator
+from fastapi.responses import JSONResponse
 from confluent_kafka import Consumer, Producer
+from confluent_kafka.admin import AdminClient
 from solver import analyze_route_segments
 from schemas.models import SafetyRequest
+from utils.logger import logger
+from utils.decorators import timer
+from utils.exception_handlers import RequestIdMiddleware, global_exception_handler
+from utils.kafka_config import get_kafka_config
 
-# --- 1. SETUP & LOGGING ---
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# --- 1. SETUP ---
 OSRM_READY = False
+KAFKA_HEALTHY = True
+OSRM_PORT = int(os.environ.get("OSRM_PORT", 5000))
+OSRM_HOST = "127.0.0.1"
 
 # --- 2. TINY FASTAPI FOR CLOUD RUN HEALTH CHECKS ---
 app = FastAPI()
+app.add_middleware(RequestIdMiddleware)
+app.add_exception_handler(Exception, global_exception_handler)
 
+instrumentator = Instrumentator(
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=[".*admin.*", "/health", "/ready", "/metrics"], # Don't monitor your probes
+)
+instrumentator.instrument(app).expose(app, endpoint="/metrics")
+
+@timer
 @app.get("/health")
 async def health():
     return {"status": "online", "engine": "OSRM MLD Active", "osrm_ready": OSRM_READY}
+
+
+@app.get("/ready", include_in_schema=False)
+async def readiness_check():
+    """
+    Readiness probe consumed by Cloud Run / load balancers.
+    Returns 200 only when ALL dependencies are confirmed reachable.
+    Never included in the public OpenAPI schema.
+    """
+    # --- 1. OSRM check ---
+    if not OSRM_READY:
+        logger.warning('readiness_failed', component='osrm', reason='osrm_not_initialised')
+        return JSONResponse(
+            status_code=503,
+            content={'status': 'not_ready', 'component': 'osrm', 'detail': 'OSRM engine not initialised'},
+        )
+
+    # --- 2. Kafka lightweight check ---
+    # AdminClient.list_topics() sends a single metadata request ; no consumer group is created.
+    try:
+            conf = get_kafka_config()
+            # AdminClient needs basic config; we strip consumer-specific keys for safety
+            admin_conf = {k: v for k, v in conf.items() if k not in ['group.id', 'auto.offset.reset']}
+            admin_conf['socket.timeout.ms'] = 3000
+            
+            admin = AdminClient(admin_conf)
+            admin.list_topics(timeout=3)
+            return {"status": "ready"}
+    except Exception:
+        return JSONResponse(status_code=503, content={'status': 'not_ready', 'detail': 'Kafka unreachable'})
 
 
 def handle_admin(payload):
@@ -30,18 +80,22 @@ def handle_admin(payload):
     return {"admin_status": f"Processed {action} successfully"}
 
 # --- 2. TASK HANDLERS ---
+@timer
 def handle_routing(payload: dict):
     """
     Business logic for route evaluation.
     Expects payload_dict containing 'requestId', 'routes', and 'shelterData'.
     """
+    request_id = payload.get("requestId", "unknown")
+    log = logger.bind(requestId=request_id)
     try:
         request_obj = SafetyRequest.model_validate(payload)
     except Exception as e:
-        logger.error(f"Validation Error: {e}")
+        log.error('validation_error', exc_info=True)
         return {"status": "error", "message": str(e)}
         
     all_route_comparisons = []
+    log.info('analyzing_routes', count=len(request_obj.routes))
     
     for route_item in request_obj.routes:
         analysis = analyze_route_segments(route_item, request_obj.shelterData)
@@ -60,7 +114,7 @@ def handle_routing(payload: dict):
     # 4. Sort by highest safety score
     all_route_comparisons.sort(key=lambda x: x["safetyScore"], reverse=True)
 
-    return {"requestId": request_obj.requestId, "routes": all_route_comparisons, "totalFound": len(all_route_comparisons), "timestamp": request_obj.timestamp, "status": "completed"}
+    return {"requestId": request_id, "routes": all_route_comparisons, "totalFound": len(all_route_comparisons), "timestamp": request_obj.timestamp, "status": "completed"}
 
 
 # The Task Map links Topics to Functions
@@ -70,36 +124,13 @@ TASK_MAP = {
 }
 
 # --- 3. KAFKA CORE ---
+@timer
 def run_kafka_consumer():
-# Fetch variables
-    brokers = os.getenv('KAFKA_BROKERS')
-    username = os.getenv('KAFKA_USERNAME')
-    password = os.getenv('KAFKA_PASSWORD')
-    ca_cert = os.getenv('KAFKA_CA_CERT')
-    if ca_cert and "\\n" in ca_cert:
-        ca_cert = ca_cert.replace("\\n", "\n")
-
-    # SENIOR CHECK: Validate before creating the consumer
-    if not all([brokers, username, password]):
-        logger.error(f"CRITICAL: Missing Kafka Secrets! Brokers: {bool(brokers)}, User: {bool(username)}, Pass: {bool(password)}")
-        return # Stop execution here so we don't crash with the KafkaException
-
-    conf = {
-        'bootstrap.servers': brokers,
-        'security.protocol': 'SASL_SSL',
-        'sasl.mechanism': 'SCRAM-SHA-256',
-        'sasl.username': username,
-        'sasl.password': password,
-        'ssl.ca.pem': ca_cert,
-        'group.id': 'CONSUMER_GROUP_ID',
-        'auto.offset.reset': 'earliest',
-        'ssl.endpoint.identification.algorithm': 'none',
-        'api.version.request': True,
-        'enable.ssl.certificate.verification': True
-    }
-
+    conf = get_kafka_config()
+    conf.update({'group.id': 'CONSUMER_GROUP_ID', 'auto.offset.reset': 'earliest'})
     consumer = Consumer(conf)
-    producer = Producer(conf)
+    producer_conf = {k: v for k, v in conf.items() if k not in ['group.id', 'auto.offset.reset']}
+    producer = Producer(producer_conf)
     
     # Listen to BOTH topics
     consumer.subscribe(list(TASK_MAP.keys()))
@@ -114,24 +145,24 @@ def run_kafka_consumer():
                 decoded_msg = msg.value().decode('utf-8')
                 # 2. Skip empty messages (Tombstones)
                 if not decoded_msg or decoded_msg.strip() == "":
-                    logger.warning("Received empty message. Skipping.")
+                    logger.warning('empty_message_received')
                     continue
 
                 try:
                     raw_data = json.loads(decoded_msg)
     
                 except json.JSONDecodeError:
-                    logger.error(f"MALFORMED JSON: Received raw string: {decoded_msg}")
+                    logger.error('malformed_json', raw_preview=decoded_msg[:200])
                     continue
 
                 payload = raw_data.get('payload', raw_data)
                 correlation_id = raw_data.get('correlationId', payload.get('requestId', 'unknown'))
 
                 if payload is None:
-                    logger.warning(f"Message {correlation_id} has no payload. Skipping.")
+                    logger.warning('empty_payload', correlation_id=correlation_id)
                     continue
 
-                logger.info(f"Incoming task on topic: {topic} | ID: {correlation_id}")
+                logger.info('task_received', topic=topic, correlation_id=correlation_id)
 
                 # Execute the correct function based on the topic
                 handler = TASK_MAP.get(topic)
@@ -141,13 +172,14 @@ def run_kafka_consumer():
                     producer.produce('route-results', value=json.dumps(result_data).encode('utf-8'))
                     producer.flush()
                 else:
-                    logger.warning(f"No handler found for topic: {topic}")
+                    logger.warning('no_handler_for_topic', topic=topic)
 
             except Exception as e:
-                logger.error(f"Error in consumer loop: {e}")
+                global KAFKA_HEALTHY
+                KAFKA_HEALTHY = False
+                logger.error('consumer_loop_error', exc_info=True)
     finally:
         consumer.close()
-
 
 
 # --- 4. OSRM ENGINE START ---
@@ -156,28 +188,39 @@ def start_osrm():
     # This is the verified path in the Alpine OSRM image
     executable = "/usr/local/bin/osrm-routed" 
     map_path = "/app/data/israel-and-palestine-latest.osrm"
-
     osrm_args = [executable, "--algorithm", "mld", map_path]
+    max_retries = 30
 
     try:
-        logger.info(f"Alpine Strategy: Launching {executable}")
+        logger.info('osrm_start', executable=executable)
         
         process = subprocess.Popen(
             osrm_args,
             stdout=None, 
             stderr=None
         )
-        
-        time.sleep(5) 
-        
-        if process.poll() is None:
-            logger.info("OSRM Engine is UP.")
-            OSRM_READY = True
-        else:
-            logger.error(f"OSRM failed with code {process.poll()}")
+
+        for i in range(max_retries):
+            # Check if process crashed immediately
+            if process.poll() is not None:
+                logger.error('osrm_crashed', exit_code=process.poll())
+                sys.exit(1)
             
+            # Try to connect to the OSRM port (default 5000)
+            try:
+                with socket.create_connection((OSRM_HOST, OSRM_PORT), timeout=1):
+                    logger.info('osrm_ready', attempt=i)
+                    OSRM_READY = True
+                    return # Success!
+            except (ConnectionRefusedError, OSError):
+                time.sleep(1) # Wait 1 second before retrying
+        
+        logger.error('osrm_timeout_reached')
+        sys.exit(1)
+        
     except Exception as e:
-        logger.error(f"Execution failed: {e}")
+        logger.error('osrm_launch_exception', exc_info=True)
+        sys.exit(1)
 
 
 # --- 5. EXECUTION ENTRYPOINT ---
@@ -191,5 +234,5 @@ if __name__ == "__main__":
 
     # Start FastAPI on the main thread to satisfy Cloud Run
     port = int(os.environ.get("PORT", 8080))
-    logger.info(f"Health check server listening on port {port}")
+    logger.info('health_server_start', port=port)
     uvicorn.run(app, host="0.0.0.0", port=port)

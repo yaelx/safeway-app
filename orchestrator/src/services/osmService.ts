@@ -1,5 +1,6 @@
 import axios from "axios";
 import { RouteShelter } from "../types/types";
+import { logger } from "../middleware/logger";
 
 export async function fetchSheltersNearPath(points: [number, number][]) {
   if (points.length === 0) return [];
@@ -24,7 +25,7 @@ export async function fetchSheltersNearPath(points: [number, number][]) {
   out center;`;
 
   try {
-    console.log("Fetching near path shelters from OSM...");
+    logger.info({ event: 'OSM_QUERY_START' }, 'Fetching near-path shelters from Overpass API');
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
     const response = await axios.get(url);
 
@@ -38,10 +39,10 @@ export async function fetchSheltersNearPath(points: [number, number][]) {
       type: el.tags.type || "",
     }));
 
-    console.log(`Found ${shelters.length} shelters via OSM.`);
+    logger.info({ event: 'OSM_QUERY_DONE', shelterCount: shelters.length }, 'OSM shelter query complete');
     return shelters;
   } catch (err) {
-    console.error("OSM Shelters in bounds Fetch failed, using empty list.");
+    logger.error({ event: 'OSM_QUERY_ERROR', err }, 'OSM Overpass query failed, returning empty shelter list');
     return [];
   }
 }

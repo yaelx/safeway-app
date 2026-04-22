@@ -1,0 +1,98 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/maxScale: '20'
+  labels:
+    cloud.googleapis.com/location: me-west1
+  name: orchestrator
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '3'
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: KAFKA_TOPIC_REQUESTS
+          value: route-requests
+        - name: KAFKA_TOPIC_RESULTS
+          value: route-results
+        - name: KAFKA_MECHANISM
+          value: SCRAM-SHA-256
+        - name: KAFKA_USERNAME
+          value: avnadmin
+        - name: EMAIL_RECEIVER
+          value: safeway.israel@gmail.com
+        - name: EMAIL_USER
+          value: safeway.israel@gmail.com
+        - name: LOGIC_SERVER_URL
+          value: https://safe-route-solver-873550105536.me-west1.run.app
+        - name: IAM_AUDIENCE
+          value: https://safe-route-solver-873550105536.me-west1.run.app
+        - name: ABLY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: ABLY_API_KEY
+        - name: KAFKA_BROKERS
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: KAFKA_BROKERS
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: KAFKA_PASSWORD
+        - name: KAFKA_CA_CERT
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: KAFKA_CA_CERT
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: DATABASE_URL
+        - name: EMAIL_PASS
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: EMAIL_PASS
+        - name: UPSTASH_REDIS_REST_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: UPSTASH_REDIS_REST_TOKEN
+        - name: UPSTASH_REDIS_REST_URL
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: UPSTASH_REDIS_REST_URL
+        - name: GOOGLE_APPLICATION_CREDENTIALS_JSON
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: GOOGLE_APPLICATION_CREDENTIALS_JSON
+        image: me-west1-docker.pkg.dev/safeway-navigation/cloud-run-source-deploy/orchestrator@sha256:f161dc4ccc7946e38b309e67a98df8a3ff0ffc5a06056d4054819ba6144002d7
+        name: orchestrator-1
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+      serviceAccountName: orchestrator-sa@safeway-navigation.iam.gserviceaccount.com
+      timeoutSeconds: 300
+

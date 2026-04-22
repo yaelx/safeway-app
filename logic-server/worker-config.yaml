@@ -1,0 +1,41 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: safeway-logic-worker
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containers:
+      - image: me-west1-docker.pkg.dev/safeway-navigation/cloud-run-source-deploy/safeway-logic-worker
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        env:
+        - name: OSRM_PORT
+          value: "5000"
+        - name: KAFKA_USERNAME
+          value: "avnadmin"
+        - name: KAFKA_MECHANISM
+          value: "SCRAM-SHA-256"
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: KAFKA_PASSWORD
+              key: latest
+
+        - name: KAFKA_BROKERS
+          valueFrom:
+            secretKeyRef:
+              name: KAFKA_BROKERS
+              key: latest
+
+        - name: KAFKA_CA_CERT
+          valueFrom:
+            secretKeyRef:
+              name: KAFKA_CA_CERT
+              key: latest

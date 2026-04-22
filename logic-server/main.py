@@ -1,21 +1,17 @@
 # main.py
-from utils import generate_route_id
+from utils.utils import generate_route_id
 from typing import List
 import subprocess
 import os
-import logging
 import uvicorn
-import hashlib
-import json
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from solver import calculate_safety_for_geometry, analyze_route_segments
 from schemas.models import SafetyRequest
+from utils.logger import logger
+from utils.exception_handlers import RequestIdMiddleware, global_exception_handler
 
 
-# Set up logging to show in the terminal
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 OSRM_READY = False
 
 app = FastAPI()
@@ -27,6 +23,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Attach request-ID middleware so every handler and the exception handler
+# can access request.state.request_id for log correlation.
+app.add_middleware(RequestIdMiddleware)
+
+# --- GLOBAL EXCEPTION HANDLER ---
+# Catches any exception that escapes a route handler.
+# Logs the full trace internally; returns a clean error to the client.
+app.add_exception_handler(Exception, global_exception_handler)
 
 # --- START OSRM SUBPROCESS ---
 # This launches the C++ engine using the data "baked" in the Dockerfile
@@ -34,17 +38,17 @@ app.add_middleware(
 def start_osrm():
     global OSRM_READY
     try:
-        print("DEBUG: Starting OSRM Engine...")
+        logger.info('osrm_start')
         osrm_process = subprocess.Popen([
             "/usr/local/bin/osrm-routed", 
             "--algorithm", "mld", 
             "/app/data/israel-and-palestine-latest.osrm"
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        print("DEBUG: OSRM process initiated.")
+        logger.info('osrm_process_initiated')
 
         OSRM_READY = True
     except Exception as e:
-        print(f"ERROR: Failed to start OSRM: {e}")
+        logger.error('osrm_start_error', exc_info=True)
 
 
 start_osrm()

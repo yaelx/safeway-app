@@ -12,3 +12,5 @@ confluent-kafka==2.3.0
 
 # Environment & Utils
 python-dotenv
+structlog
+prometheus-fastapi-instrumentator

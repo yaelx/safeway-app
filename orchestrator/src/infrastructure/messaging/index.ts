@@ -2,6 +2,7 @@ import { kafkaClient, KAFKA_TOPICS } from "./config";
 import { KafkaProducer } from "./KafkaProducer";
 import { ResultConsumer } from "./ResultConsumer";
 import { ablyService } from "../realtime/AblyService";
+import { logger } from "../../middleware/logger";
 
 const GROUP_ID = "safeway-results-group";
 
@@ -24,18 +25,16 @@ if (kafkaClient) {
 
 export const initMessaging = async () => {
   if (!kafkaRouteProducer || !kafkaRouteConsumer) {
-    console.warn(
-      "⚠️ Skipping messaging initialization: Kafka client is not configured.",
-    );
+    logger.warn({ event: 'MESSAGING_SKIPPED' }, 'Kafka client is not configured — messaging init skipped');
     return;
   }
 
-  console.log("⏳ Initializing Messaging Infrastructure...");
+  logger.info({ event: 'MESSAGING_INIT_START' }, 'Initializing messaging infrastructure');
   try {
     await kafkaRouteProducer.connect();
     await kafkaRouteConsumer.start();
-    console.log("✅ Messaging Infrastructure Online");
+    logger.info({ event: 'MESSAGING_ONLINE' }, 'Messaging infrastructure is online');
   } catch (err) {
-    console.error("❌ Messaging failed to start:", err);
+    logger.error({ event: 'MESSAGING_INIT_ERROR', err }, 'Messaging infrastructure failed to start');
   }
 };
