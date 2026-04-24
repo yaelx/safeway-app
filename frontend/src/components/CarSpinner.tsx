@@ -1,4 +1,4 @@
-const CarsSpinner = () => (
+const CarSpinner = () => (
   <svg
     width="240"
     height="100"
@@ -104,4 +104,4 @@ const CarsSpinner = () => (
   </svg>
 );
 
-export default CarsSpinner;
+export default CarSpinner;

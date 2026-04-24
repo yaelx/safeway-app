@@ -14,7 +14,7 @@ import { NavigationPanel } from "./NavigationPanel";
 import { useRoutingContext } from "../context/RoutingContext";
 import { RouteData } from "../types/types";
 import { useShelters } from "../hooks/useShelters";
-import CarsSpinner from "./Carsspinner";
+import CarSpinner from "./CarSpinner";
 
 const DefaultIcon = L.icon({
   iconUrl:
@@ -158,7 +158,7 @@ const ShelterMap: React.FC = () => {
             <LocationMarker markerLocation={startLocation} type="start" />
           )}
 
-          {sheltersLoading && <CarsSpinner />}
+          {sheltersLoading && <CarSpinner />}
 
           {globalShelters.map((s, i) => (
             <UnifiedShelterMarker key={i} shelter={s} />
