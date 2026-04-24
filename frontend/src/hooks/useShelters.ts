@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { API_ENDPOINTS } from "../config/constants";
 import { decodeSecurePayload } from "../utils/security";
 
@@ -26,6 +26,12 @@ export const useShelters = (bounds: any, enabled: boolean) => {
     return decodeSecurePayload(base64, timeKey);
   }, []);
 
+  const boundsKey = useMemo(() => {
+    return bounds
+      ? `${bounds.getSouthWest().lat}-${bounds.getSouthWest().lng}-${bounds.getNorthEast().lat}`
+      : "null";
+  }, [bounds]);
+
   useEffect(() => {
     if (!enabled || !bounds) return;
 
@@ -50,7 +56,7 @@ export const useShelters = (bounds: any, enabled: boolean) => {
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [bounds.toString(), enabled]);
+  }, [boundsKey, enabled]);
 
   return { shelters, loading };
 };
