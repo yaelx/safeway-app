@@ -34,16 +34,6 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [coordinates]);
 
-  // const handleLocateMe = () => {
-  //   locate();
-  //   if (coordinates) {
-  //     setStartLocation({
-  //       coords: { lat: coordinates.lat, lng: coordinates.lng },
-  //       address: "Current Location",
-  //     } as Location);
-  //   }
-  // };
-
   const handleLocateMe = (target: "start" | "end" = "start") => {
     locate();
     if (coordinates) {

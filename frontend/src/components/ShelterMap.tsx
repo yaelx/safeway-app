@@ -8,15 +8,15 @@ import { useLocationState } from "../context/LocationContext";
 import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
-import { API_ENDPOINTS, TileLayerUrl } from "../config/constants";
+import { TileLayerUrl } from "../config/constants";
 import { LocationMarker } from "./LocationMarker";
 import { NavigationPanel } from "./NavigationPanel";
 import { useRoutingContext } from "../context/RoutingContext";
 import { RouteData } from "../types/types";
-import { BRAND_COLORS } from "../theme/theme";
+import { useShelters } from "../hooks/useShelters";
+import CarsSpinner from "./Carsspinner";
 
 const DefaultIcon = L.icon({
-  // Use the direct paths from the node_modules via CDN or public folder
   iconUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
   shadowUrl:
@@ -36,61 +36,15 @@ const userIcon = L.divIcon({
   iconAnchor: [6, 6],
 });
 
-interface DiscoveryProps {
-  onSheltersFetched: (s: any[]) => void;
-  hasSelection: boolean; // True if start or end is set
-}
-
-const ShelterDiscovery = ({
-  onSheltersFetched,
-  hasSelection,
-}: DiscoveryProps) => {
-  const map = useMapEvents({
-    moveend: () => {
-      // We don't fetch here directly anymore
-    },
+const MapBoundsUpdater = ({
+  onBoundsChange,
+}: {
+  onBoundsChange: (b: any) => void;
+}) => {
+  useMapEvents({
+    moveend: (e) => onBoundsChange(e.target.getBounds()),
+    zoomend: (e) => onBoundsChange(e.target.getBounds()),
   });
-
-  useEffect(() => {
-    // 1. EXIT EARLY if no points are selected
-    if (!hasSelection) {
-      console.log("Discovery skipped: No points selected yet.");
-      return;
-    }
-
-    // Only fetch if selection exists AND we are zoomed in enough
-    if (map.getZoom() < 12) {
-      console.log("Zoom in more to see shelters");
-      return;
-    }
-
-    // 2. Setup a timer to fire after 500ms of inactivity
-    const timer = setTimeout(async () => {
-      const bounds = map.getBounds();
-      const payload = {
-        minLat: bounds.getSouthWest().lat,
-        maxLat: bounds.getNorthEast().lat,
-        minLng: bounds.getSouthWest().lng,
-        maxLng: bounds.getNorthEast().lng,
-      };
-
-      try {
-        const res = await fetch(API_ENDPOINTS.SHELTERS_IN_BOUNDS, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        onSheltersFetched(data.shelters || []);
-      } catch (e) {
-        console.error("Discovery error:", e);
-      }
-    }, 800); // 800ms delay is safer for Overpass
-
-    // 3. Cleanup: If the user moves the map again before 800ms, cancel the previous timer
-    return () => clearTimeout(timer);
-  }, [map.getBounds().toString(), hasSelection]); // Only re-run if bounds actually change
-
   return null;
 };
 
@@ -110,7 +64,7 @@ const MapRecenter = ({ location }: { location: L.LatLng | null }) => {
 
 // This component has no UI, it just controls the camera
 const MapController = ({ points }: { points: [number, number][] }) => {
-  const map = useMap(); // This hook ONLY works inside <MapContainer>
+  const map = useMap();
 
   useEffect(() => {
     if (points && points.length > 0) {
@@ -137,7 +91,16 @@ const ShelterMap: React.FC = () => {
   } = useRoutingContext();
   const { coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
-  const { startLocation, endLocation } = useLocationState();
+  const { startLocation } = useLocationState();
+  const [bounds, setBounds] = useState<any>(null);
+  const { shelters, loading: sheltersLoading } = useShelters(
+    bounds,
+    !!startLocation,
+  );
+
+  useEffect(() => {
+    setGlobalShelters(shelters);
+  }, [shelters]);
 
   useEffect(() => {
     if (routeData && routeData.length > 0 && !selectedRoute) {
@@ -178,6 +141,7 @@ const ShelterMap: React.FC = () => {
                 : coordinates
             }
           />
+          <MapBoundsUpdater onBoundsChange={setBounds} />
           <MapController points={decodedPath || []} />
           {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
           {routeData &&
@@ -189,14 +153,12 @@ const ShelterMap: React.FC = () => {
                 onSelectRoute={onSelectRoute}
               />
             ))}
-          <ShelterDiscovery
-            onSheltersFetched={setGlobalShelters}
-            hasSelection={!!startLocation || !!endLocation}
-          />
 
           {startLocation && !routeData && (
             <LocationMarker markerLocation={startLocation} type="start" />
           )}
+
+          {sheltersLoading && <CarsSpinner />}
 
           {globalShelters.map((s, i) => (
             <UnifiedShelterMarker key={i} shelter={s} />

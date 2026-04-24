@@ -45,10 +45,9 @@ export class AblyService implements IRealtimeService {
   }
 
   async createTokenRequest() {
-    // Use 'safeway-user' or pull a real ID from the request if you have auth
+    // change later to a real user id
     return await this.rest.auth.createTokenRequest({
       clientId: "safeway-user",
-      // ttl: 7200000, 2 hours
     });
   }
 }
