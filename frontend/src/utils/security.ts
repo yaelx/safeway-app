@@ -8,8 +8,8 @@ const IV_LENGTH = 12; // bytes
  *  both sides run identical HKDF derivation from timeKey + SECRET_SALT → same 256-bit AES key
  */
 async function deriveKey(timeKey: string): Promise<CryptoKey> {
-  const secretSalt = import.meta.env.VITE_SECRET_SALT ?? "";
-  console.log("🔑 SALT present:", import.meta.env.SECRET_SALT?.length > 0);
+  const secretSalt = import.meta.env.SECRET_SALT ?? "";
+  console.log("🔑 SALT present:", secretSalt.length > 0);
   console.log("🔑 timeKey:", timeKey);
   const rawKey = new TextEncoder().encode(timeKey + secretSalt);
 

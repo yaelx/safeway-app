@@ -9,14 +9,12 @@ import { SafeRoute } from "./SafeRoute";
 import { UserMarker } from "./UserMarker";
 import { UnifiedShelterMarker } from "./UnifiedShelterMarker";
 import { TileLayerUrl } from "../config/constants";
-import { LocationMarker } from "./LocationMarker";
 import { NavigationPanel } from "./NavigationPanel";
 import { useRoutingContext } from "../context/RoutingContext";
 import { RouteData } from "../types/types";
 import { useShelters } from "../hooks/useShelters";
 import CarSpinner from "./CarSpinner";
-import { motion } from "framer-motion";
-import ErrorMessage from "./ErrorMessage";
+import AutoDismissError from "./AutoDismissError";
 
 const DefaultIcon = L.icon({
   iconUrl:
@@ -115,7 +113,9 @@ const ShelterMap: React.FC = () => {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-brand-black">
-      {shelterError && <ErrorMessage message={shelterError} />}
+      {shelterError && (
+        <AutoDismissError message={shelterError} onDismiss={() => {}} />
+      )}
 
       <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
         <TripSearch />

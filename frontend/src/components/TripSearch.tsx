@@ -12,7 +12,7 @@ import { Button } from "@mui/material";
 import { SearchInputWrapper } from "./SearchInputWrapper";
 import { Location } from "../types/types";
 import { useRoutingContext } from "../context/RoutingContext";
-import ErrorMessage from "./ErrorMessage";
+import AutoDismissError from "./AutoDismissError";
 
 interface TripSearchProps {}
 
@@ -43,8 +43,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
     TripSearchStrings.LoadingAnalyzing,
   );
 
-  const handleSharedLocate = () => {
-    if (activeField) handleLocateMe(activeField);
+  const handleSharedLocate = async () => {
+    if (!activeField) return;
+    await handleLocateMe(activeField);
   };
 
   const selectstart = (r: Location) => {
@@ -126,7 +127,10 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
           </motion.div>
         )}
         {(locationError || routingError) && (
-          <ErrorMessage message={locationError || routingError!} />
+          <AutoDismissError
+            message={locationError || routingError!}
+            onDismiss={() => {}}
+          />
         )}
 
         {!expanded ? (
