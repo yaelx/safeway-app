@@ -9,6 +9,8 @@ const IV_LENGTH = 12; // bytes
  */
 async function deriveKey(timeKey: string): Promise<CryptoKey> {
   const secretSalt = import.meta.env.VITE_SECRET_SALT ?? "";
+  console.log("🔑 SALT present:", import.meta.env.SECRET_SALT?.length > 0);
+  console.log("🔑 timeKey:", timeKey);
   const rawKey = new TextEncoder().encode(timeKey + secretSalt);
 
   // Import the raw material
@@ -78,13 +80,31 @@ export async function decodeSecurePayload(
 // For POST responses — reads binary body + X-Key-Time header
 export async function decodeHttpResponse(response: Response): Promise<any> {
   const timeKey = response.headers.get("X-Key-Time");
+  console.log("📦 X-Key-Time header:", timeKey);
   if (!timeKey) throw new Error("Missing X-Key-Time header");
 
   const buffer = await response.arrayBuffer();
+  console.log("📦 Response buffer size:", buffer.byteLength, "bytes");
   const encrypted = new Uint8Array(buffer); // already aligned, no base64 needed
+  console.log("📦 IV (first 12 bytes):", encrypted.slice(0, 12));
 
-  const decryptedBytes = await decryptBytes(encrypted, timeKey);
-  return decode(decryptedBytes); // msgpack decode
+  try {
+    const decryptedBytes = await decryptBytes(encrypted, timeKey);
+    console.log("✅ Decrypted size:", decryptedBytes.byteLength, "bytes");
+    const result = decode(decryptedBytes);
+    console.log(
+      "✅ Decoded:",
+      Array.isArray(result)
+        ? `Array[${result.length}]`
+        : Object.keys(result as any),
+    );
+    return result;
+  } catch (e) {
+    console.error("❌ Decryption failed. timeKey was:", timeKey);
+    console.error("❌ Buffer size was:", buffer.byteLength);
+    console.error("❌ Error:", e);
+    throw e;
+  }
 }
 
 // For Ably messages — timeKey is embedded in the payload (no HTTP headers available)

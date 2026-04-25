@@ -39,7 +39,10 @@ export class ShelterService {
 
       return osmShelters;
     } catch (osmError) {
-      logger.warn({ event: 'OSM_TIMEOUT', err: osmError }, 'Overpass API timed out, returning only database shelters');
+      logger.warn(
+        { event: "OSM_TIMEOUT", err: osmError },
+        "Overpass API timed out, returning only database shelters",
+      );
       // Return what we have from Prisma instead of throwing a 500
       return [];
     }
@@ -52,7 +55,24 @@ export class ShelterService {
     maxLng: number,
     useLiveOsm: boolean = false,
   ) {
-    // 1. Fetch from your Prisma DB
+    const cacheKey = `shelters:bbox:${minLat.toFixed(4)},${minLng.toFixed(4)}:${maxLat.toFixed(4)},${maxLng.toFixed(4)}`;
+
+    try {
+      const cachedShelters = await this.cache.getRaw(cacheKey);
+      if (cachedShelters) {
+        logger.info(
+          { event: "SHELTER_CACHE_HIT", cacheKey },
+          "Retrieved shelters from Redis cache",
+        );
+        return cachedShelters;
+      }
+    } catch (err) {
+      logger.warn(
+        { event: "SHELTER_CACHE_MISS", cacheKey, err },
+        "Redis lookup failed, falling back to OSM and DB",
+      );
+    }
+
     const matchedLocal = await this.prisma.shelter.findMany({
       where: {
         lat: { gte: minLat, lte: maxLat },
@@ -61,26 +81,11 @@ export class ShelterService {
       select: SHELTER_SELECT_FIELDS,
     });
 
-    // If live data isn't requested, return local data immediately (~50ms)
     if (!useLiveOsm) {
+      await this.cache.setRaw(cacheKey, matchedLocal, 3600);
       return matchedLocal;
     }
 
-    // 2. Redis Cache Lookup for OSM Data
-    // We create a specific key for this bounding box
-    const cacheKey = `shelters:bbox:${minLat.toFixed(4)},${minLng.toFixed(4)}:${maxLat.toFixed(4)},${maxLng.toFixed(4)}`;
-
-    try {
-      const cachedShelters = await this.cache.getRaw(cacheKey);
-      if (cachedShelters) {
-        logger.info({ event: 'SHELTER_CACHE_HIT', cacheKey }, 'Retrieved shelters from Redis cache');
-        return cachedShelters;
-      }
-    } catch (err) {
-      logger.warn({ event: 'SHELTER_CACHE_MISS', cacheKey, err }, 'Redis lookup failed, falling back to OSM and DB');
-    }
-
-    // 3. Fetch from OSM if not cached
     const osmShelters = await this.fetchFromOSM(minLat, minLng, maxLat, maxLng);
     const mergedResults = [...matchedLocal, ...osmShelters];
     await this.cache.setRaw(cacheKey, mergedResults, 3600); // Cache for 1 hour
