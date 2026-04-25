@@ -15,6 +15,17 @@ import { useRoutingContext } from "../context/RoutingContext";
 
 interface TripSearchProps {}
 
+const ErrorMessage = ({ message }: { message: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 10 }}
+    className="flex items-center justify-center gap-3 py-2 text-red-600 bg-red-50 rounded-xl mb-4"
+  >
+    <span className="text-xs font-bold tracking-wide uppercase">{message}</span>
+  </motion.div>
+);
+
 export const TripSearch: React.FC<TripSearchProps> = ({}) => {
   const {
     handleLocateMe,
@@ -22,8 +33,14 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
     setStartLocation,
     endLocation,
     setEndLocation,
+    error: locationError,
   } = useLocationState();
-  const { routeData, loading, planTrip, error } = useRoutingContext();
+  const {
+    routeData,
+    loading,
+    planTrip,
+    error: routingError,
+  } = useRoutingContext();
 
   // Use the custom hook for both inputs
   const fromSearch = useAddressSearch();
@@ -119,17 +136,8 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
             </span>
           </motion.div>
         )}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="flex items-center justify-center gap-3 py-2 text-red-600 bg-red-50 rounded-xl mb-4"
-          >
-            <span className="text-xs font-bold tracking-wide uppercase">
-              {error}
-            </span>
-          </motion.div>
+        {(locationError || routingError) && (
+          <ErrorMessage message={locationError || routingError!} />
         )}
 
         {!expanded ? (

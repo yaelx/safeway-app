@@ -11,6 +11,7 @@ interface LocationContextType {
   endLocation: Location | null;
   setStartLocation: (c: Location | null) => void;
   setEndLocation: (c: Location | null) => void;
+  error: string | null;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(
@@ -20,46 +21,46 @@ const LocationContext = createContext<LocationContextType | undefined>(
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { coordinates, loading, locate } = useGeolocation();
+  const { locate, loading, error } = useGeolocation();
   const [startLocation, setStartLocation] = useState<Location | null>(null);
   const [endLocation, setEndLocation] = useState<Location | null>(null);
 
-  // Auto-sync GPS to Start Location once discovered
-  useEffect(() => {
-    if (coordinates && !startLocation && !endLocation) {
-      setStartLocation({
-        coords: { lat: coordinates.lat, lng: coordinates.lng },
-        address: "Current Location",
-      } as Location);
-    }
-  }, [coordinates]);
+  const handleLocateMe = async (target: "start" | "end" = "start") => {
+    try {
+      // 1. Await the locate() call.
+      // Note: If locate() doesn't return a promise, update it to return the LatLng.
+      const pos = await locate();
 
-  const handleLocateMe = (target: "start" | "end" = "start") => {
-    locate();
-    if (coordinates) {
-      const loc = {
-        coords: { lat: coordinates.lat, lng: coordinates.lng },
-        address: "Current Location",
-      } as Location;
+      if (pos) {
+        const loc: Location = {
+          coords: { lat: pos.lat, lng: pos.lng },
+          address: "Current Location",
+        };
 
-      if (target === "start") {
-        setStartLocation(loc);
-      } else {
-        setEndLocation(loc);
+        // 2. Set the state immediately after getting the location
+        if (target === "start") {
+          setStartLocation(loc);
+        } else {
+          setEndLocation(loc);
+        }
       }
+    } catch (err) {
+      console.error("User refused location or GPS error:", err);
+      // Optional: Update global state with error to show a Toast/Alert
     }
   };
 
   return (
     <LocationContext.Provider
       value={{
-        coordinates,
+        coordinates: null,
         loading,
         handleLocateMe,
         startLocation,
         endLocation,
         setStartLocation,
         setEndLocation,
+        error,
       }}
     >
       {children}

@@ -89,9 +89,8 @@ const ShelterMap: React.FC = () => {
     loading,
     statusMessage,
   } = useRoutingContext();
-  const { coordinates } = useLocationState();
+  const { startLocation, coordinates } = useLocationState();
   const [globalShelters, setGlobalShelters] = useState<any[]>([]);
-  const { startLocation } = useLocationState();
   const [bounds, setBounds] = useState<any>(null);
   const { shelters, loading: sheltersLoading } = useShelters(
     bounds,
@@ -133,7 +132,6 @@ const ShelterMap: React.FC = () => {
           zoomControl={false}
         >
           <TileLayer url={TileLayerUrl} />
-
           <MapRecenter
             location={
               startLocation
@@ -153,16 +151,14 @@ const ShelterMap: React.FC = () => {
                 onSelectRoute={onSelectRoute}
               />
             ))}
-
-          {startLocation && !routeData && (
+          {/* {startLocation && !routeData && (
             <LocationMarker markerLocation={startLocation} type="start" />
-          )}
-
+          )} */}
           {sheltersLoading && <CarSpinner />}
-
-          {globalShelters.map((s, i) => (
-            <UnifiedShelterMarker key={i} shelter={s} />
-          ))}
+          {globalShelters &&
+            globalShelters.map((s, i) => (
+              <UnifiedShelterMarker key={i} shelter={s} />
+            ))}
         </MapContainer>
 
         <NavigationPanel />

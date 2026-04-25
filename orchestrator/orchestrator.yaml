@@ -30,9 +30,9 @@ spec:
         - name: EMAIL_USER
           value: safeway.israel@gmail.com
         - name: LOGIC_SERVER_URL
-          value: https://safe-route-solver-873550105536.me-west1.run.app
+          value: https://safeway-logic-worker-873550105536.me-west1.run.app
         - name: IAM_AUDIENCE
-          value: https://safe-route-solver-873550105536.me-west1.run.app
+          value: https://safeway-logic-worker-873550105536.me-west1.run.app
         - name: ABLY_API_KEY
           valueFrom:
             secretKeyRef:

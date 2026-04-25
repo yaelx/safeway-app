@@ -35,26 +35,19 @@ app.use(
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      // 1. Allow requests with no origin (like mobile apps or curl)
       if (!origin) return callback(null, true);
 
-      // 2. Check if the origin is in our static whitelist
       if (allowedOrigins.indexOf(origin) !== -1) {
         return callback(null, true);
       }
 
-      // 3. ALLOW VERCEL PREVIEW URLS
-      // This Regex allows any URL ending in .vercel.app that belongs to your project
+      // ALLOW VERCEL PREVIEW URLS
       const isVercelPreview =
         /^https:\/\/safeway-app-git-.*-yaelxs-projects\.vercel\.app$/.test(
           origin,
         );
+      if (isVercelPreview) return callback(null, true);
 
-      if (isVercelPreview) {
-        return callback(null, true);
-      }
-
-      // 4. INFORMATIVE ERROR: Tell yourself exactly what went wrong
       logger.warn(
         { event: "CORS_BLOCKED", origin },
         "Origin rejected by CORS policy",
@@ -67,9 +60,14 @@ app.use(
       );
     },
     methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Key-Time"],
     credentials: true,
+    optionsSuccessStatus: 200, // Some legacy browsers need this for OPTIONS
   }),
 );
+
+// IMPORTANT: Explicitly handle OPTIONS preflight globally
+app.options("*", cors());
 
 // Trust Proxy - from Google/Vercel IP. so won't block users.
 app.set("trust proxy", 1);
