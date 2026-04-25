@@ -56,9 +56,8 @@ async function fetchWithRetry(bounds: any, signal: AbortSignal): Promise<any> {
 
       const data = await decodeHttpResponse(res);
 
-      // Store in client cache
       shelterCache.set(cacheKey, {
-        shelters: data.shelters ?? [],
+        shelters: Array.isArray(data) ? data : (data.shelters ?? []),
         timestamp: Date.now(),
       });
 
@@ -112,7 +111,12 @@ export const useShelters = (bounds: any, enabled: boolean) => {
       setLoading(true);
       try {
         const data = await fetchWithRetry(bounds, controller.signal);
-        setShelters(data.shelters ?? []);
+        console.log(
+          "🏠 Raw data from fetch:",
+          Array.isArray(data) ? `Array[${data.length}]` : data,
+        );
+        const shelters = Array.isArray(data) ? data : (data.shelters ?? []);
+        setShelters(shelters);
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return; // user panned away — silent
         console.error("Shelter fetch permanently failed:", e);
