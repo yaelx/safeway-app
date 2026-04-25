@@ -2,7 +2,7 @@ import { Kafka, Consumer, EachMessageHandler } from "kafkajs";
 import { IRealtimeService } from "../realtime/types";
 import { IKafkaConsumer } from "./types";
 import { logger } from "../../middleware/logger";
-import { securePayload } from "../../security/obfuscator";
+import { buildAblyMessage, securePayload } from "../../security/obfuscator";
 
 /**
  * Receives result from kafka and publishes it to the frontend via Ably
@@ -32,13 +32,7 @@ export class ResultConsumer implements IKafkaConsumer {
    * @param routes - The routes to publish
    */
   async publishRoutesResult(requestId: string, routes: any) {
-    const { securedData, timeKey } = securePayload(routes);
-
-    const payload = {
-      data: Buffer.from(securedData).toString("base64"),
-      keyTime: timeKey,
-      format: "application/octet-stream",
-    };
+    const payload = buildAblyMessage(routes);
 
     await this.realtime.publishResult(requestId, payload);
     await this.realtime.publishStatus(

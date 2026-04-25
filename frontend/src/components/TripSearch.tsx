@@ -12,34 +12,25 @@ import { Button } from "@mui/material";
 import { SearchInputWrapper } from "./SearchInputWrapper";
 import { Location } from "../types/types";
 import { useRoutingContext } from "../context/RoutingContext";
+import ErrorMessage from "./ErrorMessage";
 
 interface TripSearchProps {}
-
-const ErrorMessage = ({ message }: { message: string }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 10 }}
-    className="flex items-center justify-center gap-3 py-2 text-red-600 bg-red-50 rounded-xl mb-4"
-  >
-    <span className="text-xs font-bold tracking-wide uppercase">{message}</span>
-  </motion.div>
-);
 
 export const TripSearch: React.FC<TripSearchProps> = ({}) => {
   const {
     handleLocateMe,
     startLocation,
-    setStartLocation,
     endLocation,
+    locationError,
+    setStartLocation,
     setEndLocation,
-    error: locationError,
+    locating,
   } = useLocationState();
   const {
     routeData,
-    loading,
     planTrip,
     error: routingError,
+    loading,
   } = useRoutingContext();
 
   // Use the custom hook for both inputs
@@ -53,9 +44,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
   );
 
   const handleSharedLocate = () => {
-    if (activeField) {
-      handleLocateMe(activeField);
-    }
+    if (activeField) handleLocateMe(activeField);
   };
 
   const selectstart = (r: Location) => {
@@ -132,7 +121,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
             </div>
             <span className="text-xs font-bold tracking-wide uppercase">
-              {loadingMessage}x
+              {loadingMessage}
             </span>
           </motion.div>
         )}

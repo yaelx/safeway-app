@@ -1,48 +1,85 @@
 import { encode } from "@msgpack/msgpack";
 import { Response } from "express";
+import { webcrypto } from "crypto";
 
-/**
- * Optimized XOR using 64-bit chunks
- */
-function fastXor(data: Uint8Array, key: Uint8Array): Uint8Array {
-  // Use Uint32Array for 4-byte chunk processing
-  const len4 = Math.floor(data.length / 4);
-  const data32 = new Uint32Array(data.buffer, data.byteOffset, len4);
-  const key32 = new Uint32Array(
-    key.buffer,
-    key.byteOffset,
-    Math.floor(key.length / 4),
+const { subtle } = webcrypto;
+const ALGORITHM = "AES-GCM";
+const KEY_LENGTH = 256;
+const IV_LENGTH = 12; // bytes
+
+// Derives a 256-bit AES key from timeKey + SECRET_SALT using HKDF — mirrors frontend exactly
+async function deriveKey(timeKey: string, usage: KeyUsage): Promise<CryptoKey> {
+  const secretSalt = process.env.SECRET_SALT ?? "";
+  const rawKey = new TextEncoder().encode(timeKey + secretSalt);
+
+  const keyMaterial = await subtle.importKey(
+    "raw",
+    rawKey,
+    { name: "HKDF" },
+    false,
+    ["deriveKey"],
   );
 
-  for (let i = 0; i < data32.length; i++) {
-    // Bitwise XOR on 32-bit chunks works natively with Numbers
-    data32[i] = data32[i] ^ key32[i % key32.length];
-  }
-
-  // Handle remaining bytes (less than 4)
-  for (let i = len4 * 4; i < data.length; i++) {
-    data[i] = data[i] ^ key[i % key.length];
-  }
-  return data;
+  return subtle.deriveKey(
+    {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new TextEncoder().encode(secretSalt),
+      info: new TextEncoder().encode("payload-encryption"),
+    },
+    keyMaterial,
+    { name: ALGORITHM, length: KEY_LENGTH },
+    false,
+    [usage],
+  );
 }
 
-export function securePayload(data: any) {
-  const encoded = encode(data);
+/**
+ * 1. generates a fresh random 12-byte IV per request
+ * 2. encrypts the data using AES-GCM with the derived key
+ * returns: [12-byte IV][ciphertext+16-byte tag]
+ */
+async function encryptBytes(
+  data: Uint8Array,
+  timeKey: string,
+): Promise<Uint8Array> {
+  const iv = webcrypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const key = await deriveKey(timeKey, "encrypt");
 
+  const ciphertext = await subtle.encrypt({ name: ALGORITHM, iv }, key, data);
+
+  // Prepend IV so the frontend can extract it
+  const result = new Uint8Array(IV_LENGTH + ciphertext.byteLength);
+  result.set(iv, 0);
+  result.set(new Uint8Array(ciphertext), IV_LENGTH);
+  return result;
+}
+
+export async function securePayload(
+  data: any,
+): Promise<{ securedData: Uint8Array; timeKey: string }> {
+  const encoded = encode(data); // MessagePack
   const timeKey = Math.floor(Date.now() / 60000).toString();
-  const secretSalt = process.env.SECRET_SALT || "";
-  const key = new TextEncoder().encode(timeKey + secretSalt);
-
-  // We must create a copy so we don't mutate the underlying buffer of 'encoded' directly if it's shared
-  const dataCopy = new Uint8Array(encoded);
-  const securedData = fastXor(dataCopy, key);
-
+  const securedData = await encryptBytes(new Uint8Array(encoded), timeKey);
   return { securedData, timeKey };
 }
 
-export const sendSecureResponse = (res: Response, data: any) => {
-  const { securedData, timeKey } = securePayload(data);
+// For POST — sends binary over HTTP, timeKey in header
+export const sendSecureResponse = async (
+  res: Response,
+  data: any,
+): Promise<void> => {
+  const { securedData, timeKey } = await securePayload(data);
   res.setHeader("X-Key-Time", timeKey);
   res.setHeader("Content-Type", "application/octet-stream");
   res.send(Buffer.from(securedData));
 };
+
+// For Ably — timeKey travels with the payload since there are no HTTP headers
+export async function buildAblyMessage(
+  data: any,
+): Promise<{ data: string; timeKey: string }> {
+  const { securedData, timeKey } = await securePayload(data);
+  const base64 = Buffer.from(securedData).toString("base64");
+  return { data: base64, timeKey };
+}

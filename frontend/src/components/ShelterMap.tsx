@@ -15,6 +15,8 @@ import { useRoutingContext } from "../context/RoutingContext";
 import { RouteData } from "../types/types";
 import { useShelters } from "../hooks/useShelters";
 import CarSpinner from "./CarSpinner";
+import { motion } from "framer-motion";
+import ErrorMessage from "./ErrorMessage";
 
 const DefaultIcon = L.icon({
   iconUrl:
@@ -90,16 +92,12 @@ const ShelterMap: React.FC = () => {
     statusMessage,
   } = useRoutingContext();
   const { startLocation, coordinates } = useLocationState();
-  const [globalShelters, setGlobalShelters] = useState<any[]>([]);
   const [bounds, setBounds] = useState<any>(null);
-  const { shelters, loading: sheltersLoading } = useShelters(
-    bounds,
-    !!startLocation,
-  );
-
-  useEffect(() => {
-    setGlobalShelters(shelters);
-  }, [shelters]);
+  const {
+    shelters,
+    loading: sheltersLoading,
+    error: shelterError,
+  } = useShelters(bounds, !!startLocation);
 
   useEffect(() => {
     if (routeData && routeData.length > 0 && !selectedRoute) {
@@ -109,7 +107,8 @@ const ShelterMap: React.FC = () => {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-brand-black">
-      {/* TripSearch Overlay */}
+      {shelterError && <ErrorMessage message={shelterError} />}
+
       <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
         <TripSearch />
       </div>
@@ -155,8 +154,8 @@ const ShelterMap: React.FC = () => {
             <LocationMarker markerLocation={startLocation} type="start" />
           )} */}
           {sheltersLoading && <CarSpinner />}
-          {globalShelters &&
-            globalShelters.map((s, i) => (
+          {!shelterError &&
+            shelters.map((s, i) => (
               <UnifiedShelterMarker key={i} shelter={s} />
             ))}
         </MapContainer>

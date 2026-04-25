@@ -1,17 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useGeolocation } from "../hooks/useGeolocation";
-import L from "leaflet";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
+import { locateWithRetry } from "../hooks/useGeolocation";
+
 import { Location } from "../types/types";
 
 interface LocationContextType {
-  coordinates: L.LatLng | null;
-  loading: boolean;
-  handleLocateMe: (target: "start" | "end") => void;
   startLocation: Location | null;
   endLocation: Location | null;
   setStartLocation: (c: Location | null) => void;
   setEndLocation: (c: Location | null) => void;
-  error: string | null;
+  locating: boolean;
+  locationError: string | null;
+  handleLocateMe: (target: "start" | "end") => void;
+  cancelLocate: () => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(
@@ -21,46 +27,56 @@ const LocationContext = createContext<LocationContextType | undefined>(
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { locate, loading, error } = useGeolocation();
   const [startLocation, setStartLocation] = useState<Location | null>(null);
   const [endLocation, setEndLocation] = useState<Location | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const handleLocateMe = async (target: "start" | "end" = "start") => {
+  const cancelLocate = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
+
+  const handleLocateMe = useCallback(async (target: "start" | "end") => {
+    // Cancel any in-flight locate
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLocating(true);
+    setLocationError(null);
+
     try {
-      // 1. Await the locate() call.
-      // Note: If locate() doesn't return a promise, update it to return the LatLng.
-      const pos = await locate();
+      const position = await locateWithRetry(controller.signal);
+      const loc: Location = {
+        coords: {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        },
+        address: "Current Location",
+      };
 
-      if (pos) {
-        const loc: Location = {
-          coords: { lat: pos.lat, lng: pos.lng },
-          address: "Current Location",
-        };
-
-        // 2. Set the state immediately after getting the location
-        if (target === "start") {
-          setStartLocation(loc);
-        } else {
-          setEndLocation(loc);
-        }
-      }
+      if (target === "start") setStartLocation(loc);
+      else setEndLocation(loc);
     } catch (err) {
-      console.error("User refused location or GPS error:", err);
-      // Optional: Update global state with error to show a Toast/Alert
+      if (err instanceof DOMException && err.name === "AbortError") return; // silent
+      setLocationError("Could not get your location. Please try again.");
+    } finally {
+      setLocating(false);
     }
-  };
+  }, []);
 
   return (
     <LocationContext.Provider
       value={{
-        coordinates: null,
-        loading,
-        handleLocateMe,
         startLocation,
         endLocation,
         setStartLocation,
         setEndLocation,
-        error,
+        locating,
+        locationError,
+        handleLocateMe,
+        cancelLocate,
       }}
     >
       {children}
