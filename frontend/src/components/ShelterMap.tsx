@@ -91,7 +91,7 @@ const ShelterMap: React.FC = () => {
     loading,
     statusMessage,
   } = useRoutingContext();
-  const { startLocation, coordinates } = useLocationState();
+  const { startLocation } = useLocationState();
   const [bounds, setBounds] = useState<any>(null);
   const {
     shelters,
@@ -131,16 +131,19 @@ const ShelterMap: React.FC = () => {
           zoomControl={false}
         >
           <TileLayer url={TileLayerUrl} />
-          <MapRecenter
-            location={
-              startLocation
-                ? L.latLng(startLocation.coords.lat, startLocation.coords.lng)
-                : coordinates
-            }
-          />
+          {startLocation && (
+            <MapRecenter
+              location={L.latLng(
+                startLocation.coords.lat,
+                startLocation.coords.lng,
+              )}
+            />
+          )}
           <MapBoundsUpdater onBoundsChange={setBounds} />
           <MapController points={decodedPath || []} />
-          {coordinates && <UserMarker coords={coordinates} icon={userIcon} />}
+          {startLocation && (
+            <UserMarker coords={startLocation.coords} icon={userIcon} />
+          )}
           {routeData &&
             [...routeData].map((r: RouteData, i: number) => (
               <SafeRoute
