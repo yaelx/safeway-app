@@ -1,6 +1,6 @@
 /// <reference path="../types/govmap.d.ts" />
 import "leaflet/dist/leaflet.css";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import { TripSearch } from "./TripSearch";
@@ -52,13 +52,14 @@ const MapBoundsUpdater = ({
 
 const MapRecenter = ({ location }: { location: L.LatLng | null }) => {
   const map = useMap(); // useMap is a hook provided by react-leaflet
+  const prevLocationRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (location) {
-      map.flyTo(location, 16, {
-        animate: true,
-        duration: 1.5,
-      });
-    }
+    if (!location) return;
+    const key = `${location.lat}-${location.lng}`;
+    if (key === prevLocationRef.current) return; // same location, don't re-fly
+    prevLocationRef.current = key;
+    map.flyTo(location, 16, { animate: true, duration: 1.5 });
   }, [location, map]);
 
   return null;
@@ -105,6 +106,13 @@ const ShelterMap: React.FC = () => {
     }
   }, [routeData, selectedRoute]);
 
+  const startLocationLatLng = useMemo(() => {
+    if (startLocation) {
+      return L.latLng(startLocation.coords.lat, startLocation.coords.lng);
+    }
+    return null;
+  }, [startLocation?.coords.lat, startLocation?.coords.lng]);
+
   return (
     <div className="relative h-screen w-full overflow-hidden bg-brand-black">
       {shelterError && <ErrorMessage message={shelterError} />}
@@ -131,18 +139,13 @@ const ShelterMap: React.FC = () => {
           zoomControl={false}
         >
           <TileLayer url={TileLayerUrl} />
-          {startLocation && (
-            <MapRecenter
-              location={L.latLng(
-                startLocation.coords.lat,
-                startLocation.coords.lng,
-              )}
-            />
+          {startLocationLatLng && (
+            <MapRecenter location={startLocationLatLng} />
           )}
           <MapBoundsUpdater onBoundsChange={setBounds} />
           <MapController points={decodedPath || []} />
-          {startLocation && (
-            <UserMarker coords={startLocation.coords} icon={userIcon} />
+          {startLocationLatLng && (
+            <UserMarker coords={startLocationLatLng} icon={userIcon} />
           )}
           {routeData &&
             [...routeData].map((r: RouteData, i: number) => (

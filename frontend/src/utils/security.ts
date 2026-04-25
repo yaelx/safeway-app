@@ -81,14 +81,10 @@ export async function decodeHttpResponse(response: Response): Promise<any> {
   if (!timeKey) throw new Error("Missing X-Key-Time header");
 
   const buffer = await response.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
+  const encrypted = new Uint8Array(buffer); // already aligned, no base64 needed
 
-  // Binary → base64
-  let binary = "";
-  bytes.forEach((b) => (binary += String.fromCharCode(b)));
-  const base64 = btoa(binary);
-
-  return decodeSecurePayload(base64, timeKey);
+  const decryptedBytes = await decryptBytes(encrypted, timeKey);
+  return decode(decryptedBytes); // msgpack decode
 }
 
 // For Ably messages — timeKey is embedded in the payload (no HTTP headers available)

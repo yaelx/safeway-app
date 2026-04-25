@@ -59,10 +59,11 @@ app.use(
         false,
       );
     },
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Key-Time"],
     credentials: true,
     optionsSuccessStatus: 200, // Some legacy browsers need this for OPTIONS
+    exposedHeaders: ["X-Key-Time"],
   }),
 );
 

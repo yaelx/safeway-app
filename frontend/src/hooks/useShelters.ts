@@ -37,6 +37,7 @@ async function fetchWithRetry(bounds: any, signal: AbortSignal): Promise<any> {
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
       return await decodeHttpResponse(res);
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") throw e; // don't retry aborts
