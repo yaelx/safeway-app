@@ -78,6 +78,11 @@ spec:
             secretKeyRef:
               key: latest
               name: GOOGLE_APPLICATION_CREDENTIALS_JSON
+        - name: SECRET_SALT
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: SECRET_SALT
         image: me-west1-docker.pkg.dev/safeway-navigation/cloud-run-source-deploy/orchestrator@sha256:f161dc4ccc7946e38b309e67a98df8a3ff0ffc5a06056d4054819ba6144002d7
         name: orchestrator-1
         ports:
