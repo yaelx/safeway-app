@@ -56,7 +56,7 @@ export const RouteResultsSheet = ({ routes }: { routes: RouteData[] }) => {
         <div className="p-4 space-y-4">
           <SafetySidebar
             routes={routes}
-            selectedRouteId={routes[0].index}
+            selectedRouteId={routes[0].id}
             onSelect={() => {
               // TODO: Implement route selection
             }}

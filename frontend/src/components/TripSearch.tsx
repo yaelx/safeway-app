@@ -127,10 +127,7 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
           </motion.div>
         )}
         {(locationError || routingError) && (
-          <AutoDismissError
-            message={locationError || routingError!}
-            onDismiss={() => {}}
-          />
+          <AutoDismissError message={locationError || routingError!} />
         )}
 
         {!expanded ? (

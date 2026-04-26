@@ -113,9 +113,7 @@ const ShelterMap: React.FC = () => {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-brand-black">
-      {shelterError && (
-        <AutoDismissError message={shelterError} onDismiss={() => {}} />
-      )}
+      {shelterError && <AutoDismissError message={shelterError} />}
 
       <div className="absolute top-0 left-0 z-[1001] p-4 pointer-events-none w-full max-w-sm">
         <TripSearch />
