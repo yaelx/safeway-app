@@ -3,7 +3,7 @@ import polyline from "@mapbox/polyline";
 import { API_ENDPOINTS } from "../config/constants";
 import { RouteData, SegmentAnalysis } from "../types/types";
 import { ably } from "../lib/ably"; // We'll create this helper
-import { decodeAblyMessage, decodeSecurePayload } from "../utils/security";
+import { decodeAblyMessage } from "../utils/security";
 
 export const useRouting = () => {
   const [routeData, setRouteData] = useState<RouteData[] | null>(null);

@@ -7,6 +7,7 @@ const RETRY_DELAY_MS = 1000;
 const DEBOUNCE_MS = 800;
 const PRECISION = 2; // ~1km grid snapping
 const MAX_CACHE_ENTRIES = 100;
+const FETCH_TIMEOUT_MS = 12000;
 
 // Simple in-memory cache — lives for the browser session
 const shelterCache = new Map<string, { shelters: any[]; timestamp: number }>();
@@ -22,6 +23,9 @@ function isRetryable(error: unknown): boolean {
 }
 
 async function fetchWithRetry(bounds: any, signal: AbortSignal): Promise<any> {
+  const timeoutSignal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+  const combinedSignal = AbortSignal.any([signal, timeoutSignal]);
+
   const round = (n: number) => Math.round(n * 10000) / 10000; // 4dp, matches backend
   const sw = bounds.getSouthWest();
   const ne = bounds.getNorthEast();
@@ -49,7 +53,7 @@ async function fetchWithRetry(bounds: any, signal: AbortSignal): Promise<any> {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-        signal,
+        signal: combinedSignal,
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
