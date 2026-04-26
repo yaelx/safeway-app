@@ -48,17 +48,23 @@ const MapBoundsUpdater = ({
   return null;
 };
 
-const MapRecenter = ({ location }: { location: L.LatLng | null }) => {
-  const map = useMap(); // useMap is a hook provided by react-leaflet
+const MapRecenter = ({
+  location,
+  disabled,
+}: {
+  location: L.LatLng | null;
+  disabled: boolean;
+}) => {
+  const map = useMap();
   const prevLocationRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!location) return;
+    if (!location || disabled) return; // ← don't fly if route is showing
     const key = `${location.lat}-${location.lng}`;
-    if (key === prevLocationRef.current) return; // same location, don't re-fly
+    if (key === prevLocationRef.current) return;
     prevLocationRef.current = key;
     map.flyTo(location, 16, { animate: true, duration: 1.5 });
-  }, [location, map]);
+  }, [location, map, disabled]);
 
   return null;
 };
@@ -66,15 +72,18 @@ const MapRecenter = ({ location }: { location: L.LatLng | null }) => {
 // This component has no UI, it just controls the camera
 const MapController = ({ points }: { points: [number, number][] }) => {
   const map = useMap();
+  const prevPointsKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (points && points.length > 0) {
-      try {
-        const bounds = L.latLngBounds(points);
-        map.fitBounds(bounds, { padding: [50, 50] });
-      } catch (err) {
-        console.error("Autocentering failed:", err);
-      }
+    if (!points || points.length === 0) return;
+    const key = points[0]?.join() + points[points.length - 1]?.join(); // first+last point as key
+    if (key === prevPointsKeyRef.current) return; // same route, don't refit
+    prevPointsKeyRef.current = key;
+    try {
+      const bounds = L.latLngBounds(points);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } catch (err) {
+      console.error("Autocentering failed:", err);
     }
   }, [points, map]);
 
@@ -96,7 +105,7 @@ const ShelterMap: React.FC = () => {
     shelters,
     loading: sheltersLoading,
     error: shelterError,
-  } = useShelters(bounds, !!startLocation);
+  } = useShelters(bounds, !!startLocation && !routeData);
 
   useEffect(() => {
     if (routeData && routeData.length > 0 && !selectedRoute) {
@@ -138,7 +147,10 @@ const ShelterMap: React.FC = () => {
         >
           <TileLayer url={TileLayerUrl} />
           {startLocationLatLng && (
-            <MapRecenter location={startLocationLatLng} />
+            <MapRecenter
+              location={startLocationLatLng}
+              disabled={!!routeData}
+            />
           )}
           <MapBoundsUpdater onBoundsChange={setBounds} />
           <MapController points={decodedPath || []} />
@@ -157,8 +169,9 @@ const ShelterMap: React.FC = () => {
           {/* {startLocation && !routeData && (
             <LocationMarker markerLocation={startLocation} type="start" />
           )} */}
-          {sheltersLoading && <CarSpinner />}
-          {!shelterError &&
+          {!routeData && sheltersLoading && <CarSpinner />}
+          {!routeData &&
+            !shelterError &&
             shelters.map((s, i) => (
               <UnifiedShelterMarker key={i} shelter={s} />
             ))}
