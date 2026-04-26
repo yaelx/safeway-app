@@ -32,9 +32,9 @@ export class ResultConsumer implements IKafkaConsumer {
    * @param routes - The routes to publish
    */
   async publishRoutesResult(requestId: string, routes: any) {
-    const { data: encryptedData, timeKey } = await buildAblyMessage(routes);
+    const { data, timeKey } = await buildAblyMessage(routes);
     await this.realtime.publishResult(requestId, {
-      data: encryptedData,
+      data,
       timeKey,
     });
     await this.realtime.publishStatus(
@@ -54,6 +54,7 @@ export class ResultConsumer implements IKafkaConsumer {
       let requestId: string | undefined;
       try {
         const payload = JSON.parse(message.value.toString());
+        logger.info({ event: "KAFKA_MESSAGE_RECEIVED", payload });
         ({ requestId } = payload);
         const { routes } = payload;
 

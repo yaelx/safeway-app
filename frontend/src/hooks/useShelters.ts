@@ -34,7 +34,6 @@ async function fetchWithRetry(bounds: any, signal: AbortSignal): Promise<any> {
   // Check client cache first — no network request at all
   const cached = shelterCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CLIENT_CACHE_TTL) {
-    console.log("✅ Client cache hit — no request needed");
     return { shelters: cached.shelters };
   }
 
@@ -115,10 +114,6 @@ export const useShelters = (bounds: any, enabled: boolean) => {
       setLoading(true);
       try {
         const data = await fetchWithRetry(bounds, controller.signal);
-        console.log(
-          "🏠 Raw data from fetch:",
-          Array.isArray(data) ? `Array[${data.length}]` : data,
-        );
         const shelters = Array.isArray(data) ? data : (data.shelters ?? []);
         setShelters(shelters);
       } catch (e) {
