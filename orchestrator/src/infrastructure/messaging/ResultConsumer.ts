@@ -32,9 +32,8 @@ export class ResultConsumer implements IKafkaConsumer {
    * @param routes - The routes to publish
    */
   async publishRoutesResult(requestId: string, routes: any) {
-    const payload = buildAblyMessage(routes);
-
-    await this.realtime.publishResult(requestId, payload);
+    const message = await buildAblyMessage(routes);
+    await this.realtime.publishResult(requestId, JSON.stringify(message));
     await this.realtime.publishStatus(
       requestId,
       "completed",

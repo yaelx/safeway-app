@@ -65,6 +65,16 @@ export const useRouting = () => {
 
       // Listen for the Final Result
       channel.subscribe("result_ready", async (msg: any) => {
+        console.log("📨 Ably raw message:", {
+          name: msg.name,
+          dataType: typeof msg.data,
+          dataPreview:
+            typeof msg.data === "string"
+              ? msg.data.slice(0, 100)
+              : JSON.stringify(msg.data).slice(0, 100),
+          encoding: msg.encoding,
+        });
+
         const routes = await decodeAblyMessage(msg);
         if (routes && routes.length) {
           setRouteData(processRoutes(routes));
