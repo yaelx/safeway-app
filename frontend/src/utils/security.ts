@@ -109,6 +109,7 @@ export async function decodeHttpResponse(response: Response): Promise<any> {
 
 // For Ably messages — timeKey is embedded in the payload (no HTTP headers available)
 export async function decodeAblyMessage(msg: any): Promise<any> {
-  const { data: encryptedData, timeKey } = msg.data.routes;
-  return decodeSecurePayload(encryptedData, timeKey);
+  console.log("📦 Ably message:", msg);
+  const { data, timeKey } = msg.data;
+  return decodeSecurePayload(data, timeKey);
 }

@@ -10,7 +10,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # 2. Install EVERYTHING (including @types) for the build
-RUN npm install
+RUN npm install --frozen-lockfile
 
 # Copy source
 COPY . .

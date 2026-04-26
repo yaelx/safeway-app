@@ -40,8 +40,8 @@ export class AblyService implements IRealtimeService {
     await this.publish(requestId, "status_update", { status, message });
   }
 
-  async publishResult(requestId: string, routes: any) {
-    await this.publish(requestId, "result_ready", { routes });
+  async publishResult(requestId: string, data: any) {
+    await this.publish(requestId, "result_ready", data);
   }
 
   async createTokenRequest() {

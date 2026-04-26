@@ -34,7 +34,8 @@ export class ResultConsumer implements IKafkaConsumer {
   async publishRoutesResult(requestId: string, routes: any) {
     const { data: encryptedData, timeKey } = await buildAblyMessage(routes);
     await this.realtime.publishResult(requestId, {
-      routes: { data: encryptedData, timeKey }, // plain object, no JSON.stringify
+      data: encryptedData,
+      timeKey,
     });
     await this.realtime.publishStatus(
       requestId,
