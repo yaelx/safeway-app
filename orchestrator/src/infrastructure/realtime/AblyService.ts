@@ -40,15 +40,14 @@ export class AblyService implements IRealtimeService {
     await this.publish(requestId, "status_update", { status, message });
   }
 
-  async publishResult(requestId: string, routes: any) {
-    await this.publish(requestId, "result_ready", { routes });
+  async publishResult(requestId: string, data: any) {
+    await this.publish(requestId, "result_ready", data);
   }
 
   async createTokenRequest() {
-    // Use 'safeway-user' or pull a real ID from the request if you have auth
+    // change later to a real user id
     return await this.rest.auth.createTokenRequest({
       clientId: "safeway-user",
-      // ttl: 7200000, 2 hours
     });
   }
 }

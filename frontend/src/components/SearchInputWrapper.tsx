@@ -62,7 +62,7 @@ export const SearchInputWrapper: React.FC<SearchInputWrapperProps> = ({
 
       {/* Results Dropdown (Same as before) */}
       {isFocused && (
-        <ul className="absolute z-[3000] w-full mt-2 bg-brand-slate border border-brand-border shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+        <ul className="absolute z-3000 w-full mt-2 bg-brand-slate border border-brand-border shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
           {handleLocate && !query && (
             <li
               onMouseDown={(e) => {

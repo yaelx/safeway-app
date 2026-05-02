@@ -2,7 +2,11 @@ import { Kafka, Consumer, EachMessageHandler } from "kafkajs";
 import { IRealtimeService } from "../realtime/types";
 import { IKafkaConsumer } from "./types";
 import { logger } from "../../middleware/logger";
+import { buildAblyMessage, securePayload } from "../../security/obfuscator";
 
+/**
+ * Receives result from kafka and publishes it to the frontend via Ably
+ */
 export class ResultConsumer implements IKafkaConsumer {
   private consumer: Consumer;
 
@@ -22,6 +26,24 @@ export class ResultConsumer implements IKafkaConsumer {
     });
   }
 
+  /**
+   * Encrypts and publishes the routes to the frontend
+   * @param requestId - The request ID
+   * @param routes - The routes to publish
+   */
+  async publishRoutesResult(requestId: string, routes: any) {
+    const { data, timeKey } = await buildAblyMessage(routes);
+    await this.realtime.publishResult(requestId, {
+      data,
+      timeKey,
+    });
+    await this.realtime.publishStatus(
+      requestId,
+      "completed",
+      "Route analysis finished.",
+    );
+  }
+
   public async start(): Promise<void> {
     await this.consumer.connect();
     await this.consumer.subscribe({ topic: this.topic, fromBeginning: false });
@@ -32,24 +54,26 @@ export class ResultConsumer implements IKafkaConsumer {
       let requestId: string | undefined;
       try {
         const payload = JSON.parse(message.value.toString());
+        logger.info({ event: "KAFKA_MESSAGE_RECEIVED", payload });
         ({ requestId } = payload);
         const { routes } = payload;
 
         if (requestId && routes) {
-          await this.realtime.publishResult(requestId, routes);
-          await this.realtime.publishStatus(
-            requestId,
-            "completed",
-            "Route analysis finished.",
-          );
+          await this.publishRoutesResult(requestId, routes);
         }
       } catch (err) {
-        logger.error({ event: 'KAFKA_MESSAGE_PROCESS_ERROR', requestId, err }, 'Failed to process incoming Kafka result message');
+        logger.error(
+          { event: "KAFKA_MESSAGE_PROCESS_ERROR", requestId, err },
+          "Failed to process incoming Kafka result message",
+        );
       }
     };
 
     await this.consumer.run({ eachMessage: handler });
-    logger.info({ event: 'KAFKA_CONSUMER_READY', topic: this.topic }, 'Kafka ResultConsumer is listening');
+    logger.info(
+      { event: "KAFKA_CONSUMER_READY", topic: this.topic },
+      "Kafka ResultConsumer is listening",
+    );
   }
 
   public async disconnect(): Promise<void> {

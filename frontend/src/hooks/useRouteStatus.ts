@@ -3,6 +3,7 @@ import polyline from "@mapbox/polyline";
 import { API_ENDPOINTS } from "../config/constants";
 import { RouteData, SegmentAnalysis } from "../types/types";
 import { ably } from "../lib/ably"; // We'll create this helper
+import { decodeAblyMessage } from "../utils/security";
 
 export const useRouting = () => {
   const [routeData, setRouteData] = useState<RouteData[] | null>(null);
@@ -23,6 +24,16 @@ export const useRouting = () => {
       })),
     }));
   };
+
+  useEffect(() => {
+    return () => {
+      // If the component unmounts, stop listening and clean up the ref
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+        channelRef.current.detach();
+      }
+    };
+  }, []);
 
   const planTrip = async (start: string, end: string) => {
     setLoading(true);
@@ -53,8 +64,8 @@ export const useRouting = () => {
       });
 
       // Listen for the Final Result
-      channel.subscribe("result_ready", (msg: any) => {
-        const routes = msg.data.routes;
+      channel.subscribe("result_ready", async (msg: any) => {
+        const routes = await decodeAblyMessage(msg);
         if (routes && routes.length) {
           setRouteData(processRoutes(routes));
         } else {

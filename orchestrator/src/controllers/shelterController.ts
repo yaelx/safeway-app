@@ -1,10 +1,17 @@
 import { Request, Response } from "express";
+import { logger } from "../middleware/logger";
 import { ShelterService } from "../services/shelterService";
+import { sendSecureResponse } from "../security/obfuscator";
 
 export class ShelterController {
   constructor(private shelterService: ShelterService) {}
 
   async getSheltersInBounds(req: Request, res: Response) {
+    // Add logging
+    logger.info(
+      { event: "SHELTER_FETCH_REQUESTED", body: req.body },
+      "Received request to fetch shelters in bounds",
+    );
     try {
       const { minLat, maxLat, minLng, maxLng } = req.body as any;
       const shelters = await this.shelterService.getSheltersInBounds(
@@ -13,7 +20,9 @@ export class ShelterController {
         minLng,
         maxLng,
       );
-      res.json({ shelters });
+
+      //res.json({ shelters });
+      sendSecureResponse(res, shelters);
     } catch (e: any) {
       res
         .status(500)

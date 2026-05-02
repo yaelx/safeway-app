@@ -12,6 +12,7 @@ import { Button } from "@mui/material";
 import { SearchInputWrapper } from "./SearchInputWrapper";
 import { Location } from "../types/types";
 import { useRoutingContext } from "../context/RoutingContext";
+import AutoDismissError from "./AutoDismissError";
 
 interface TripSearchProps {}
 
@@ -19,11 +20,18 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
   const {
     handleLocateMe,
     startLocation,
-    setStartLocation,
     endLocation,
+    locationError,
+    setStartLocation,
     setEndLocation,
+    locating,
   } = useLocationState();
-  const { routeData, loading, planTrip, error } = useRoutingContext();
+  const {
+    routeData,
+    planTrip,
+    error: routingError,
+    loading,
+  } = useRoutingContext();
 
   // Use the custom hook for both inputs
   const fromSearch = useAddressSearch();
@@ -35,10 +43,9 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
     TripSearchStrings.LoadingAnalyzing,
   );
 
-  const handleSharedLocate = () => {
-    if (activeField) {
-      handleLocateMe(activeField);
-    }
+  const handleSharedLocate = async () => {
+    if (!activeField) return;
+    await handleLocateMe(activeField);
   };
 
   const selectstart = (r: Location) => {
@@ -115,21 +122,12 @@ export const TripSearch: React.FC<TripSearchProps> = ({}) => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
             </div>
             <span className="text-xs font-bold tracking-wide uppercase">
-              {loadingMessage}x
+              {loadingMessage}
             </span>
           </motion.div>
         )}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="flex items-center justify-center gap-3 py-2 text-red-600 bg-red-50 rounded-xl mb-4"
-          >
-            <span className="text-xs font-bold tracking-wide uppercase">
-              {error}
-            </span>
-          </motion.div>
+        {(locationError || routingError) && (
+          <AutoDismissError message={locationError || routingError!} />
         )}
 
         {!expanded ? (

@@ -1,4 +1,10 @@
-import { Router } from "express";
+import {
+  NextFunction,
+  Request,
+  Response,
+  RequestHandler,
+  Router,
+} from "express";
 import { ShelterController } from "../controllers/shelterController";
 import { ShelterService } from "../services/shelterService";
 import { prisma } from "../config/db";
@@ -10,11 +16,19 @@ const router = Router();
 const service = new ShelterService(prisma);
 const controller = new ShelterController(service);
 
+export const safe =
+  (
+    fn: (req: Request, res: Response, next: NextFunction) => Promise<any>,
+  ): RequestHandler =>
+  (req, res, next) => {
+    fn(req, res, next).catch(next);
+  };
+
 // Discovery & Map
 router.post(
   API_ENDPOINTS.SHELTERS_IN_BOUNDS,
   validate(getInBoundsSchema),
-  (req, res) => controller.getSheltersInBounds(req, res),
+  safe(async (req, res) => controller.getSheltersInBounds(req, res)),
 );
 
 // Management (CRUD & Reports)

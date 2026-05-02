@@ -3,6 +3,7 @@ import cors from "cors";
 import axios from "axios";
 import dotenv from "dotenv";
 import helmet from "helmet";
+import timeout from "connect-timeout";
 import isRateLimit from "express-rate-limit";
 import shelterRoutes from "./src/routes/shelterRoutes";
 import routingRoutes from "./src/routes/routingRoutes";
@@ -35,26 +36,19 @@ app.use(
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      // 1. Allow requests with no origin (like mobile apps or curl)
       if (!origin) return callback(null, true);
 
-      // 2. Check if the origin is in our static whitelist
       if (allowedOrigins.indexOf(origin) !== -1) {
         return callback(null, true);
       }
 
-      // 3. ALLOW VERCEL PREVIEW URLS
-      // This Regex allows any URL ending in .vercel.app that belongs to your project
+      // ALLOW VERCEL PREVIEW URLS
       const isVercelPreview =
         /^https:\/\/safeway-app-git-.*-yaelxs-projects\.vercel\.app$/.test(
           origin,
         );
+      if (isVercelPreview) return callback(null, true);
 
-      if (isVercelPreview) {
-        return callback(null, true);
-      }
-
-      // 4. INFORMATIVE ERROR: Tell yourself exactly what went wrong
       logger.warn(
         { event: "CORS_BLOCKED", origin },
         "Origin rejected by CORS policy",
@@ -66,10 +60,16 @@ app.use(
         false,
       );
     },
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Key-Time"],
     credentials: true,
+    optionsSuccessStatus: 200, // Some legacy browsers need this for OPTIONS
+    exposedHeaders: ["X-Key-Time"],
   }),
 );
+
+// IMPORTANT: Explicitly handle OPTIONS preflight globally
+app.options("*", cors());
 
 // Trust Proxy - from Google/Vercel IP. so won't block users.
 app.set("trust proxy", 1);
@@ -103,6 +103,12 @@ const authorizeRequest = (req: Request, res: Response, next: NextFunction) => {
 };
 app.use(express.json());
 
+app.use(timeout("10s")); // adjust to your needs
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (!req.timedout) next();
+});
+
 // 1. General API Protection (Applied to everything starting with /api)
 // This acts as a "Catch-all" for your database-heavy endpoints
 app.use("/api", apiLimiter);
@@ -118,6 +124,29 @@ app.use(API_ENDPOINTS.SHELTERS, shelterRoutes);
 app.use(API_ENDPOINTS.SAFE_ROUTE, routingRoutes);
 app.use(API_ENDPOINTS.CONTACT, contactRoutes);
 app.use(API_ENDPOINTS.AUTH, ablyRoutes);
+
+// Add this LAST in your Express app, after all routes
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  logger.error({
+    event: "UNHANDLED_ROUTE_ERROR",
+    path: req.path,
+    method: req.method,
+    error: err?.message,
+    stack: err?.stack,
+  });
+
+  if (res.headersSent) return; // already responded, can't do anything
+
+  if (req.timedout) {
+    res.status(503).json({ error: "Request timed out. Please try again." });
+    return;
+  }
+
+  res.status(500).json({
+    error: "Internal server error",
+    path: req.path,
+  });
+});
 
 // ─── Python Health Check ──────────────────────────────────────────────────────
 const checkPythonConnection = async () => {

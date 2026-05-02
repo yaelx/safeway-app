@@ -1,0 +1,8 @@
+apiVersion: skaffold/v4beta14
+kind: Config
+metadata:
+  name: orchestrator
+manifests:
+  rawYaml:
+    - orchestrator-dev.yaml
+    - orchestrator.yaml
