@@ -88,8 +88,6 @@ export async function decodeHttpResponse(response: Response): Promise<any> {
     const result = decode(decryptedBytes);
     return result;
   } catch (e) {
-    console.error("❌ Decryption failed. timeKey was:", timeKey);
-    console.error("❌ Buffer size was:", buffer.byteLength);
     console.error("❌ Error:", e);
     throw e;
   }
