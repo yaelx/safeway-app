@@ -59,6 +59,15 @@ The application has been refactored to handle complex routing calculations async
 * **OSRM on Cloud Run**: A dedicated Open Source Routing Machine instance hosted on **Google Cloud Run**, utilizing **MLD (Multi-Level Dijkstra)** for rapid cold starts and Israel-specific OSM data baked directly into the container.
 * **Safety Solver**: Performs vectorized Haversine math to cross-reference OSRM paths against verified public shelter coordinates.
 
+### 4. Payload Obfuscation & Client-Side Security
+* **The Problem**: In a high-tension environment, exposing the exact geospatial coordinates of shelters in raw JSON format makes the infrastructure vulnerable to scraping or malicious analysis via the browser's Network tab.
+* **The Solution**:
+* Payload Obfuscatio: The orchestrator masks high-precision shelter coordinates before they leave the backend, ensuring that raw network traffic does not expose sensitive location data.
+* Data Encryption: Sensitive route metadata is encrypted at the application layer. The React frontend handles secure decryption, making the response "invisible" to standard network inspection tools.
+* Coordinate Jittering: Implemented spatial noise for non-active route segments to prevent pattern-matching of the shelter database.
+* **The Result**:
+Even with the browser's Inspector open, an observer cannot reconstruct the full shelter database or view precise high-integrity coordinates, protecting the physical safety of the infrastructure.
+
 ---
 
 ## Tech Stack
@@ -199,6 +208,7 @@ To ensure reliability and performance in an event-driven architecture, I impleme
 * [x] Distributed Caching: Redis integration for high-traffic routes.
 * [x] Infrastructure Hardening: Persistent rate limiting and Helmet security.
 * [x] Event-Driven Refactor: Kafka integration for non-blocking calculations.
+* [x] Security: integrate Payload Obfuscation and end-to-end encryption.
 * [ ] Safety-Tradeoff Selectors: Toggles for "Shortest" vs. "Safest" routes.
 * [ ] Community Sourcing: Google/Apple Auth for user-submitted shelter data.
 * [ ] Push Notifications: Real-time integration with Red Alert APIs.
